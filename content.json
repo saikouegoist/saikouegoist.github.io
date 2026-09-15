@@ -1,0 +1,34 @@
+{
+  "siteInfo": {
+    "title": "mewoking",
+    "tagline": "my little corner of the internet",
+    "author": "mewoking",
+    "avatar": "assets/cat.jpg",
+    "copyrightYear": "2026",
+    "footerText": "best viewed without expectations",
+    "lastUpdated": "10 / 06 / 2004",
+    "navLinks": [
+      { "id": "home", "label": "home", "href": "#/" },
+      { "id": "articles", "label": "articles", "href": "#/articles" },
+      { "id": "projects", "label": "projects", "href": "#/projects" },
+      { "id": "notes", "label": "notes", "href": "#/notes" },
+      { "id": "about", "label": "about", "href": "#/about" },
+      { "id": "links", "label": "links", "href": "#/links" }
+    ],
+    "siteStats": {
+      "pages": "07",
+      "articlesCount": "auto",
+      "visitorsBase": 1337,
+      "bugs": "∞"
+    },
+    "warningBox": {
+      "title": "warning",
+      "text": "I have no idea what I'm doing."
+    },
+    "randomThoughts": [
+      "Everyone wants their website to look like an app now. I wanted mine to look like a website.",
+      "A computer is like air conditioning: it becomes useless when you open Windows.",
+      "90% of modern web performance issues can be solved by deleting JavaScript you never needed."
+    ]
+  }
+}

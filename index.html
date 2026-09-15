@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mewoking - my little corner of the internet</title>
+  <meta name="description"
+    content="A personal homepage, notebook, archive and dumping ground for things I find interesting.">
+  <meta name="author" content="mewoking">
+
+  <!-- OpenGraph / Social Metadata -->
+  <meta property="og:title" content="mewoking - my little corner of the internet">
+  <meta property="og:description"
+    content="A personal homepage, notebook, archive and dumping ground for things I find interesting.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/cat.jpg">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpeg" href="assets/cat.jpg">
+
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="site-wrapper">
+
+    <!-- Site Header -->
+    <header class="site-header">
+      <a href="#/" class="header-brand" id="brand-link">
+        <div class="avatar-box">
+          <img src="assets/cat.jpg" alt="mewoking cat avatar" class="avatar-img" id="site-avatar">
+        </div>
+        <div class="title-group">
+          <h1 class="site-title" id="site-title">mewoking</h1>
+          <span class="site-tagline" id="site-tagline">my little corner of the internet</span>
+        </div>
+      </a>
+
+      <div class="header-controls">
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">light mode</button>
+      </div>
+    </header>
+
+    <!-- Top Navigation Bar -->
+    <nav class="top-nav" aria-label="Main Navigation">
+      <ul class="nav-list" id="top-nav-list">
+        <li><a href="#/" data-route="home">home</a></li>
+        <li><a href="#/articles" data-route="articles">articles</a></li>
+        <li><a href="#/projects" data-route="projects">projects</a></li>
+        <li><a href="#/notes" data-route="notes">notes</a></li>
+        <li><a href="#/about" data-route="about">about</a></li>
+        <li><a href="#/links" data-route="links">links</a></li>
+      </ul>
+    </nav>
+
+    <!-- Main 3-Column Grid -->
+    <main class="main-grid">
+
+      <!-- Left Column: Navigation, Stats, Buttons -->
+      <aside class="column-left" aria-label="Left Sidebar">
+        <!-- Navigation Card -->
+        <div class="box box-navigation">
+          <div class="box-header">navigation</div>
+          <div class="box-content">
+            <ul class="sidebar-nav-list" id="sidebar-nav-list">
+              <li><a href="#/" data-route="home">home</a></li>
+              <li><a href="#/articles" data-route="articles">articles</a></li>
+              <li><a href="#/projects" data-route="projects">projects</a></li>
+              <li><a href="#/notes" data-route="notes">notes</a></li>
+              <li><a href="#/about" data-route="about">about me</a></li>
+              <li><a href="#/links" data-route="links">cool links</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Site Stats Card -->
+        <div class="box box-stats">
+          <div class="box-header">site stats</div>
+          <div class="box-content">
+            <ul class="stats-list" id="site-stats-list">
+              <li class="stat-item">
+                <span class="stat-key">pages:</span>
+                <span class="stat-value" id="stat-pages">07</span>
+              </li>
+              <li class="stat-item">
+                <span class="stat-key">articles:</span>
+                <span class="stat-value" id="stat-articles">04</span>
+              </li>
+              <li class="stat-item">
+                <span class="stat-key">visitors:</span>
+                <span class="stat-value" id="stat-visitors">001337</span>
+              </li>
+              <li class="stat-item">
+                <span class="stat-key">bugs:</span>
+                <span class="stat-value" id="stat-bugs">&infin;</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Buttons Card -->
+        <div class="box box-buttons">
+          <div class="box-header">buttons</div>
+          <div class="box-content">
+            <div class="buttons-note">Decorative buttons will live here later.</div>
+            <div class="badges-shelf" id="badges-shelf">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Column: Dynamic Content Region -->
+      <section class="column-main" id="main-content" aria-live="polite">
+        <!-- Injected dynamically by app.js based on URL hash -->
+      </section>
+
+      <!-- Right Column: About me snippet, Warning, Last updated -->
+      <aside class="column-right" id="sidebar-right" aria-label="Right Sidebar">
+        <!-- About Me Card -->
+        <div class="box box-about-snippet">
+          <div class="box-header" id="about-snippet-title">about me</div>
+          <div class="box-content">
+            <p id="about-snippet-greeting"><strong>I'm mewoking.</strong></p>
+            <p id="about-snippet-bio">Interested in computers, cybersecurity, technology, the Internet and the weird
+              things people do with them.</p>
+            <p><a href="#/about" class="more-link" id="about-snippet-link">more about me &rarr;</a></p>
+          </div>
+        </div>
+
+        <!-- Warning Card -->
+        <div class="box box-warning">
+          <div class="box-header" id="warning-header">warning</div>
+          <div class="box-content">
+            <div class="warning-inner" id="warning-text">
+              I have no idea what I'm doing.
+            </div>
+          </div>
+        </div>
+
+        <!-- Last Updated Card -->
+        <div class="box box-last-updated">
+          <div class="box-header">last updated</div>
+          <div class="box-content">
+            <div class="last-updated-text" id="stat-last-updated">10 / 06 / 2004</div>
+          </div>
+        </div>
+      </aside>
+
+    </main>
+
+    <!-- Site Footer -->
+    <footer class="site-footer">
+      <p class="footer-copy" id="footer-copy">&copy; 2026 mewoking</p>
+      <p class="footer-tagline" id="footer-tagline">best viewed without expectations</p>
+      <div class="footer-links">
+        <a href="#/">home</a> |
+        <a href="#/articles">articles</a> |
+        <a href="#/projects">projects</a> |
+        <a href="#/notes">notes</a> |
+        <a href="#/about">about</a> |
+        <a href="#/links">links</a>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Modular Data Files (Separated for effortless updates) -->
+  <script src="data/config.js"></script>
+  <script src="data/articles.js"></script>
+  <script src="data/notes.js"></script>
+  <script src="data/projects.js"></script>
+  <script src="data/about.js"></script>
+  <script src="data/links.js"></script>
+  <!-- Content aggregator bridge -->
+  <script src="content.js"></script>
+  <!-- Core Application -->
+  <script src="app.js"></script>
+</body>
+
+</html>

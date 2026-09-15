@@ -1,0 +1,383 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mewoking - Content Studio</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .studio-container { max-width: 900px; margin: 0 auto; }
+    .studio-tabs { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+    .tab-btn { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 14px; font-family: var(--font-ui); font-size: 0.95rem; cursor: pointer; }
+    .tab-btn.active { background: var(--bg-header); color: #ffffff; font-weight: bold; border-color: var(--bg-header); }
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; }
+    .form-input, .form-textarea { width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 10px; font-family: inherit; font-size: 0.95rem; }
+    .form-textarea { min-height: 160px; font-family: var(--font-mono); font-size: 0.9rem; line-height: 1.5; }
+    .split-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .preview-box { border: 1px solid var(--border-color); background: var(--bg-card); padding: 12px; overflow-y: auto; max-height: 380px; }
+    .btn-action { background: var(--bg-header); color: #ffffff; border: 1px solid #3746c8; padding: 8px 16px; font-family: var(--font-ui); font-size: 0.95rem; cursor: pointer; font-weight: bold; }
+    .btn-action:hover { background: #1c2bb0; }
+    .btn-secondary { background: transparent; color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 14px; font-family: var(--font-ui); font-size: 0.95rem; cursor: pointer; }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.05); }
+    .action-row { display: flex; gap: 10px; margin-top: 16px; align-items: center; flex-wrap: wrap; }
+    .status-msg { font-family: var(--font-mono); font-size: 0.85rem; color: #34d399; }
+    .guide-box { background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--border-color); padding: 8px 12px; font-size: 0.88rem; margin-bottom: 14px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="site-wrapper studio-container">
+    <header class="site-header">
+      <div class="header-brand">
+        <div class="avatar-box">
+          <img src="assets/cat.jpg" alt="cat" class="avatar-img">
+        </div>
+        <div class="title-group">
+          <h1 class="site-title">mewoking content studio</h1>
+          <span class="site-tagline">separated data files: data/articles.js &bull; data/notes.js &bull; data/projects.js</span>
+        </div>
+      </div>
+      <div>
+        <a href="index.html#/" class="theme-toggle-btn" style="text-decoration: none;">&larr; view website</a>
+      </div>
+    </header>
+
+    <div class="studio-tabs">
+      <button class="tab-btn active" data-tab="article">📝 New Article (data/articles.js)</button>
+      <button class="tab-btn" data-tab="note">💬 New Note (data/notes.js)</button>
+      <button class="tab-btn" data-tab="project">🚀 New Project (data/projects.js)</button>
+      <button class="tab-btn" data-tab="manage">📁 File Structure Guide</button>
+    </div>
+
+    <!-- TAB 1: NEW ARTICLE -->
+    <div id="tab-article" class="tab-content">
+      <div class="box">
+        <div class="box-header">compose new article for data/articles.js</div>
+        <div class="box-content">
+          <div class="guide-box">
+            💡 <strong>Quick Workflow:</strong> Fill out the form, click <strong>"Copy Code Block"</strong>, and paste it into <code>data/articles.js</code>! Or click <strong>"Download data/articles.js"</strong> to replace the file directly.
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Article Title</label>
+            <input type="text" id="art-title" class="form-input" placeholder="e.g. Exploring Minimalist Computing">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label class="form-label">URL Slug / ID</label>
+              <input type="text" id="art-id" class="form-input" placeholder="e.g. exploring-minimalist-computing">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date (YYYY-MM-DD)</label>
+              <input type="text" id="art-date" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Read Time</label>
+              <input type="text" id="art-time" class="form-input" placeholder="e.g. 5 min read">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tags (comma separated)</label>
+            <input type="text" id="art-tags" class="form-input" placeholder="e.g. linux, security, retro">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Excerpt / Summary</label>
+            <input type="text" id="art-excerpt" class="form-input" placeholder="Short description displayed in previews and search">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Article Body (Markdown)</label>
+            <div class="split-editor">
+              <textarea id="art-content" class="form-textarea" placeholder="Write in Markdown...
+### Section Title
+Paragraph text goes here.
+
+- Bullet item 1
+- Bullet item 2
+
+```bash
+echo 'Code works here'
+```"></textarea>
+              <div class="preview-box article-body" id="art-preview">
+                <em style="color: var(--text-muted);">Live preview will appear here...</em>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button id="btn-copy-art-snippet" class="btn-action">📋 Copy Article Block for data/articles.js</button>
+            <button id="btn-download-articles-js" class="btn-secondary">💾 Download data/articles.js</button>
+            <span id="art-status" class="status-msg"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: NEW NOTE -->
+    <div id="tab-note" class="tab-content" style="display: none;">
+      <div class="box">
+        <div class="box-header">create quick note for data/notes.js</div>
+        <div class="box-content">
+          <div class="guide-box">
+            💡 Notes appear chronologically on <code>#/notes</code> and support instant year and text filtering.
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label class="form-label">Date (YYYY-MM-DD)</label>
+              <input type="text" id="note-date" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tags (comma separated)</label>
+              <input type="text" id="note-tags" class="form-input" placeholder="e.g. snippet, trivia">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Note Content</label>
+            <textarea id="note-content" class="form-textarea" placeholder="Write your quick thought or terminal snippet here..."></textarea>
+          </div>
+          <div class="action-row">
+            <button id="btn-copy-note-snippet" class="btn-action">📋 Copy Note Block for data/notes.js</button>
+            <button id="btn-download-notes-js" class="btn-secondary">💾 Download data/notes.js</button>
+            <span id="note-status" class="status-msg"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: NEW PROJECT -->
+    <div id="tab-project" class="tab-content" style="display: none;">
+      <div class="box">
+        <div class="box-header">add project to data/projects.js</div>
+        <div class="box-content">
+          <div class="guide-box">
+            💡 Projects appear on <code>#/projects</code> with tech tags, status badge, and year filter.
+          </div>
+          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label class="form-label">Project Title</label>
+              <input type="text" id="proj-title" class="form-input" placeholder="e.g. My Great Tool">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Year</label>
+              <input type="text" id="proj-year" class="form-input" value="2026">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <input type="text" id="proj-status" class="form-input" value="Active">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <input type="text" id="proj-desc" class="form-input" placeholder="Brief one-line summary">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tags (comma separated)</label>
+            <input type="text" id="proj-tags" class="form-input" placeholder="e.g. Python, Linux, CLI">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label class="form-label">GitHub URL</label>
+              <input type="text" id="proj-github" class="form-input" placeholder="https://github.com/...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Live Demo URL</label>
+              <input type="text" id="proj-demo" class="form-input" placeholder="https://...">
+            </div>
+          </div>
+          <div class="action-row">
+            <button id="btn-copy-proj-snippet" class="btn-action">📋 Copy Project Block for data/projects.js</button>
+            <button id="btn-download-proj-js" class="btn-secondary">💾 Download data/projects.js</button>
+            <span id="proj-status-msg" class="status-msg"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: FILE STRUCTURE GUIDE -->
+    <div id="tab-manage" class="tab-content" style="display: none;">
+      <div class="box">
+        <div class="box-header">how your data files are organized</div>
+        <div class="box-content">
+          <p>Everything is separated into individual, easy-to-edit files inside the <code>data/</code> folder:</p>
+          <ul>
+            <li><strong><code>data/articles.js</code></strong>: Long-form articles. Each article is a simple object. To remove an article, simply delete its block!</li>
+            <li><strong><code>data/notes.js</code></strong>: Short thoughts, logs, and snippets. Filterable by year and keyword.</li>
+            <li><strong><code>data/projects.js</code></strong>: Portfolio projects with tech tags, year, and repository links.</li>
+            <li><strong><code>data/about.js</code></strong>: Biography, hobbies/interests, and hardware/software setup table.</li>
+            <li><strong><code>data/links.js</code></strong>: Curated web directory organized by category.</li>
+            <li><strong><code>data/config.js</code></strong>: Site name, tagline, stats, warning box text, and random thoughts.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="data/config.js"></script>
+  <script src="data/articles.js"></script>
+  <script src="data/notes.js"></script>
+  <script src="data/projects.js"></script>
+  <script src="data/about.js"></script>
+  <script src="data/links.js"></script>
+  <script src="app.js"></script>
+  <script>
+    const tabs = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        contents.forEach(c => c.style.display = 'none');
+        tab.classList.add('active');
+        const target = document.getElementById('tab-' + tab.dataset.tab);
+        if (target) target.style.display = 'block';
+      });
+    });
+
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('art-date').value = today;
+    document.getElementById('note-date').value = today;
+
+    document.getElementById('art-title').addEventListener('input', (e) => {
+      const slug = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      document.getElementById('art-id').value = slug;
+    });
+
+    const artContent = document.getElementById('art-content');
+    const artPreview = document.getElementById('art-preview');
+    artContent.addEventListener('input', () => {
+      artPreview.innerHTML = artContent.value
+        ? (window.parseMarkdownMicro ? window.parseMarkdownMicro(artContent.value) : artContent.value.replace(/\n/g, '<br>'))
+        : '<em style="color: var(--text-muted);">Live preview will appear here...</em>';
+    });
+
+    function downloadFile(filename, content, type) {
+      const blob = new Blob([content], { type: type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Article Snippet Copy
+    document.getElementById('btn-copy-art-snippet').addEventListener('click', () => {
+      const art = {
+        id: document.getElementById('art-id').value.trim() || 'post-' + Date.now(),
+        title: document.getElementById('art-title').value.trim() || 'Untitled',
+        date: document.getElementById('art-date').value.trim() || today,
+        year: (document.getElementById('art-date').value.trim() || today).slice(0, 4),
+        readTime: document.getElementById('art-time').value.trim() || '3 min read',
+        tags: document.getElementById('art-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+        excerpt: document.getElementById('art-excerpt').value.trim(),
+        coverImage: '',
+        content: document.getElementById('art-content').value.trim()
+      };
+
+      const codeSnippet = `  {\n    id: ${JSON.stringify(art.id)},\n    title: ${JSON.stringify(art.title)},\n    date: ${JSON.stringify(art.date)},\n    year: ${JSON.stringify(art.year)},\n    readTime: ${JSON.stringify(art.readTime)},\n    tags: ${JSON.stringify(art.tags)},\n    excerpt: ${JSON.stringify(art.excerpt)},\n    coverImage: "",\n    content: \`\n${art.content}\n    \`\n  },`;
+
+      navigator.clipboard.writeText(codeSnippet).then(() => {
+        document.getElementById('art-status').textContent = '✓ Copied article snippet to clipboard! Paste at the top of window.SITE_ARTICLES in data/articles.js.';
+        setTimeout(() => document.getElementById('art-status').textContent = '', 5000);
+      });
+    });
+
+    // Download articles.js
+    document.getElementById('btn-download-articles-js').addEventListener('click', () => {
+      const art = {
+        id: document.getElementById('art-id').value.trim() || 'post-' + Date.now(),
+        title: document.getElementById('art-title').value.trim() || 'Untitled',
+        date: document.getElementById('art-date').value.trim() || today,
+        year: (document.getElementById('art-date').value.trim() || today).slice(0, 4),
+        readTime: document.getElementById('art-time').value.trim() || '3 min read',
+        tags: document.getElementById('art-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+        excerpt: document.getElementById('art-excerpt').value.trim(),
+        coverImage: '',
+        content: document.getElementById('art-content').value.trim()
+      };
+
+      const list = [art, ...(window.SITE_ARTICLES || [])];
+      const js = `/**\n * MEWOKING - Articles Collection\n */\nwindow.SITE_ARTICLES = ${JSON.stringify(list, null, 2)};\n`;
+      downloadFile('articles.js', js, 'application/javascript');
+    });
+
+    // Note Snippet Copy
+    document.getElementById('btn-copy-note-snippet').addEventListener('click', () => {
+      const note = {
+        id: 'note-' + Date.now(),
+        date: document.getElementById('note-date').value.trim() || today,
+        year: (document.getElementById('note-date').value.trim() || today).slice(0, 4),
+        tags: document.getElementById('note-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+        content: document.getElementById('note-content').value.trim()
+      };
+
+      const snippet = `  {\n    id: ${JSON.stringify(note.id)},\n    date: ${JSON.stringify(note.date)},\n    year: ${JSON.stringify(note.year)},\n    tags: ${JSON.stringify(note.tags)},\n    content: ${JSON.stringify(note.content)}\n  },`;
+
+      navigator.clipboard.writeText(snippet).then(() => {
+        document.getElementById('note-status').textContent = '✓ Copied note snippet to clipboard! Paste into data/notes.js.';
+        setTimeout(() => document.getElementById('note-status').textContent = '', 5000);
+      });
+    });
+
+    // Download notes.js
+    document.getElementById('btn-download-notes-js').addEventListener('click', () => {
+      const note = {
+        id: 'note-' + Date.now(),
+        date: document.getElementById('note-date').value.trim() || today,
+        year: (document.getElementById('note-date').value.trim() || today).slice(0, 4),
+        tags: document.getElementById('note-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+        content: document.getElementById('note-content').value.trim()
+      };
+      const list = [note, ...(window.SITE_NOTES || [])];
+      const js = `/**\n * MEWOKING - Notes Collection\n */\nwindow.SITE_NOTES = ${JSON.stringify(list, null, 2)};\n`;
+      downloadFile('notes.js', js, 'application/javascript');
+    });
+
+    // Project Snippet Copy
+    document.getElementById('btn-copy-proj-snippet').addEventListener('click', () => {
+      const proj = {
+        id: (document.getElementById('proj-title').value.trim() || 'proj').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        title: document.getElementById('proj-title').value.trim() || 'Untitled Project',
+        year: document.getElementById('proj-year').value.trim() || '2026',
+        date: today,
+        status: document.getElementById('proj-status').value.trim() || 'Active',
+        statusType: 'success',
+        description: document.getElementById('proj-desc').value.trim(),
+        tags: document.getElementById('proj-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+        github: document.getElementById('proj-github').value.trim(),
+        demo: document.getElementById('proj-demo').value.trim(),
+        details: ''
+      };
+
+      const snippet = `  {\n    id: ${JSON.stringify(proj.id)},\n    title: ${JSON.stringify(proj.title)},\n    year: ${JSON.stringify(proj.year)},\n    date: ${JSON.stringify(proj.date)},\n    status: ${JSON.stringify(proj.status)},\n    statusType: "success",\n    description: ${JSON.stringify(proj.description)},\n    tags: ${JSON.stringify(proj.tags)},\n    github: ${JSON.stringify(proj.github)},\n    demo: ${JSON.stringify(proj.demo)},\n    details: ""\n  },`;
+
+      navigator.clipboard.writeText(snippet).then(() => {
+        document.getElementById('proj-status-msg').textContent = '✓ Copied project snippet to clipboard! Paste into data/projects.js.';
+        setTimeout(() => document.getElementById('proj-status-msg').textContent = '', 5000);
+      });
+    });
+
+    // Download projects.js
+    document.getElementById('btn-download-proj-js').addEventListener('click', () => {
+      const proj = {
+        id: (document.getElementById('proj-title').value.trim() || 'proj').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        title: document.getElementById('proj-title').value.trim() || 'Untitled Project',
+        year: document.getElementById('proj-year').value.trim() || '2026',
+        date: today,
+        status: document.getElementById('proj-status').value.trim() || 'Active',
+        statusType: 'success',
+        description: document.getElementById('proj-desc').value.trim(),
+        tags: document.getElementById('proj-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+        github: document.getElementById('proj-github').value.trim(),
+        demo: document.getElementById('proj-demo').value.trim(),
+        details: ''
+      };
+      const list = [proj, ...(window.SITE_PROJECTS || [])];
+      const js = `/**\n * MEWOKING - Projects Collection\n */\nwindow.SITE_PROJECTS = ${JSON.stringify(list, null, 2)};\n`;
+      downloadFile('projects.js', js, 'application/javascript');
+    });
+  </script>
+</body>
+</html>
