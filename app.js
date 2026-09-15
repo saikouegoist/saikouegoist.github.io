@@ -1,4 +1,4 @@
-﻿/**
+/**
  * MEOWKING - Client Application & Router
  * -------------------------------------------------------------
  * Powers dynamic routing, markdown parsing, theme toggling,
@@ -18,7 +18,8 @@
       notes: window.SITE_NOTES || (window.SITE_CONTENT && window.SITE_CONTENT.notes) || [],
       projects: window.SITE_PROJECTS || (window.SITE_CONTENT && window.SITE_CONTENT.projects) || [],
       about: window.SITE_ABOUT || (window.SITE_CONTENT && window.SITE_CONTENT.about) || {},
-      coolLinks: window.SITE_LINKS || (window.SITE_CONTENT && window.SITE_CONTENT.coolLinks) || []
+      coolLinks: window.SITE_LINKS || (window.SITE_CONTENT && window.SITE_CONTENT.coolLinks) || [],
+      guestbook: window.SITE_GUESTBOOK || (window.SITE_CONTENT && window.SITE_CONTENT.guestbook) || []
     };
   }
 
@@ -178,6 +179,10 @@
       renderAbout(mainContent);
     } else if (route === 'links') {
       renderLinks(mainContent);
+    } else if (route === 'guestbook') {
+      renderGuestbook(mainContent);
+    } else if (route === 'archive') {
+      renderArchive(mainContent);
     } else {
       renderNotFound(mainContent);
     }
@@ -715,6 +720,746 @@
                 `).join('')}
               </div>
             </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // -----------------------------------------------------------
+  // RETRO BBS GUESTBOOK VIEW (Firebase Firestore + IRC Style)
+  // -----------------------------------------------------------
+  function renderGuestbook(container) {
+    const siteData = getSiteData();
+    const seedEntries = siteData.guestbook || [];
+
+    // Helper: Deterministic IRC Nickname Color
+    function getNickColorClass(name) {
+      let hash = 0;
+      const str = String(name || '');
+      for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return `nick-color-${Math.abs(hash) % 8}`;
+    }
+
+    // Local storage helpers (offline / fallback cache)
+    function getLocalEntries() {
+      try {
+        const raw = localStorage.getItem('meowking_guestbook_entries');
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveLocalEntries(entries) {
+      try {
+        localStorage.setItem('meowking_guestbook_entries', JSON.stringify(entries));
+      } catch (e) {
+        console.error('Failed to save to localStorage', e);
+      }
+    }
+
+    // Get Firestore database instance safely
+    function getDb() {
+      if (window.FIREBASE_DB) return window.FIREBASE_DB;
+      if (typeof firebase !== 'undefined' && firebase.firestore && firebase.apps.length > 0) {
+        window.FIREBASE_DB = firebase.firestore();
+        return window.FIREBASE_DB;
+      }
+      return null;
+    }
+
+    let firestoreEntries = [];
+    let isConnectedToFirestore = false;
+    let currentIcon = "🐱";
+    let searchQuery = "";
+    let selectedIconFilter = "all";
+    let selectedSortOrder = "newest";
+    let selectedDateFilter = "all";
+
+    // Build DOM structure
+    container.innerHTML = `
+      <div class="box">
+        <div class="box-header">
+          <span>retro bbs guestbook</span>
+          <span class="account-free-badge">⚡ account-free log</span>
+        </div>
+        <div class="box-content">
+
+          <div id="gb-alert-area"></div>
+
+          <!-- BBS Terminal ASCII Header -->
+          <div class="bbs-ascii-banner">
+            <div class="bbs-banner-row">
+              <div>
+                <strong>* * * MEOWKING BBS GUESTBOOK BUFFER * * *</strong>
+                <div style="font-size: 0.78rem; opacity: 0.85; margin-top: 2px;">
+                  COMMUNITY LOG · MULTI-USER CHAT LOG · PUBLIC CYBERSPACE ARCHIVE
+                </div>
+              </div>
+              <div id="bbs-live-indicator">
+                <span class="bbs-status-badge bbs-status-offline" id="bbs-status-text">CONNECTING TO FIREBASE...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- BBS Sign Prompt Console (Terminal Form) -->
+          <div class="bbs-prompt-box">
+            <div class="bbs-prompt-header">
+              <span class="bbs-prompt-header-title">&gt; SIGN_LOGBOOK.EXE --no-auth-required</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">v2.0 [LIVE SYNC]</span>
+            </div>
+
+            <div class="bbs-prompt-body">
+              <form id="guestbook-form" autocomplete="off">
+                <div class="bbs-terminal-input-row">
+                  <div class="bbs-terminal-field">
+                    <label for="gb-alias" class="bbs-terminal-label">
+                      <span>Handle / Alias <span class="req">*</span></span>
+                      <span style="font-size: 0.72rem;">(max 40 chars)</span>
+                    </label>
+                    <input type="text" id="gb-alias" class="bbs-terminal-input" placeholder="e.g. cyber_surfer, pixel_fox..." maxlength="40" required>
+                  </div>
+
+                  <div class="bbs-terminal-field">
+                    <label for="gb-website" class="bbs-terminal-label">
+                      <span>Personal Website / URL</span>
+                      <span style="font-size: 0.72rem;">(optional)</span>
+                    </label>
+                    <input type="text" id="gb-website" class="bbs-terminal-input" placeholder="e.g. yoursite.neocities.org or github.com/you" maxlength="120">
+                  </div>
+                </div>
+
+                <!-- Avatar Icon Selector -->
+                <div class="guestbook-icon-picker">
+                  <label class="bbs-terminal-label" style="margin-bottom: 4px;">
+                    <span>Choose Avatar Symbol:</span>
+                  </label>
+                  <div class="icon-selector-group" id="icon-selector-group">
+                    <button type="button" class="icon-choice-btn selected" data-icon="🐱">🐱</button>
+                    <button type="button" class="icon-choice-btn" data-icon="💾">💾</button>
+                    <button type="button" class="icon-choice-btn" data-icon="👾">👾</button>
+                    <button type="button" class="icon-choice-btn" data-icon="🌐">🌐</button>
+                    <button type="button" class="icon-choice-btn" data-icon="📟">📟</button>
+                    <button type="button" class="icon-choice-btn" data-icon="☕">☕</button>
+                    <button type="button" class="icon-choice-btn" data-icon="⚡">⚡</button>
+                    <button type="button" class="icon-choice-btn" data-icon="🕹️">🕹️</button>
+                    <button type="button" class="icon-choice-btn" data-icon="🔮">🔮</button>
+                    <button type="button" class="icon-choice-btn" data-icon="⭐">⭐</button>
+                  </div>
+                </div>
+
+                <!-- Message Textarea -->
+                <div class="bbs-terminal-field" style="margin-bottom: 12px;">
+                  <label for="gb-message" class="bbs-terminal-label">
+                    <span>Message / Comment <span class="req">*</span></span>
+                    <span id="char-counter" class="char-counter">500 characters remaining</span>
+                  </label>
+                  <textarea id="gb-message" class="bbs-terminal-textarea" placeholder="&gt; Type greeting or comment to leave on the public logbook..." maxlength="500" required></textarea>
+                </div>
+
+                <div class="guestbook-footer-row">
+                  <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted);">
+                    ⚡ Transmitted immediately to Firebase Firestore. Markdown supported.
+                  </div>
+                  <button type="submit" id="gb-submit-btn" class="bbs-submit-btn">
+                    <span>[ ↵ TRANSMIT ENTRY ]</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- BBS Multi-Filter & Search Toolbar -->
+          <div class="bbs-filter-panel">
+            <div class="bbs-filter-row-top">
+              <div class="bbs-search-box">
+                <span class="bbs-search-icon">🔍</span>
+                <input type="text" id="gb-search-input" class="bbs-search-input" placeholder="Search by alias, message, or website...">
+              </div>
+
+              <div class="bbs-filter-dropdowns">
+                <!-- Icon Filter -->
+                <div class="bbs-select-wrapper">
+                  <span>Icon:</span>
+                  <select id="gb-icon-filter" class="bbs-select">
+                    <option value="all">All Icons</option>
+                    <option value="🐱">🐱 Cat</option>
+                    <option value="💾">💾 Floppy</option>
+                    <option value="👾">👾 Alien</option>
+                    <option value="🌐">🌐 Web</option>
+                    <option value="📟">📟 Pager</option>
+                    <option value="☕">☕ Coffee</option>
+                    <option value="⚡">⚡ Bolt</option>
+                    <option value="🕹️">🕹️ Joy</option>
+                    <option value="🔮">🔮 Orb</option>
+                    <option value="⭐">⭐ Star</option>
+                  </select>
+                </div>
+
+                <!-- Sort Order -->
+                <div class="bbs-select-wrapper">
+                  <span>Sort:</span>
+                  <select id="gb-sort-select" class="bbs-select">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                  </select>
+                </div>
+
+                <!-- Date Range Filter -->
+                <div class="bbs-select-wrapper">
+                  <span>Time:</span>
+                  <select id="gb-date-filter" class="bbs-select">
+                    <option value="all">All Time</option>
+                    <option value="7days">Past 7 Days</option>
+                    <option value="30days">Past 30 Days</option>
+                    <option value="thisYear">This Year</option>
+                  </select>
+                </div>
+
+                <!-- Quick Action Buttons -->
+                <button type="button" id="btn-export-gb" class="btn-retro-secondary" title="Export entries to JSON file">💾 Export</button>
+                <button type="button" id="btn-refresh-gb" class="btn-retro-secondary" title="Reload from Firestore">🔄 Sync</button>
+              </div>
+            </div>
+
+            <!-- Filter Status Line -->
+            <div class="bbs-filter-info-bar">
+              <span id="gb-count-indicator">Loading entries...</span>
+              <span id="gb-filter-clear-span" style="display: none;">
+                Filtered view active — <a href="javascript:void(0)" id="clear-all-filters-btn" class="bbs-filter-clear-link">Reset filters</a>
+              </span>
+            </div>
+          </div>
+
+          <!-- BBS / IRC Log Stream Container -->
+          <div class="bbs-log-feed" id="guestbook-feed-container">
+            <div style="padding: 24px; text-align: center; color: var(--text-muted); font-family: var(--font-mono);">
+              Connecting to Firebase Firestore buffer...
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    // Date range filter helper
+    function matchesDateFilter(timestampStr, filter) {
+      if (filter === 'all' || !timestampStr) return true;
+      try {
+        const entryDate = new Date(timestampStr.replace(' ', 'T'));
+        if (isNaN(entryDate.getTime())) return true;
+        const now = new Date();
+        const diffMs = now - entryDate;
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        if (filter === '7days') return diffDays <= 7;
+        if (filter === '30days') return diffDays <= 30;
+        if (filter === 'thisYear') return entryDate.getFullYear() === now.getFullYear();
+      } catch (e) {
+        return true;
+      }
+      return true;
+    }
+
+    // Combine cloud, local, and seed entries
+    function getAllCombinedEntries() {
+      // If we have live Firestore entries, use them as primary
+      if (firestoreEntries && firestoreEntries.length > 0) {
+        return firestoreEntries;
+      }
+
+      // Check cached Firestore or local storage entries
+      const locals = getLocalEntries();
+      if (locals && locals.length > 0) {
+        return [...locals, ...seedEntries];
+      }
+
+      return seedEntries;
+    }
+
+    // Render the BBS / IRC Log Feed
+    function renderEntriesFeed() {
+      const feedEl = document.getElementById('guestbook-feed-container');
+      const countEl = document.getElementById('gb-count-indicator');
+      const clearSpan = document.getElementById('gb-filter-clear-span');
+      if (!feedEl) return;
+
+      const all = getAllCombinedEntries();
+      const query = searchQuery.toLowerCase().trim();
+
+      const hasActiveFilter = Boolean(query || selectedIconFilter !== 'all' || selectedDateFilter !== 'all');
+      if (clearSpan) {
+        clearSpan.style.display = hasActiveFilter ? 'inline' : 'none';
+      }
+
+      // Filter entries
+      let filtered = all.filter(item => {
+        // Search query filter
+        if (query) {
+          const matchAlias = (item.alias || '').toLowerCase().includes(query);
+          const matchMsg = (item.message || '').toLowerCase().includes(query);
+          const matchWeb = (item.website || '').toLowerCase().includes(query);
+          if (!matchAlias && !matchMsg && !matchWeb) return false;
+        }
+
+        // Icon filter
+        if (selectedIconFilter !== 'all') {
+          if (item.icon !== selectedIconFilter) return false;
+        }
+
+        // Date filter
+        if (selectedDateFilter !== 'all') {
+          if (!matchesDateFilter(item.timestamp, selectedDateFilter)) return false;
+        }
+
+        return true;
+      });
+
+      // Sort entries
+      filtered.sort((a, b) => {
+        const timeA = new Date(String(a.timestamp || '').replace(' ', 'T')).getTime() || 0;
+        const timeB = new Date(String(b.timestamp || '').replace(' ', 'T')).getTime() || 0;
+        return selectedSortOrder === 'oldest' ? timeA - timeB : timeB - timeA;
+      });
+
+      if (countEl) {
+        countEl.textContent = `Showing ${filtered.length} of ${all.length} entries (${selectedSortOrder === 'newest' ? 'newest first' : 'oldest first'})`;
+      }
+
+      if (filtered.length === 0) {
+        feedEl.innerHTML = `
+          <div style="padding: 30px 20px; text-align: center; color: var(--text-muted); font-family: var(--font-mono);">
+            [NO MATCHING LOG ENTRIES FOUND IN BUFFER]<br>
+            <span style="font-size: 0.8rem; margin-top: 6px; display: inline-block;">
+              Try modifying your search or <a href="javascript:void(0)" id="feed-clear-filters-link" style="color: #38bdf8;">clearing active filters</a>.
+            </span>
+          </div>
+        `;
+        const link = document.getElementById('feed-clear-filters-link');
+        if (link) {
+          link.addEventListener('click', resetAllFilters);
+        }
+        return;
+      }
+
+      const totalCount = all.length;
+      feedEl.innerHTML = filtered.map((entry, index) => {
+        const entryNum = String(selectedSortOrder === 'newest' ? totalCount - index : index + 1).padStart(2, '0');
+        const nickColorClass = getNickColorClass(entry.alias);
+
+        // Format clean timestamp
+        const tsDisplay = entry.timestamp ? entry.timestamp.slice(0, 16) : '2026-09-15 12:00';
+
+        // Clean website link if present
+        let websiteChipHtml = '';
+        if (entry.website) {
+          let url = entry.website.trim();
+          if (!/^https?:\/\//i.test(url) && !url.startsWith('#')) {
+            url = 'https://' + url;
+          }
+          const displayUrl = escapeHtml(entry.website.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''));
+          websiteChipHtml = `
+            <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="bbs-site-link" title="Visit ${escapeHtml(entry.alias)}'s website">
+              🌐 ${displayUrl} ↗
+            </a>
+          `;
+        }
+
+        const formattedMsg = formatInlineMarkdown(escapeHtml(entry.message));
+
+        let sysopReplyHtml = '';
+        if (entry.adminReply) {
+          sysopReplyHtml = `
+            <div class="bbs-sysop-reply">
+              <span class="bbs-sysop-tag">*** [sysop note]:</span>
+              ${formatInlineMarkdown(escapeHtml(entry.adminReply))}
+            </div>
+          `;
+        }
+
+        return `
+          <div class="bbs-log-entry" id="entry-${entry.id}">
+            <div class="bbs-log-meta-line">
+              <span class="bbs-num">#${entryNum}</span>
+              <span class="bbs-ts">[${escapeHtml(tsDisplay)}]</span>
+              <span class="bbs-icon-tag">${entry.icon || '🐱'}</span>
+              <span class="bbs-nick ${nickColorClass}">&lt;${escapeHtml(entry.alias)}&gt;</span>
+              ${websiteChipHtml}
+            </div>
+            <div class="bbs-log-msg">${formattedMsg}</div>
+            ${sysopReplyHtml}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Reset all filter controls helper
+    function resetAllFilters() {
+      searchQuery = '';
+      selectedIconFilter = 'all';
+      selectedSortOrder = 'newest';
+      selectedDateFilter = 'all';
+
+      const sInput = document.getElementById('gb-search-input');
+      const iSelect = document.getElementById('gb-icon-filter');
+      const soSelect = document.getElementById('gb-sort-select');
+      const dSelect = document.getElementById('gb-date-filter');
+
+      if (sInput) sInput.value = '';
+      if (iSelect) iSelect.value = 'all';
+      if (soSelect) soSelect.value = 'newest';
+      if (dSelect) dSelect.value = 'all';
+
+      renderEntriesFeed();
+    }
+
+    const resetFiltersBtn = document.getElementById('clear-all-filters-btn');
+    if (resetFiltersBtn) {
+      resetFiltersBtn.addEventListener('click', resetAllFilters);
+    }
+
+    // Update connection status badge
+    function updateConnectionStatus(isLive, customText) {
+      const statusEl = document.getElementById('bbs-status-text');
+      if (!statusEl) return;
+
+      if (isLive) {
+        statusEl.className = 'bbs-status-badge bbs-status-live';
+        statusEl.textContent = customText || 'LIVE FIREBASE SYNC';
+      } else {
+        statusEl.className = 'bbs-status-badge bbs-status-offline';
+        statusEl.textContent = customText || 'LOCAL BUFFER (OFFLINE)';
+      }
+    }
+
+    // Setup Firebase Real-time Firestore Listener
+    function setupFirestoreListener() {
+      const db = getDb();
+      if (!db) {
+        console.warn("Firestore not available yet. Using local entries.");
+        updateConnectionStatus(false, 'LOCAL STORAGE MODE');
+        renderEntriesFeed();
+        return;
+      }
+
+      try {
+        updateConnectionStatus(false, 'CONNECTING...');
+
+        // Subscribe to guestbook collection in real-time
+        db.collection('guestbook').onSnapshot((snapshot) => {
+          isConnectedToFirestore = true;
+          updateConnectionStatus(true, 'LIVE FIREBASE SYNC');
+
+          const entries = [];
+          snapshot.forEach((doc) => {
+            const d = doc.data();
+            let tsStr = d.timestamp;
+            if (!tsStr && d.createdAt && typeof d.createdAt.toDate === 'function') {
+              const dateObj = d.createdAt.toDate();
+              const pad = n => String(n).padStart(2, '0');
+              tsStr = `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())} ${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}:${pad(dateObj.getSeconds())}`;
+            }
+
+            entries.push({
+              id: doc.id,
+              alias: d.alias || 'anonymous',
+              icon: d.icon || '🐱',
+              website: d.website || null,
+              timestamp: tsStr || '2026-09-15 12:00:00',
+              message: d.message || '',
+              adminReply: d.adminReply || null,
+              createdAt: d.createdAt
+            });
+          });
+
+          // If collection is empty, include seed entries so the guestbook isn't empty
+          if (entries.length === 0) {
+            firestoreEntries = [...seedEntries];
+          } else {
+            firestoreEntries = entries;
+          }
+
+          // Cache to localStorage for offline fallback
+          try {
+            localStorage.setItem('meowking_guestbook_cloud_cache', JSON.stringify(firestoreEntries));
+          } catch (e) {}
+
+          renderEntriesFeed();
+        }, (error) => {
+          console.warn("Firestore listener error (falling back to cached data):", error);
+          updateConnectionStatus(false, 'FIRESTORE OFFLINE');
+          renderEntriesFeed();
+        });
+      } catch (err) {
+        console.error("Failed to attach Firestore listener:", err);
+        updateConnectionStatus(false, 'FIRESTORE ERROR');
+        renderEntriesFeed();
+      }
+    }
+
+    // Icon Selector setup
+    const iconButtons = container.querySelectorAll('.icon-choice-btn');
+    iconButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        iconButtons.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        currentIcon = btn.getAttribute('data-icon') || '🐱';
+      });
+    });
+
+    // Character Counter
+    const messageInput = document.getElementById('gb-message');
+    const charCounter = document.getElementById('char-counter');
+    if (messageInput && charCounter) {
+      messageInput.addEventListener('input', () => {
+        const remaining = 500 - messageInput.value.length;
+        charCounter.textContent = `${remaining} characters remaining`;
+        charCounter.style.color = remaining < 50 ? '#f87171' : 'var(--text-muted)';
+      });
+    }
+
+    // Search input listener
+    const searchInput = document.getElementById('gb-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value;
+        renderEntriesFeed();
+      });
+    }
+
+    // Icon filter listener
+    const iconSelect = document.getElementById('gb-icon-filter');
+    if (iconSelect) {
+      iconSelect.addEventListener('change', (e) => {
+        selectedIconFilter = e.target.value;
+        renderEntriesFeed();
+      });
+    }
+
+    // Sort order listener
+    const sortSelect = document.getElementById('gb-sort-select');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', (e) => {
+        selectedSortOrder = e.target.value;
+        renderEntriesFeed();
+      });
+    }
+
+    // Date filter listener
+    const dateSelect = document.getElementById('gb-date-filter');
+    if (dateSelect) {
+      dateSelect.addEventListener('change', (e) => {
+        selectedDateFilter = e.target.value;
+        renderEntriesFeed();
+      });
+    }
+
+    // Refresh button
+    const refreshBtn = document.getElementById('btn-refresh-gb');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        setupFirestoreListener();
+        showAlert("Syncing latest log entries from Firebase...", "success");
+      });
+    }
+
+    // Export Log button
+    const exportBtn = document.getElementById('btn-export-gb');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        const entries = getAllCombinedEntries();
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(entries, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `meowking_guestbook_${new Date().toISOString().slice(0, 10)}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+      });
+    }
+
+    // Alert helper
+    function showAlert(msg, type) {
+      const alertArea = document.getElementById('gb-alert-area');
+      if (!alertArea) return;
+      alertArea.innerHTML = `
+        <div class="guestbook-alert guestbook-alert-${type}">
+          ${escapeHtml(msg)}
+        </div>
+      `;
+      setTimeout(() => {
+        if (alertArea) alertArea.innerHTML = '';
+      }, 5000);
+    }
+
+    // Form Submission Handler (Transmits to Firebase Firestore)
+    const form = document.getElementById('guestbook-form');
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const aliasInput = document.getElementById('gb-alias');
+        const websiteInput = document.getElementById('gb-website');
+        const msgInput = document.getElementById('gb-message');
+        const submitBtn = document.getElementById('gb-submit-btn');
+
+        const alias = (aliasInput ? aliasInput.value : '').trim();
+        let website = (websiteInput ? websiteInput.value : '').trim();
+        const message = (msgInput ? msgInput.value : '').trim();
+
+        if (!alias) {
+          showAlert("Please enter your alias or nickname.", "error");
+          aliasInput && aliasInput.focus();
+          return;
+        }
+
+        if (!message) {
+          showAlert("Please enter a message or comment.", "error");
+          msgInput && msgInput.focus();
+          return;
+        }
+
+        // Clean website
+        if (website && !/^https?:\/\//i.test(website) && !website.startsWith('#')) {
+          website = 'https://' + website;
+        }
+
+        // Format clean timestamp
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+        const newEntry = {
+          alias: alias,
+          icon: currentIcon,
+          website: website || null,
+          timestamp: timestamp,
+          message: message,
+          adminReply: null
+        };
+
+        // Disable button while transmitting
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = `<span>[ TRANSMITTING... ]</span>`;
+        }
+
+        const db = getDb();
+        let cloudSuccess = false;
+
+        if (db) {
+          try {
+            const serverTs = (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
+              ? firebase.firestore.FieldValue.serverTimestamp()
+              : new Date();
+
+            const docRef = await db.collection('guestbook').add({
+              ...newEntry,
+              createdAt: serverTs
+            });
+
+            newEntry.id = docRef.id;
+            cloudSuccess = true;
+          } catch (err) {
+            console.warn("Could not save to Firestore directly (offline or rules restricted), saving to local buffer:", err);
+          }
+        }
+
+        // Always save to local backup as well
+        if (!newEntry.id) {
+          newEntry.id = 'user-' + Date.now();
+        }
+        const locals = getLocalEntries();
+        locals.unshift(newEntry);
+        saveLocalEntries(locals);
+
+        // Reset form
+        form.reset();
+        if (charCounter) {
+          charCounter.textContent = '500 characters remaining';
+          charCounter.style.color = 'var(--text-muted)';
+        }
+
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<span>[ ↵ TRANSMIT ENTRY ]</span>`;
+        }
+
+        // Reset search query to show newest entry
+        searchQuery = '';
+        if (searchInput) searchInput.value = '';
+        renderEntriesFeed();
+
+        // Highlight new entry
+        setTimeout(() => {
+          const newEl = document.getElementById(`entry-${newEntry.id}`);
+          if (newEl) {
+            newEl.classList.add('bbs-highlight-new');
+            newEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 150);
+
+        if (cloudSuccess) {
+          showAlert("✓ Transmitted! Your entry is now permanently broadcast in the live Firebase guestbook.", "success");
+        } else {
+          showAlert("✓ Saved to local buffer! (Live Firebase synchronization pending).", "success");
+        }
+      });
+    }
+
+    // Connect to Firestore and start listening
+    setupFirestoreListener();
+  }
+
+  // -----------------------------------------------------------
+  // ARCHIVE VIEW (Grouped by Year)
+  // -----------------------------------------------------------
+  function renderArchive(container) {
+    const siteData = getSiteData();
+    const articles = siteData.articles || [];
+    const projects = siteData.projects || [];
+    const notes = siteData.notes || [];
+
+    // Aggregate all items with unified schema
+    const allItems = [
+      ...articles.map(a => ({ type: 'article', title: a.title, date: a.date, link: `#/articles/${a.id}`, badge: 'article' })),
+      ...projects.map(p => ({ type: 'project', title: p.title, date: p.date || (p.year ? `${p.year}-01-01` : '2026-01-01'), link: p.demo || p.github || '#/projects', badge: 'project' })),
+      ...notes.map((n, i) => ({ type: 'note', title: n.content.slice(0, 60) + '...', date: n.date, link: '#/notes', badge: 'note' }))
+    ];
+
+    // Group items by year
+    const byYear = {};
+    allItems.forEach(item => {
+      const yr = item.date ? item.date.slice(0, 4) : '2026';
+      if (!byYear[yr]) byYear[yr] = [];
+      byYear[yr].push(item);
+    });
+
+    const years = Object.keys(byYear).sort().reverse();
+
+    container.innerHTML = `
+      <div class="box">
+        <div class="box-header">chronological site archive</div>
+        <div class="box-content">
+          <p style="color: var(--text-muted); margin-bottom: 16px;">
+            A complete historical log of all articles, projects, and notes published on meowking.
+          </p>
+
+          ${years.map(yr => `
+            <h3 class="year-header">${yr} (${byYear[yr].length})</h3>
+            <ul class="writings-list" style="margin-bottom: 20px;">
+              ${byYear[yr].map(item => `
+                <li class="writing-item" style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <span class="tag" style="font-size: 0.75rem; margin-right: 6px;">${item.badge}</span>
+                    <a href="${item.link}" class="writing-title-link">${escapeHtml(item.title)}</a>
+                  </div>
+                  <span class="writing-meta">${escapeHtml(item.date)}</span>
+                </li>
+              `).join('')}
+            </ul>
           `).join('')}
         </div>
       </div>

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * MEOWKING - Site Configuration & Settings
  * -------------------------------------------------------------
  * Edit this file to customize site title, tagline, avatar,
@@ -20,13 +20,14 @@ window.SITE_CONFIG = {
     { id: "articles", label: "articles", href: "#/articles" },
     { id: "projects", label: "projects", href: "#/projects" },
     { id: "notes", label: "notes", href: "#/notes" },
+    { id: "guestbook", label: "guestbook", href: "#/guestbook" },
     { id: "about", label: "about", href: "#/about" },
     { id: "links", label: "links", href: "#/links" }
   ],
 
   // Stats displayed in left sidebar
   siteStats: {
-    pages: "07",
+    pages: "08",
     articlesCount: "auto", // "auto" automatically counts from articles.js
     visitorsBase: 1337,    // Base counter; increments in browser localStorage
     bugs: "&infin;"

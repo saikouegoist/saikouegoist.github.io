@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="dark">
 
 <head>
@@ -50,6 +50,7 @@
         <li><a href="#/articles" data-route="articles">articles</a></li>
         <li><a href="#/projects" data-route="projects">projects</a></li>
         <li><a href="#/notes" data-route="notes">notes</a></li>
+        <li><a href="#/guestbook" data-route="guestbook">guestbook</a></li>
         <li><a href="#/about" data-route="about">about</a></li>
         <li><a href="#/links" data-route="links">links</a></li>
       </ul>
@@ -69,6 +70,7 @@
               <li><a href="#/articles" data-route="articles">articles</a></li>
               <li><a href="#/projects" data-route="projects">projects</a></li>
               <li><a href="#/notes" data-route="notes">notes</a></li>
+              <li><a href="#/guestbook" data-route="guestbook">guestbook</a></li>
               <li><a href="#/about" data-route="about">about me</a></li>
               <li><a href="#/links" data-route="links">cool links</a></li>
             </ul>
@@ -160,6 +162,7 @@
         <a href="#/articles">articles</a> |
         <a href="#/projects">projects</a> |
         <a href="#/notes">notes</a> |
+        <a href="#/guestbook">guestbook</a> |
         <a href="#/about">about</a> |
         <a href="#/links">links</a>
       </div>
@@ -172,10 +175,15 @@
   <script src="data/articles.js"></script>
   <script src="data/notes.js"></script>
   <script src="data/projects.js"></script>
+  <script src="data/guestbook.js"></script>
   <script src="data/about.js"></script>
   <script src="data/links.js"></script>
   <!-- Content aggregator bridge -->
   <script src="content.js"></script>
+  <!-- Firebase SDKs (Static GitHub Pages Compatible) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="data/firebase-config.js"></script>
   <!-- Core Application -->
   <script src="app.js"></script>
 </body>

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * MEOWKING - Content Aggregator & Bridge
  * -------------------------------------------------------------
  * Your data is now organized into separate, easy-to-edit files inside the /data folder:
@@ -19,5 +19,6 @@ window.SITE_CONTENT = {
   get notes() { return window.SITE_NOTES || []; },
   get projects() { return window.SITE_PROJECTS || []; },
   get about() { return window.SITE_ABOUT || {}; },
-  get coolLinks() { return window.SITE_LINKS || []; }
+  get coolLinks() { return window.SITE_LINKS || []; },
+  get guestbook() { return window.SITE_GUESTBOOK || []; }
 };

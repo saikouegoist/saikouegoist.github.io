@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>reading article - meowking</title>
-  <meta name="description" content="Reading long-form content on meowking.">
+  <title>guestbook - meowking</title>
+  <meta name="description" content="Sign the retro guestbook, drop your alias, plug your personal website, and browse visitor comments.">
   <meta name="author" content="meowking">
   <link rel="icon" type="image/jpeg" href="assets/cat.jpg">
   <link rel="stylesheet" href="style.css">
 </head>
-<body data-page="article">
+<body data-page="guestbook">
   <div class="site-wrapper">
     
     <!-- Header -->
@@ -33,11 +33,13 @@
     <nav class="top-nav" aria-label="Main Navigation">
       <ul class="nav-list" id="top-nav-list">
         <li><a href="index.html" data-route="home">home</a></li>
-        <li><a href="articles.html" data-route="articles" class="active">articles</a></li>
+        <li><a href="articles.html" data-route="articles">articles</a></li>
         <li><a href="projects.html" data-route="projects">projects</a></li>
         <li><a href="notes.html" data-route="notes">notes</a></li>
+        <li><a href="guestbook.html" data-route="guestbook" class="active">guestbook</a></li>
         <li><a href="about.html" data-route="about">about</a></li>
         <li><a href="links.html" data-route="links">links</a></li>
+        <li><a href="archive.html" data-route="archive">archive</a></li>
       </ul>
     </nav>
 
@@ -51,11 +53,13 @@
           <div class="box-content">
             <ul class="sidebar-nav-list" id="sidebar-nav-list">
               <li><a href="index.html" data-route="home">home</a></li>
-              <li><a href="articles.html" data-route="articles" class="active">articles</a></li>
+              <li><a href="articles.html" data-route="articles">articles</a></li>
               <li><a href="projects.html" data-route="projects">projects</a></li>
               <li><a href="notes.html" data-route="notes">notes</a></li>
+              <li><a href="guestbook.html" data-route="guestbook" class="active">guestbook</a></li>
               <li><a href="about.html" data-route="about">about me</a></li>
               <li><a href="links.html" data-route="links">cool links</a></li>
+              <li><a href="archive.html" data-route="archive">archive</a></li>
             </ul>
           </div>
         </div>
@@ -64,10 +68,10 @@
           <div class="box-header">site stats</div>
           <div class="box-content">
             <ul class="stats-list" id="site-stats-list">
-              <li class="stat-item"><span class="stat-key">pages:</span><span class="stat-value" id="stat-pages">07</span></li>
-              <li class="stat-item"><span class="stat-key">articles:</span><span class="stat-value" id="stat-articles">02</span></li>
+              <li class="stat-item"><span class="stat-key">pages:</span><span class="stat-value" id="stat-pages">08</span></li>
+              <li class="stat-item"><span class="stat-key">articles:</span><span class="stat-value" id="stat-articles">04</span></li>
               <li class="stat-item"><span class="stat-key">visitors:</span><span class="stat-value" id="stat-visitors">001337</span></li>
-              <li class="stat-item"><span class="stat-key">bugs:</span><span class="stat-value" id="stat-bugs">∞</span></li>
+              <li class="stat-item"><span class="stat-key">bugs:</span><span class="stat-value" id="stat-bugs">&infin;</span></li>
             </ul>
           </div>
         </div>
@@ -81,9 +85,9 @@
         </div>
       </aside>
 
-      <!-- Center Column: Article Detail Reader -->
+      <!-- Center Column: Guestbook Content -->
       <section class="column-main" id="main-content" aria-live="polite">
-        <!-- Rendered dynamically by app.js based on ?id= -->
+        <!-- Injected dynamically by app.js -->
       </section>
 
       <!-- Right Column -->
@@ -93,7 +97,7 @@
           <div class="box-content">
             <p id="about-snippet-greeting"><strong>I'm meowking.</strong></p>
             <p id="about-snippet-bio">Interested in computers, cybersecurity, technology, the Internet and the weird things people do with them.</p>
-            <p><a href="about.html" class="more-link" id="about-snippet-link">more about me →</a></p>
+            <p><a href="about.html" class="more-link" id="about-snippet-link">more about me &rarr;</a></p>
           </div>
         </div>
 
@@ -116,21 +120,34 @@
 
     <!-- Footer -->
     <footer class="site-footer">
-      <p class="footer-copy" id="footer-copy">© 2026 meowking</p>
+      <p class="footer-copy" id="footer-copy">&copy; 2026 meowking</p>
       <p class="footer-tagline" id="footer-tagline">best viewed without expectations</p>
       <div class="footer-links">
         <a href="index.html">home</a> |
         <a href="articles.html">articles</a> |
         <a href="projects.html">projects</a> |
         <a href="notes.html">notes</a> |
+        <a href="guestbook.html">guestbook</a> |
         <a href="about.html">about</a> |
-        <a href="links.html">links</a>
+        <a href="links.html">links</a> |
+        <a href="archive.html">archive</a>
       </div>
     </footer>
 
   </div>
 
+  <script src="data/config.js"></script>
+  <script src="data/articles.js"></script>
+  <script src="data/notes.js"></script>
+  <script src="data/projects.js"></script>
+  <script src="data/guestbook.js"></script>
+  <script src="data/about.js"></script>
+  <script src="data/links.js"></script>
   <script src="content.js"></script>
+  <!-- Firebase SDKs (Static GitHub Pages Compatible) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="data/firebase-config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
