@@ -1,0 +1,70 @@
+rules_version = '2';
+
+/**
+ * MEOWKING - Firestore Security Rules (Guestbook)
+ * -------------------------------------------------------------
+ * The Firebase config in data/firebase-config.js (apiKey, projectId, etc.)
+ * is PUBLIC by design -- that's normal for a client-side Firebase app and
+ * is not a secret. The actual security boundary is these rules, enforced
+ * by Firebase's servers on every read/write, regardless of what the
+ * client-side JavaScript tries to do (client-side checks like <input
+ * maxlength> or the icon picker UI can always be bypassed by calling the
+ * Firestore SDK/REST API directly from a browser console).
+ *
+ * HOW TO APPLY:
+ * 1. Go to the Firebase Console -> your project -> Firestore Database -> Rules.
+ * 2. Paste the contents of this file in and click "Publish".
+ *    (Or, if you use the Firebase CLI: `firebase deploy --only firestore:rules`.)
+ *
+ * WHAT THIS PROTECTS AGAINST:
+ * - Anyone opening devtools and calling
+ *     firebase.firestore().collection('guestbook').add({...})
+ *   directly (bypassing the site's form) to inject arbitrary field values,
+ *   e.g. a malicious `icon` field used for stored XSS, or a forged
+ *   `adminReply` used to impersonate the site owner ("sysop spoofing").
+ * - Anyone updating or deleting other visitors' entries.
+ * - Oversized spam payloads that could run up Firestore usage/costs.
+ */
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /guestbook/{entryId} {
+      // Guestbook is public read-only content by design.
+      allow read: if true;
+
+      // Only allow creating brand-new entries, and only if every field is
+      // present, of the right type, and within sane length limits.
+      allow create: if
+        request.resource.data.keys().hasOnly(
+          ['alias', 'icon', 'website', 'timestamp', 'message', 'adminReply', 'createdAt']
+        ) &&
+        request.resource.data.alias is string &&
+        request.resource.data.alias.size() > 0 &&
+        request.resource.data.alias.size() <= 40 &&
+        request.resource.data.message is string &&
+        request.resource.data.message.size() > 0 &&
+        request.resource.data.message.size() <= 500 &&
+        request.resource.data.icon in
+          ['🐱', '💾', '👾', '🌐', '📟', '☕', '⚡', '🕹️', '🔮', '⭐'] &&
+        (
+          request.resource.data.website == null ||
+          (request.resource.data.website is string && request.resource.data.website.size() <= 120)
+        ) &&
+        // adminReply must never be set by a public visitor -- only the
+        // site owner should be able to add one, e.g. from the Firebase
+        // Console or a trusted admin tool, not this public-facing form.
+        request.resource.data.adminReply == null &&
+        request.resource.data.createdAt == request.time;
+
+      // Never allow public updates or deletes. This is what stops anyone
+      // from editing/deleting someone else's entry, or attaching a forged
+      // "sysop" reply to an existing entry after the fact.
+      allow update, delete: if false;
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

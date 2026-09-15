@@ -11,6 +11,10 @@
   // Article content cache for fetched markdown files
   const articleContentCache = {};
 
+  // Cleanup callback for any "reading mode" UI (e.g. the scroll progress
+  // bar) set up by the current route, torn down before the next route renders.
+  let readingModeCleanup = null;
+
   function getSiteData() {
     return {
       siteInfo: window.SITE_CONFIG || (window.SITE_CONTENT && window.SITE_CONTENT.siteInfo) || {},
@@ -164,11 +168,23 @@
 
     updateActiveNav(route.split('/')[0]);
 
+    // Tear down any reading-mode UI (e.g. the scroll progress bar) left
+    // over from the previous route before rendering the new one.
+    if (readingModeCleanup) {
+      readingModeCleanup();
+      readingModeCleanup = null;
+    }
+
+    // Distraction-free reading layout: hides the left/right sidebars and
+    // footer, keeps the header/top-nav, and widens the article pane.
+    const isArticleReading = route.startsWith('articles/');
+    document.body.classList.toggle('reading-mode', isArticleReading);
+
     if (route === 'home' || route === '') {
       renderHome(mainContent);
     } else if (route === 'articles') {
       renderArticles(mainContent);
-    } else if (route.startsWith('articles/')) {
+    } else if (isArticleReading) {
       const articleId = route.replace('articles/', '');
       renderArticleDetail(mainContent, articleId);
     } else if (route === 'notes') {
@@ -181,8 +197,6 @@
       renderLinks(mainContent);
     } else if (route === 'guestbook') {
       renderGuestbook(mainContent);
-    } else if (route === 'archive') {
-      renderArchive(mainContent);
     } else {
       renderNotFound(mainContent);
     }
@@ -315,6 +329,8 @@
             </div>
           </div>
 
+          <p class="filter-count-line">Showing <span id="articles-count">${articles.length}</span> result(s)</p>
+
           <div id="articles-container">
             ${renderArticleList(articles)}
           </div>
@@ -405,28 +421,34 @@
       <div class="box article-full">
         <div class="box-header">reading: ${escapeHtml(article.title)}</div>
         <div class="box-content">
-          <a href="#/articles" class="back-btn">&larr; back to articles</a>
-          
-          <h1 class="article-full-title">${escapeHtml(article.title)}</h1>
-          <div class="article-card-meta">
-            <span>Published: ${article.date}</span>
-            ${article.readTime ? `<span>Reading time: ${escapeHtml(article.readTime)}</span>` : ''}
-          </div>
-          
-          <div class="tag-list" style="margin-bottom: 16px;">
-            ${(article.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join('')}
-          </div>
+          <div class="reading-pane-inner">
+            <a href="#/articles" class="back-btn">&larr; back to articles</a>
 
-          <div class="article-body" id="article-markdown-body">
-            <p style="color: var(--text-muted);">Loading article content...</p>
-          </div>
+            <h1 class="article-full-title">${escapeHtml(article.title)}</h1>
+            <div class="article-card-meta">
+              <span>Published: ${article.date}</span>
+              ${article.readTime ? `<span>Reading time: ${escapeHtml(article.readTime)}</span>` : ''}
+            </div>
 
-          <div class="more-link-bar" style="margin-top: 24px;">
-            <a href="#/articles" class="back-btn">&larr; back to all writings</a>
+            <div class="tag-list" style="margin-bottom: 16px;">
+              ${(article.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join('')}
+            </div>
+
+            <div class="article-body" id="article-markdown-body">
+              <p style="color: var(--text-muted);">Loading article content...</p>
+            </div>
+
+            <div class="more-link-bar" style="margin-top: 24px;">
+              <a href="#/articles" class="back-btn">&larr; back to all writings</a>
+            </div>
           </div>
         </div>
       </div>
     `;
+
+    // Set up the reading progress bar for this article; renderRoute() will
+    // tear it down automatically when the visitor navigates away.
+    readingModeCleanup = setupReadingProgressBar();
 
     // Fetch markdown content from file if needed
     let rawContent = article.content || articleContentCache[article.id] || '';
@@ -458,6 +480,32 @@
     if (bodyEl) {
       bodyEl.innerHTML = parseMarkdown(rawContent);
     }
+  }
+
+  // Thin fixed progress bar along the top of the viewport that fills up as
+  // the visitor scrolls through the article. Returns a cleanup function
+  // that removes the listeners and the bar itself.
+  function setupReadingProgressBar() {
+    const bar = document.createElement('div');
+    bar.id = 'reading-progress-bar';
+    document.body.appendChild(bar);
+
+    const updateProgress = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = docHeight > 0 ? Math.min(100, Math.max(0, (scrollTop / docHeight) * 100)) : 0;
+      bar.style.width = pct + '%';
+    };
+
+    updateProgress();
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    window.addEventListener('resize', updateProgress);
+
+    return () => {
+      window.removeEventListener('scroll', updateProgress);
+      window.removeEventListener('resize', updateProgress);
+      bar.remove();
+    };
   }
 
   // -----------------------------------------------------------
@@ -496,6 +544,8 @@
               </select>
             </div>
           </div>
+
+          <p class="filter-count-line">Showing <span id="notes-count">${notes.length}</span> result(s)</p>
 
           <div class="notes-feed" id="notes-container">
             ${renderNoteList(notes)}
@@ -592,6 +642,8 @@
               </select>
             </div>
           </div>
+
+          <p class="filter-count-line">Showing <span id="projects-count">${projects.length}</span> result(s)</p>
 
           <div class="projects-grid" id="projects-container">
             ${renderProjectList(projects)}
@@ -774,10 +826,52 @@
     let firestoreEntries = [];
     let isConnectedToFirestore = false;
     let currentIcon = "🐱";
+    // Whitelist of avatar icons offered by the UI. Any guestbook entry whose
+    // `icon` field isn't one of these (e.g. crafted via a direct Firestore
+    // write bypassing the form) falls back to the default cat icon instead
+    // of being trusted/rendered as-is.
+    const ALLOWED_GB_ICONS = ['🐱', '💾', '👾', '🌐', '📟', '☕', '⚡', '🕹️', '🔮', '⭐'];
     let searchQuery = "";
     let selectedIconFilter = "all";
     let selectedSortOrder = "newest";
     let selectedDateFilter = "all";
+
+    // --- Client-side spam mitigation (cooldown + honeypot) ---
+    // NOTE: this is a UX deterrent only, not a security boundary -- anyone
+    // can bypass client JS entirely and call Firestore directly. The real
+    // enforcement lives in firestore.rules on the backend.
+    const GB_SUBMIT_COOLDOWN_MS = 45 * 1000; // 45 seconds between posts
+    const GB_LAST_SUBMIT_KEY = 'meowking_gb_last_submit';
+    const GB_SUBMIT_BTN_DEFAULT_HTML = '<span>[ ↵ TRANSMIT ENTRY ]</span>';
+    let cooldownIntervalId = null;
+
+    function getSubmitCooldownRemainingMs() {
+      const last = parseInt(localStorage.getItem(GB_LAST_SUBMIT_KEY), 10);
+      if (isNaN(last)) return 0;
+      return Math.max(0, GB_SUBMIT_COOLDOWN_MS - (Date.now() - last));
+    }
+
+    function startSubmitCooldownUI() {
+      const submitBtn = document.getElementById('gb-submit-btn');
+      if (!submitBtn) return;
+      if (cooldownIntervalId) clearInterval(cooldownIntervalId);
+
+      const tick = () => {
+        const remaining = getSubmitCooldownRemainingMs();
+        if (remaining <= 0) {
+          clearInterval(cooldownIntervalId);
+          cooldownIntervalId = null;
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = GB_SUBMIT_BTN_DEFAULT_HTML;
+          return;
+        }
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span>[ WAIT ${Math.ceil(remaining / 1000)}s ]</span>`;
+      };
+
+      tick();
+      cooldownIntervalId = setInterval(tick, 500);
+    }
 
     // Build DOM structure
     container.innerHTML = `
@@ -788,27 +882,20 @@
         </div>
         <div class="box-content">
 
-          <div id="gb-alert-area"></div>
-
-          <!-- BBS Terminal ASCII Header -->
           <div class="bbs-ascii-banner">
             <div class="bbs-banner-row">
-              <div>
-                <strong>* * * MEOWKING BBS GUESTBOOK BUFFER * * *</strong>
-                <div style="font-size: 0.78rem; opacity: 0.85; margin-top: 2px;">
-                  COMMUNITY LOG · MULTI-USER CHAT LOG · PUBLIC CYBERSPACE ARCHIVE
-                </div>
-              </div>
-              <div id="bbs-live-indicator">
-                <span class="bbs-status-badge bbs-status-offline" id="bbs-status-text">CONNECTING TO FIREBASE...</span>
-              </div>
+              <span>◈ MEOWKING GUESTBOOK BBS — public log buffer</span>
+              <span id="bbs-status-text" class="bbs-status-badge bbs-status-offline">CONNECTING...</span>
             </div>
           </div>
+
+          <div id="gb-alert-area"></div>
+          
 
           <!-- BBS Sign Prompt Console (Terminal Form) -->
           <div class="bbs-prompt-box">
             <div class="bbs-prompt-header">
-              <span class="bbs-prompt-header-title">&gt; SIGN_LOGBOOK.EXE --no-auth-required</span>
+              <span class="bbs-prompt-header-title">&gt; SIGN_LOGBOOK.EXE</span>
               <span style="font-size: 0.75rem; color: var(--text-muted);">v2.0 [LIVE SYNC]</span>
             </div>
 
@@ -820,7 +907,7 @@
                       <span>Handle / Alias <span class="req">*</span></span>
                       <span style="font-size: 0.72rem;">(max 40 chars)</span>
                     </label>
-                    <input type="text" id="gb-alias" class="bbs-terminal-input" placeholder="e.g. cyber_surfer, pixel_fox..." maxlength="40" required>
+                    <input type="text" id="gb-alias" class="bbs-terminal-input" placeholder="e.g. cyber_surfer" maxlength="40" required>
                   </div>
 
                   <div class="bbs-terminal-field">
@@ -828,8 +915,16 @@
                       <span>Personal Website / URL</span>
                       <span style="font-size: 0.72rem;">(optional)</span>
                     </label>
-                    <input type="text" id="gb-website" class="bbs-terminal-input" placeholder="e.g. yoursite.neocities.org or github.com/you" maxlength="120">
+                    <input type="text" id="gb-website" class="bbs-terminal-input" placeholder="e.g. github.com/you" maxlength="120">
                   </div>
+                </div>
+
+                <!-- Honeypot field: hidden from real users via CSS. Bots that
+                     blindly fill every input on the page will populate this,
+                     letting the submit handler silently ignore the entry. -->
+                <div class="gb-honeypot-field" aria-hidden="true">
+                  <label for="gb-hp-website2">Leave this field blank</label>
+                  <input type="text" id="gb-hp-website2" name="website2" tabindex="-1" autocomplete="off">
                 </div>
 
                 <!-- Avatar Icon Selector -->
@@ -854,7 +949,7 @@
                 <!-- Message Textarea -->
                 <div class="bbs-terminal-field" style="margin-bottom: 12px;">
                   <label for="gb-message" class="bbs-terminal-label">
-                    <span>Message / Comment <span class="req">*</span></span>
+                    <span>Message<span class="req">*</span></span>
                     <span id="char-counter" class="char-counter">500 characters remaining</span>
                   </label>
                   <textarea id="gb-message" class="bbs-terminal-textarea" placeholder="&gt; Type greeting or comment to leave on the public logbook..." maxlength="500" required></textarea>
@@ -1067,6 +1162,7 @@
           `;
         }
 
+        const safeIcon = ALLOWED_GB_ICONS.includes(entry.icon) ? entry.icon : '🐱';
         const formattedMsg = formatInlineMarkdown(escapeHtml(entry.message));
 
         let sysopReplyHtml = '';
@@ -1080,11 +1176,11 @@
         }
 
         return `
-          <div class="bbs-log-entry" id="entry-${entry.id}">
+          <div class="bbs-log-entry" id="entry-${escapeHtml(String(entry.id))}">
             <div class="bbs-log-meta-line">
               <span class="bbs-num">#${entryNum}</span>
               <span class="bbs-ts">[${escapeHtml(tsDisplay)}]</span>
-              <span class="bbs-icon-tag">${entry.icon || '🐱'}</span>
+              <span class="bbs-icon-tag">${escapeHtml(safeIcon)}</span>
               <span class="bbs-nick ${nickColorClass}">&lt;${escapeHtml(entry.alias)}&gt;</span>
               ${websiteChipHtml}
             </div>
@@ -1184,7 +1280,7 @@
           // Cache to localStorage for offline fallback
           try {
             localStorage.setItem('meowking_guestbook_cloud_cache', JSON.stringify(firestoreEntries));
-          } catch (e) {}
+          } catch (e) { }
 
           renderEntriesFeed();
         }, (error) => {
@@ -1304,6 +1400,25 @@
         const websiteInput = document.getElementById('gb-website');
         const msgInput = document.getElementById('gb-message');
         const submitBtn = document.getElementById('gb-submit-btn');
+        const honeypotInput = document.getElementById('gb-hp-website2');
+
+        // Honeypot: real visitors never see or fill this field. If it has a
+        // value, this is almost certainly a bot filling every input blindly.
+        // Pretend success so the bot doesn't learn its submission was rejected.
+        if (honeypotInput && honeypotInput.value.trim() !== '') {
+          console.warn('Guestbook honeypot triggered -- submission silently ignored.');
+          form.reset();
+          showAlert("✓ Transmitted! Your entry is now permanently broadcast in the live Firebase guestbook.", "success");
+          return;
+        }
+
+        // Client-side rate limit: block rapid-fire re-submissions.
+        const cooldownRemaining = getSubmitCooldownRemainingMs();
+        if (cooldownRemaining > 0) {
+          showAlert(`Whoa, slow down! You can post again in ${Math.ceil(cooldownRemaining / 1000)}s.`, "error");
+          startSubmitCooldownUI();
+          return;
+        }
 
         const alias = (aliasInput ? aliasInput.value : '').trim();
         let website = (websiteInput ? websiteInput.value : '').trim();
@@ -1382,10 +1497,10 @@
           charCounter.style.color = 'var(--text-muted)';
         }
 
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = `<span>[ ↵ TRANSMIT ENTRY ]</span>`;
-        }
+        // Start the post-submit cooldown (keeps the button disabled with a
+        // countdown instead of immediately allowing another post).
+        localStorage.setItem(GB_LAST_SUBMIT_KEY, String(Date.now()));
+        startSubmitCooldownUI();
 
         // Reset search query to show newest entry
         searchQuery = '';
@@ -1409,62 +1524,17 @@
       });
     }
 
+    // If the page was reloaded shortly after a previous submission, reflect
+    // the remaining cooldown on the button immediately instead of letting
+    // it look ready to submit again.
+    if (getSubmitCooldownRemainingMs() > 0) {
+      startSubmitCooldownUI();
+    }
+
     // Connect to Firestore and start listening
     setupFirestoreListener();
   }
 
-  // -----------------------------------------------------------
-  // ARCHIVE VIEW (Grouped by Year)
-  // -----------------------------------------------------------
-  function renderArchive(container) {
-    const siteData = getSiteData();
-    const articles = siteData.articles || [];
-    const projects = siteData.projects || [];
-    const notes = siteData.notes || [];
-
-    // Aggregate all items with unified schema
-    const allItems = [
-      ...articles.map(a => ({ type: 'article', title: a.title, date: a.date, link: `#/articles/${a.id}`, badge: 'article' })),
-      ...projects.map(p => ({ type: 'project', title: p.title, date: p.date || (p.year ? `${p.year}-01-01` : '2026-01-01'), link: p.demo || p.github || '#/projects', badge: 'project' })),
-      ...notes.map((n, i) => ({ type: 'note', title: n.content.slice(0, 60) + '...', date: n.date, link: '#/notes', badge: 'note' }))
-    ];
-
-    // Group items by year
-    const byYear = {};
-    allItems.forEach(item => {
-      const yr = item.date ? item.date.slice(0, 4) : '2026';
-      if (!byYear[yr]) byYear[yr] = [];
-      byYear[yr].push(item);
-    });
-
-    const years = Object.keys(byYear).sort().reverse();
-
-    container.innerHTML = `
-      <div class="box">
-        <div class="box-header">chronological site archive</div>
-        <div class="box-content">
-          <p style="color: var(--text-muted); margin-bottom: 16px;">
-            A complete historical log of all articles, projects, and notes published on meowking.
-          </p>
-
-          ${years.map(yr => `
-            <h3 class="year-header">${yr} (${byYear[yr].length})</h3>
-            <ul class="writings-list" style="margin-bottom: 20px;">
-              ${byYear[yr].map(item => `
-                <li class="writing-item" style="display: flex; justify-content: space-between; align-items: center;">
-                  <div>
-                    <span class="tag" style="font-size: 0.75rem; margin-right: 6px;">${item.badge}</span>
-                    <a href="${item.link}" class="writing-title-link">${escapeHtml(item.title)}</a>
-                  </div>
-                  <span class="writing-meta">${escapeHtml(item.date)}</span>
-                </li>
-              `).join('')}
-            </ul>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
 
   // 404 VIEW
   function renderNotFound(container) {
@@ -1536,7 +1606,15 @@
     text = text.replace(/`([^`]+)`/g, (_, c) => `<code>${escapeHtml(c)}</code>`);
     text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-    text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    // Only allow safe URL schemes for markdown-style links. This blocks
+    // javascript:, data:, vbscript:, etc. from being used to smuggle
+    // executable code in via user-submitted content (e.g. the guestbook).
+    text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, url) => {
+      const trimmedUrl = url.trim();
+      const isSafe = /^(https?:|mailto:|#|\/)/i.test(trimmedUrl);
+      const safeHref = isSafe ? trimmedUrl : '#';
+      return `<a href="${escapeHtml(safeHref)}" target="_blank" rel="noopener">${label}</a>`;
+    });
     return text;
   }
 

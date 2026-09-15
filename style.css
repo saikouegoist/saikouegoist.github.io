@@ -603,6 +603,58 @@ body {
   border: none;
 }
 
+/* --------------------------------------------------------------------------
+   Distraction-Free Reading Mode (Article Detail Page)
+   Hides the left/right sidebars and footer, keeps the header/top-nav, and
+   widens + centers the article pane for comfortable reading.
+   -------------------------------------------------------------------------- */
+body.reading-mode .site-wrapper {
+  max-width: 1080px;
+}
+
+body.reading-mode .column-left,
+body.reading-mode .column-right {
+  display: none;
+}
+
+body.reading-mode .main-grid {
+  grid-template-columns: 1fr;
+}
+
+body.reading-mode .site-footer {
+  display: none;
+}
+
+body.reading-mode .article-full .box-content {
+  padding: 30px clamp(16px, 5vw, 48px) 44px;
+}
+
+body.reading-mode .reading-pane-inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+body.reading-mode .article-full-title {
+  font-size: 2.1rem;
+}
+
+body.reading-mode .article-body {
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+/* Slim scroll progress bar shown only while reading an article. */
+#reading-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0%;
+  background: var(--link-color);
+  z-index: 999;
+  transition: width 0.12s ease-out;
+}
+
 /* Notes Section */
 .note-item {
   padding: 12px 0;
@@ -867,19 +919,6 @@ body {
   font-weight: bold;
 }
 
-.year-header {
-  font-family: var(--font-mono);
-  font-size: 1.15rem;
-  color: var(--text-main);
-  border-bottom: 1px solid var(--dotted-border);
-  padding-bottom: 4px;
-  margin: 20px 0 10px 0;
-  letter-spacing: 1px;
-}
-
-.year-header:first-child {
-  margin-top: 6px;
-}
 
 /* --------------------------------------------------------------------------
    Retro Filter Dropdown & Search Controls
@@ -895,6 +934,12 @@ body {
 .filter-controls-row .filter-input {
   flex: 1;
   min-width: 170px;
+}
+
+.filter-count-line {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 10px;
 }
 
 .filter-dropdown-wrapper {
@@ -1272,6 +1317,19 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+/* Honeypot field: visually hidden from real visitors (off-screen, not
+   display:none/hidden so it still "looks fillable" to naive bots that
+   scan the DOM), but never reachable via tab order. If it ever comes back
+   non-empty on submit, the entry is silently dropped as spam. */
+.gb-honeypot-field {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
 }
 
 .bbs-terminal-label {
