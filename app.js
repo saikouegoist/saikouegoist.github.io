@@ -779,7 +779,7 @@
   }
 
   // -----------------------------------------------------------
-  // RETRO BBS GUESTBOOK VIEW (Firebase Firestore + IRC Style)
+  // RETRO GUESTBOOK VIEW (Firebase Firestore + IRC Style)
   // -----------------------------------------------------------
   function renderGuestbook(container) {
     const siteData = getSiteData();
@@ -877,8 +877,7 @@
     container.innerHTML = `
       <div class="box">
         <div class="box-header">
-          <span>retro bbs guestbook</span>
-          <span class="account-free-badge">⚡ account-free log</span>
+          <span>retro guestbook</span>
         </div>
         <div class="box-content">
 
@@ -895,8 +894,8 @@
           <!-- BBS Sign Prompt Console (Terminal Form) -->
           <div class="bbs-prompt-box">
             <div class="bbs-prompt-header">
-              <span class="bbs-prompt-header-title">&gt; SIGN_LOGBOOK.EXE</span>
-              <span style="font-size: 0.75rem; color: var(--text-muted);">v2.0 [LIVE SYNC]</span>
+              <span class="bbs-prompt-header-title">&gt; SIGN_LOGBOOK</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">[LIVE SYNC]</span>
             </div>
 
             <div class="bbs-prompt-body">

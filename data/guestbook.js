@@ -13,7 +13,7 @@ window.SITE_GUESTBOOK = [
     icon: "🐱",
     website: "#/",
     timestamp: "2024-06-10 12:00:00",
-    message: "Guestbook officially opened! Leave a comment, drop your handle, and plug your site. Visitors from all over cyberspace are welcome.",
+    message: "Guestbook officially opened! Leave a comment, drop your handle, and plug your site. Visitors from all over spaces are welcome.",
     adminReply: null
   }
 ];
