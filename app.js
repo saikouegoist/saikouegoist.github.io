@@ -883,7 +883,7 @@
 
           <div class="bbs-ascii-banner">
             <div class="bbs-banner-row">
-              <span>◈ MEOWKING GUESTBOOK BBS — public log buffer</span>
+              <span>◈ MEOWKING GUESTBOOK — public log buffer</span>
               <span id="bbs-status-text" class="bbs-status-badge bbs-status-offline">CONNECTING...</span>
             </div>
           </div>
