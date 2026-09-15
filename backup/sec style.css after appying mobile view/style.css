@@ -1569,7 +1569,7 @@ body.reading-mode .article-body {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 8px;
   margin-bottom: 4px;
 }
 
@@ -1621,15 +1621,14 @@ body.reading-mode .article-body {
 }
 
 .bbs-site-link {
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   color: #93c5fd;
   background: rgba(147, 197, 253, 0.1);
   border: 1px solid rgba(147, 197, 253, 0.25);
-  padding: 1px 5px;
+  padding: 1px 6px;
   text-decoration: none;
   transition: all 0.1s ease;
-  margin-left: 4px;
-  white-space: nowrap;
+  margin-left: auto;
 }
 
 [data-theme="light"] .bbs-site-link {
