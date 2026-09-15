@@ -13,7 +13,6 @@
  *     readTime: "4 min read",
  *     tags: ["security", "retro"],
  *     excerpt: "Brief one-line summary of the post.",
- *     file: "articles/my-post.md"  // Path to your markdown file!
  *   },
  *
  * HOW TO REMOVE AN ARTICLE:
@@ -29,6 +28,5 @@ window.SITE_ARTICLES = [
     readTime: "3 min read",
     tags: ["retro", "css", "design"],
     excerpt: "Exploring the tactile charm of beveled buttons, royal blue headers, and dotted dividing lines.",
-    file: "articles/retro-web-aesthetics.md"
   },
 ];

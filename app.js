@@ -406,7 +406,6 @@
           <div class="article-card-meta">
             <span>Published: ${article.date}</span>
             ${article.readTime ? `<span>Reading time: ${escapeHtml(article.readTime)}</span>` : ''}
-            ${article.file ? `<span>Source: <code>${escapeHtml(article.file)}</code></span>` : ''}
           </div>
           
           <div class="tag-list" style="margin-bottom: 16px;">
