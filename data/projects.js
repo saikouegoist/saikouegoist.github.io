@@ -1,5 +1,5 @@
 ﻿/**
- * MEWOKING - Projects & Portfolio
+ * MEOWKING - Projects & Portfolio
  * -------------------------------------------------------------
  * HOW TO ADD A PROJECT:
  * Copy the template below and paste it into `window.SITE_PROJECTS`:
@@ -22,8 +22,8 @@
 
 window.SITE_PROJECTS = [
   // {
-  //   id: "mewoking-template",
-  //   title: "mewoking Template",
+  //   id: "meowking-template",
+  //   title: "meowking Template",
   //   year: "2026",
   //   date: "2026-09-15",
   //   status: "Active",

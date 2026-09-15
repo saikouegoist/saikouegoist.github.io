@@ -1,5 +1,5 @@
 ﻿/**
- * MEWOKING - Quick Notes Collection
+ * MEOWKING - Quick Notes Collection
  * -------------------------------------------------------------
  * HOW TO ADD A NOTE:
  * Copy the template below and paste it at the TOP of `window.SITE_NOTES`:

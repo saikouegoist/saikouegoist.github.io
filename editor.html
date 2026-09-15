@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>mewoking - Content Studio</title>
+  <title>meowking - Content Studio</title>
   <link rel="stylesheet" href="style.css">
   <style>
     .studio-container { max-width: 900px; margin: 0 auto; }
@@ -33,7 +33,7 @@
           <img src="assets/cat.jpg" alt="cat" class="avatar-img">
         </div>
         <div class="title-group">
-          <h1 class="site-title">mewoking content studio</h1>
+          <h1 class="site-title">meowking content studio</h1>
           <span class="site-tagline">separated data files: data/articles.js &bull; data/notes.js &bull; data/projects.js</span>
         </div>
       </div>
@@ -299,7 +299,7 @@ echo 'Code works here'
       };
 
       const list = [art, ...(window.SITE_ARTICLES || [])];
-      const js = `/**\n * MEWOKING - Articles Collection\n */\nwindow.SITE_ARTICLES = ${JSON.stringify(list, null, 2)};\n`;
+      const js = `/**\n * MEOWKING - Articles Collection\n */\nwindow.SITE_ARTICLES = ${JSON.stringify(list, null, 2)};\n`;
       downloadFile('articles.js', js, 'application/javascript');
     });
 
@@ -331,7 +331,7 @@ echo 'Code works here'
         content: document.getElementById('note-content').value.trim()
       };
       const list = [note, ...(window.SITE_NOTES || [])];
-      const js = `/**\n * MEWOKING - Notes Collection\n */\nwindow.SITE_NOTES = ${JSON.stringify(list, null, 2)};\n`;
+      const js = `/**\n * MEOWKING - Notes Collection\n */\nwindow.SITE_NOTES = ${JSON.stringify(list, null, 2)};\n`;
       downloadFile('notes.js', js, 'application/javascript');
     });
 
@@ -375,7 +375,7 @@ echo 'Code works here'
         details: ''
       };
       const list = [proj, ...(window.SITE_PROJECTS || [])];
-      const js = `/**\n * MEWOKING - Projects Collection\n */\nwindow.SITE_PROJECTS = ${JSON.stringify(list, null, 2)};\n`;
+      const js = `/**\n * MEOWKING - Projects Collection\n */\nwindow.SITE_PROJECTS = ${JSON.stringify(list, null, 2)};\n`;
       downloadFile('projects.js', js, 'application/javascript');
     });
   </script>

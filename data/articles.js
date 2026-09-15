@@ -1,5 +1,5 @@
 ﻿/**
- * MEWOKING - Articles Collection
+ * MEOWKING - Articles Collection
  * -------------------------------------------------------------
  * HOW TO ADD A NEW ARTICLE:
  * 1. Create a markdown file in the `articles/` folder (e.g. `articles/my-post.md`).

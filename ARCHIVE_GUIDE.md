@@ -1,4 +1,4 @@
-﻿# MEWOKING - Content & Archive Guide
+﻿# MEOWKING - Content & Archive Guide
 
 A complete guide to managing your articles, notes, projects, links, and about information across the separated data architecture.
 

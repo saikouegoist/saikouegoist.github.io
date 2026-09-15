@@ -1,5 +1,5 @@
 ﻿/**
- * MEWOKING - Content Aggregator & Bridge
+ * MEOWKING - Content Aggregator & Bridge
  * -------------------------------------------------------------
  * Your data is now organized into separate, easy-to-edit files inside the /data folder:
  * 

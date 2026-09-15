@@ -1,5 +1,5 @@
 ﻿/**
- * MEWOKING - Client Application & Router
+ * MEOWKING - Client Application & Router
  * -------------------------------------------------------------
  * Powers dynamic routing, markdown parsing, theme toggling,
  * async article loading, and dropdown year filtering for GitHub Pages.
@@ -45,7 +45,7 @@
   // -----------------------------------------------------------
   function initTheme() {
     const toggleBtn = document.getElementById('theme-toggle');
-    const savedTheme = localStorage.getItem('mewoking_theme') || 'dark';
+    const savedTheme = localStorage.getItem('meowking_theme') || 'dark';
     setTheme(savedTheme);
 
     if (toggleBtn) {
@@ -59,7 +59,7 @@
 
   function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('mewoking_theme', theme);
+    localStorage.setItem('meowking_theme', theme);
     const toggleBtn = document.getElementById('theme-toggle');
     if (toggleBtn) {
       toggleBtn.textContent = theme === 'dark' ? 'light mode' : 'dark mode';
@@ -72,14 +72,14 @@
   function initVisitorCounter() {
     const siteData = getSiteData();
     const baseCount = (siteData.siteInfo.siteStats && siteData.siteInfo.siteStats.visitorsBase) || 1337;
-    let visits = parseInt(localStorage.getItem('mewoking_visits'), 10);
+    let visits = parseInt(localStorage.getItem('meowking_visits'), 10);
 
     if (isNaN(visits)) {
       visits = baseCount;
     } else {
       visits += 1;
     }
-    localStorage.setItem('mewoking_visits', visits);
+    localStorage.setItem('meowking_visits', visits);
 
     const statVisitors = document.getElementById('stat-visitors');
     if (statVisitors) {
@@ -97,7 +97,7 @@
     const titleEl = document.getElementById('site-title');
     const taglineEl = document.getElementById('site-tagline');
     const avatarEl = document.getElementById('site-avatar');
-    if (titleEl) titleEl.textContent = info.title || 'mewoking';
+    if (titleEl) titleEl.textContent = info.title || 'meowking';
     if (taglineEl) taglineEl.textContent = info.tagline || 'my little corner of the internet';
     if (avatarEl && info.avatar) avatarEl.src = info.avatar;
 
@@ -143,7 +143,7 @@
     // Footer
     const footerCopy = document.getElementById('footer-copy');
     const footerTagline = document.getElementById('footer-tagline');
-    if (footerCopy) footerCopy.innerHTML = `&copy; ${info.copyrightYear || '2026'} ${escapeHtml(info.title || 'mewoking')}`;
+    if (footerCopy) footerCopy.innerHTML = `&copy; ${info.copyrightYear || '2026'} ${escapeHtml(info.title || 'meowking')}`;
     if (footerTagline && info.footerText) footerTagline.textContent = info.footerText;
   }
 
@@ -210,7 +210,7 @@
     const welcomeData = info.welcome || {
       title: "welcome",
       paragraphs: [
-        "Hello. You have somehow ended up on **mewoking's little corner of the Internet**.",
+        "Hello. You have somehow ended up on **meowking's little corner of the Internet**.",
         "This is a personal homepage, notebook, archive and dumping ground for things I find interesting.",
         "I write about technology, cybersecurity, the Internet, ideas, projects, and whatever else catches my attention.",
         "No particular reason for the cat. There just is one."

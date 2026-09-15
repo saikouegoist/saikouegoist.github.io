@@ -1,4 +1,4 @@
-# mewoking - Retro Personal Website Template
+# meowking - Retro Personal Website Template
 
 > **A deployment-ready personal website template compatible with GitHub Pages (`github.io`), featuring an authentic early-2000s web shrine aesthetic and a single-file content management system.**
 
@@ -10,7 +10,7 @@
 - **Zero Build Step**: Built with 100% native HTML5, CSS3, and modern Vanilla JavaScript. No Node.js, Webpack, or framework compilation required.
 - **Centralized Content**: Add, edit, or delete articles, notes, projects, and site settings by updating a single file: `content.js`.
 - **Integrated Content Studio**: Includes `editor.html`—a visual writing tool with live Markdown preview and 1-click download/copy to update your content without touching code.
-- **GitHub Pages Ready**: Out-of-the-box support for `yourusername.github.io/mewoking/` or a custom domain.
+- **GitHub Pages Ready**: Out-of-the-box support for `yourusername.github.io/meowking/` or a custom domain.
 - **Theme Toggle**: Switch between Dark Mode (default obsidian & royal blue) and Light Mode (crisp retro paper) with persistent `localStorage`.
 - **Offline Capable**: Double-click `index.html` on your computer to open and view the site locally without even running a web server!
 
@@ -19,10 +19,10 @@
 ## 📁 Project Structure
 
 ```
-mewoking/
+meowking/
 ├── assets/
 │   ├── cat.jpg                  # Avatar image (gritty grainy kitten)
-│   ├── button-mewoking.svg      # Retro 88x31 "MEWOKING WEB SITE" button
+│   ├── button-meowking.svg      # Retro 88x31 "MEOWKING WEB SITE" button
 │   └── button-private.svg       # Retro 88x31 "NO TRACK" badge
 ├── index.html                   # Main site HTML structure & SPA shell
 ├── style.css                    # Complete stylesheet & dark/light theme
@@ -43,7 +43,7 @@ You can deploy this site to GitHub Pages in under 2 minutes.
 ### Option A: Using the GitHub Web Interface (No Git Required)
 
 1. Log in to [GitHub](https://github.com/) and click **New repository**.
-2. Name your repository `mewoking` (or `yourusername.github.io` if you want it as your primary site).
+2. Name your repository `meowking` (or `yourusername.github.io` if you want it as your primary site).
 3. Set the repository to **Public** and click **Create repository**.
 4. On the repository page, click **uploading an existing file**.
 5. Drag and drop all the files and folders from this folder (`index.html`, `style.css`, `content.js`, `app.js`, `editor.html`, `.nojekyll`, and the `assets/` folder).
@@ -51,7 +51,7 @@ You can deploy this site to GitHub Pages in under 2 minutes.
 7. Go to **Settings** → **Pages** (in the left sidebar).
 8. Under **Branch**, select `main` (or `master`), leave folder as `/ (root)`, and click **Save**.
 9. In 1–2 minutes, your site will be live at:  
-   `https://yourusername.github.io/mewoking/` (or `https://yourusername.github.io/`)!
+   `https://yourusername.github.io/meowking/` (or `https://yourusername.github.io/`)!
 
 ---
 
@@ -59,18 +59,18 @@ You can deploy this site to GitHub Pages in under 2 minutes.
 
 ```bash
 # 1. Navigate to the project directory
-cd mewoking
+cd meowking
 
 # 2. Initialize git repository
 git init
 
 # 3. Add all files and commit
 git add .
-git commit -m "Initial commit of mewoking site"
+git commit -m "Initial commit of meowking site"
 
 # 4. Link to your GitHub repository
 git branch -M main
-git remote add origin https://github.com/yourusername/mewoking.git
+git remote add origin https://github.com/yourusername/meowking.git
 
 # 5. Push to GitHub
 git push -u origin main
@@ -178,7 +178,7 @@ All site settings are organized in the `siteInfo` section of `content.js`:
 
 | Setting | Description |
 | :--- | :--- |
-| `title` | Site brand name shown in header and tab title (default: `"mewoking"`) |
+| `title` | Site brand name shown in header and tab title (default: `"meowking"`) |
 | `tagline` | Header subtitle (default: `"my little corner of the internet"`) |
 | `avatar` | Path to header avatar image (default: `"assets/cat.jpg"`) |
 | `lastUpdated` | Formatted date displayed in the right sidebar (e.g. `"10 / 06 / 2004"`) |

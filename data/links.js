@@ -1,5 +1,5 @@
 ﻿/**
- * MEWOKING - Cool Links & Web Directory
+ * MEOWKING - Cool Links & Web Directory
  * -------------------------------------------------------------
  * Organize your favorite websites, blogs, shrines, and tools by category.
  */

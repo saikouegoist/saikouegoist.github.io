@@ -1,14 +1,14 @@
 ﻿/**
- * MEWOKING - Site Configuration & Settings
+ * MEOWKING - Site Configuration & Settings
  * -------------------------------------------------------------
  * Edit this file to customize site title, tagline, avatar,
  * stats, buttons, warning box, and random thoughts.
  */
 
 window.SITE_CONFIG = {
-  title: "mewoking",
+  title: "meowking",
   tagline: "my little corner of the internet",
-  author: "mewoking",
+  author: "meowking",
   avatar: "assets/cat.jpg",
   copyrightYear: "2026",
   footerText: "best viewed without expectations",
@@ -36,7 +36,7 @@ window.SITE_CONFIG = {
   welcome: {
     title: "welcome",
     paragraphs: [
-      "Hello. You have somehow ended up on **mewoking's little corner of the Internet**.",
+      "Hello. You have somehow ended up on **meowking's little corner of the Internet**.",
       "This is a personal homepage, notebook, archive and dumping ground for things I find interesting.",
       "I write about technology, cybersecurity, the Internet, ideas, projects, and whatever else catches my attention.",
       "No particular reason for the cat. There just is one."
@@ -46,7 +46,7 @@ window.SITE_CONFIG = {
   // Right sidebar "about me" snippet
   aboutSnippet: {
     title: "about me",
-    greeting: "I'm mewoking.",
+    greeting: "I'm meowking.",
     bio: "Interested in computers, cybersecurity, technology, the Internet and the weird things people do with them.",
     linkText: "more about me &rarr;",
     linkHref: "#/about"
@@ -70,8 +70,8 @@ window.SITE_CONFIG = {
   // 88x31 retro pixel badges
   buttons: [
     {
-      image: "assets/button-mewoking.svg",
-      alt: "Mewoking Web Site",
+      image: "assets/button-meowking.svg",
+      alt: "MEOWKING Web Site",
       link: "#/"
     },
     {
