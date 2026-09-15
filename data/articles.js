@@ -24,11 +24,11 @@ window.SITE_ARTICLES = [
   {
     id: "retro-web-aesthetics",
     title: "Reclaiming the 90s Web Aesthetic",
-    date: "2024-05-18",
-    year: "2024",
+    date: "2026-09-15",
+    year: "2026",
     readTime: "3 min read",
     tags: ["retro", "css", "design"],
     excerpt: "Exploring the tactile charm of beveled buttons, royal blue headers, and dotted dividing lines.",
     file: "articles/retro-web-aesthetics.md"
-  }
+  },
 ];
