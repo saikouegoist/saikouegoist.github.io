@@ -10,10 +10,10 @@ window.SITE_MUSIC = {
   classic: [
     {
         "id": "cl-01",
-        "title": "Stay With Me",
-        "artist": "Miki Matsubara",
-        "year": "1979",
-        "file": "assets/audio/classic-01-stay-with-me.mp3"
+        "title": "Ai ga Tomoru",
+        "artist": "Rokudenashi",
+        "year": "2022",
+        "file": "assets/audio/classic-01-ai-ga-tomoru.mp3"
     },
     {
         "id": "cl-02",
@@ -178,10 +178,10 @@ window.SITE_MUSIC = {
     },
     {
         "id": "cl-25",
-        "title": "Ai ga Tomoru",
-        "artist": "Rokudenashi",
-        "year": "2022",
-        "file": "assets/audio/classic-25-ai-ga-tomoru.mp3"
+        "title": "Stay With Me",
+        "artist": "Miki Matsubara",
+        "year": "1979",
+        "file": "assets/audio/classic-25-stay-with-me.mp3"
     },
     {
         "id": "cl-26",

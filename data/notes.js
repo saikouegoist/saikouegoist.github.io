@@ -15,4 +15,11 @@
  */
 
 window.SITE_NOTES = [
+  // {
+  //   id: "note-001",
+  //   date: "2026-09-15",
+  //   year: "2026",
+  //   tags: ["css", "retro"],
+  //   content: "CSS `shape-rendering: crispEdges;` and `image-rendering: pixelated;` are hidden gems for anyone crafting retro 90s pixel graphics. Keeps everything razor sharp without antialiasing blur."
+  // }
 ];

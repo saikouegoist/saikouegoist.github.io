@@ -227,6 +227,9 @@
     const btnNext = document.getElementById('btn-music-next');
     const volumeSlider = document.getElementById('music-volume');
     const btnLoop = document.getElementById('btn-music-loop');
+    const dancerSprite = document.getElementById('music-dancer-sprite');
+    const dancerStage = document.getElementById('music-dancer-stage');
+    const dancerStatus = document.getElementById('music-dancer-status');
 
     // State
     let currentMode = safeStorage.get('meowking_music_mode') || 'classic';
@@ -244,6 +247,14 @@
     audioPlayer.preload = 'auto';
     let loadedTrackFile = null;
     let vuInterval = null;
+
+    const DANCER_GROOVES = [
+      '♪ dancing to the beat! ♪',
+      'groovin\' =^.^= ♪',
+      '♪ 90s retro vibes ♪',
+      'feel the rhythm! ♪♫'
+    ];
+    let grooveIdx = 0;
 
     const VU_PATTERNS = [
       '▰▱▱▱▱▱', '▰▰▱▱▱▱', '▰▰▰▱▱▱',
@@ -287,6 +298,16 @@
           headerMusicBtn.classList.add('playing');
         }
         if (playerEl) playerEl.classList.add('music-active');
+        if (dancerSprite) {
+          dancerSprite.src = 'assets/dancer-playing.gif';
+        }
+        if (dancerStage) {
+          dancerStage.classList.add('is-dancing');
+        }
+        if (dancerStatus) {
+          dancerStatus.textContent = DANCER_GROOVES[grooveIdx % DANCER_GROOVES.length];
+          grooveIdx++;
+        }
         startVUMeter();
       } else {
         if (btnPlay) {
@@ -298,6 +319,15 @@
           headerMusicBtn.classList.remove('playing');
         }
         if (playerEl) playerEl.classList.remove('music-active');
+        if (dancerSprite) {
+          dancerSprite.src = 'assets/dancer-stopped.gif';
+        }
+        if (dancerStage) {
+          dancerStage.classList.remove('is-dancing');
+        }
+        if (dancerStatus) {
+          dancerStatus.textContent = '[...ohh, music stopped :3]';
+        }
         stopVUMeter();
       }
     }
@@ -409,6 +439,9 @@
     }
     if (headerMusicBtn) {
       headerMusicBtn.addEventListener('click', togglePlayback);
+    }
+    if (dancerStage) {
+      dancerStage.addEventListener('click', togglePlayback);
     }
     if (btnPrev) {
       btnPrev.addEventListener('click', () => selectTrack(currentTrackIndex - 1));

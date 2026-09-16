@@ -714,6 +714,62 @@ body {
   color: #334155;
 }
 
+/* 90s Animated Music Companion Stage */
+.music-dancer-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #020617;
+  border: 1px solid var(--border-color);
+  border-radius: 1px;
+  padding: 4px 6px 3px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="light"] .music-dancer-stage {
+  background: #090d16;
+}
+
+.music-dancer-stage:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.music-dancer-stage.is-dancing {
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: inset 0 0 8px rgba(56, 189, 248, 0.15);
+}
+
+.music-dancer-sprite {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  image-rendering: pixelated;
+  shape-rendering: crispEdges;
+  display: block;
+}
+
+.music-dancer-status {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+  margin-top: 2px;
+  text-align: center;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.music-dancer-stage.is-dancing .music-dancer-status {
+  color: #38bdf8;
+  text-shadow: 0 0 6px rgba(56, 189, 248, 0.4);
+}
+
 /* Controls Row */
 .music-controls-row {
   display: flex;
