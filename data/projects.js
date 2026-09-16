@@ -1,4 +1,4 @@
-﻿/**
+/**
  * MEOWKING - Projects & Portfolio
  * -------------------------------------------------------------
  * HOW TO ADD A PROJECT:
@@ -21,18 +21,17 @@
  */
 
 window.SITE_PROJECTS = [
-  // {
-  //   id: "meowking-template",
-  //   title: "meowking Template",
-  //   year: "2026",
-  //   date: "2026-09-15",
-  //   status: "Active",
-  //   statusType: "success",
-  //   description: "A deployment-ready personal website template adhering to early-2000s web aesthetics. Zero-build architecture running on GitHub Pages.",
-  //   tags: ["HTML5", "CSS3", "JavaScript", "GitHub Pages"],
-  //   github: "https://github.com/",
-  //   demo: "#/",
-  //   details: "Features a modular content management system, dynamic client routing, markdown rendering, retro 88x31 badges, and dark/light mode toggle."
-  // }
-
+  {
+    id: "meowking-template",
+    title: "meowking Template",
+    year: "2026",
+    date: "2026-09-15",
+    status: "Active",
+    statusType: "success",
+    description: "A deployment-ready personal website template adhering to early-2000s web aesthetics. Zero-build architecture running on GitHub Pages.",
+    tags: ["HTML5", "CSS3", "JavaScript", "GitHub Pages"],
+    github: "https://github.com/",
+    demo: "#/",
+    details: "Features a modular content management system, dynamic client routing, markdown rendering, retro 88x31 badges, and dark/light mode toggle."
+  }
 ];

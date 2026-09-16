@@ -1,4 +1,4 @@
-﻿/**
+/**
  * MEOWKING - Quick Notes Collection
  * -------------------------------------------------------------
  * HOW TO ADD A NOTE:
@@ -15,12 +15,18 @@
  */
 
 window.SITE_NOTES = [
-  // {
-  //   id: "note-005",
-  //   date: "2026-09-10",
-  //   year: "2026",
-  //   tags: ["css", "retro"],
-  //   content: "CSS `shape-rendering: crispEdges;` is a hidden gem for anyone crafting retro 90s pixel buttons in SVG. Keeps everything razor sharp without antialiasing blur."
-  // },
-
+  {
+    id: "note-001",
+    date: "2026-09-15",
+    year: "2026",
+    tags: ["css", "retro"],
+    content: "CSS `shape-rendering: crispEdges;` and `image-rendering: pixelated;` are hidden gems for anyone crafting retro 90s pixel graphics. Keeps everything razor sharp without antialiasing blur."
+  },
+  {
+    id: "note-002",
+    date: "2026-09-12",
+    year: "2026",
+    tags: ["security", "web"],
+    content: "Building static websites with zero tracking and zero telemetry is surprisingly liberating. Fast load times, zero maintenance overhead, and total user privacy."
+  }
 ];

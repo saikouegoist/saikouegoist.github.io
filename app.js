@@ -15,6 +15,16 @@
   // bar) set up by the current route, torn down before the next route renders.
   let readingModeCleanup = null;
 
+  // Safe storage helper (prevents SecurityError crashes in private browsing or iframe contexts)
+  const safeStorage = {
+    get(key) {
+      try { return localStorage.getItem(key); } catch (e) { return null; }
+    },
+    set(key, val) {
+      try { localStorage.setItem(key, val); } catch (e) { }
+    }
+  };
+
   function getSiteData() {
     return {
       siteInfo: window.SITE_CONFIG || (window.SITE_CONTENT && window.SITE_CONTENT.siteInfo) || {},
@@ -41,6 +51,7 @@
     initTheme();
     initVisitorCounter();
     populateSiteInfo();
+    initPetCat();
     window.addEventListener('hashchange', renderRoute);
     renderRoute();
   });
@@ -50,7 +61,7 @@
   // -----------------------------------------------------------
   function initTheme() {
     const toggleBtn = document.getElementById('theme-toggle');
-    const savedTheme = localStorage.getItem('meowking_theme') || 'dark';
+    const savedTheme = safeStorage.get('meowking_theme') || 'dark';
     setTheme(savedTheme);
 
     if (toggleBtn) {
@@ -64,7 +75,7 @@
 
   function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('meowking_theme', theme);
+    safeStorage.set('meowking_theme', theme);
     const toggleBtn = document.getElementById('theme-toggle');
     if (toggleBtn) {
       toggleBtn.textContent = theme === 'dark' ? 'light mode' : 'dark mode';
@@ -77,14 +88,14 @@
   function initVisitorCounter() {
     const siteData = getSiteData();
     const baseCount = (siteData.siteInfo.siteStats && siteData.siteInfo.siteStats.visitorsBase) || 1337;
-    let visits = parseInt(localStorage.getItem('meowking_visits'), 10);
+    let visits = parseInt(safeStorage.get('meowking_visits'), 10);
 
     if (isNaN(visits)) {
       visits = baseCount;
     } else {
       visits += 1;
     }
-    localStorage.setItem('meowking_visits', visits);
+    safeStorage.set('meowking_visits', visits);
 
     const statVisitors = document.getElementById('stat-visitors');
     if (statVisitors) {
@@ -150,6 +161,35 @@
     const footerTagline = document.getElementById('footer-tagline');
     if (footerCopy) footerCopy.innerHTML = `&copy; ${info.copyrightYear || '2026'} ${escapeHtml(info.title || 'meowking')}`;
     if (footerTagline && info.footerText) footerTagline.textContent = info.footerText;
+  }
+
+  // -----------------------------------------------------------
+  // Interactive Pet Cat on Divider
+  // -----------------------------------------------------------
+  function initPetCat() {
+    const dividerWrap = document.querySelector('.sidebar-pixel-divider-wrap');
+    if (!dividerWrap) return;
+
+    const purrSounds = ['♥ purr~', '✨ meow!', 'nya~ ★', 'purr... ♥', '=^.^='];
+    let soundIndex = 0;
+
+    dividerWrap.setAttribute('title', 'Click to pet me! =^.^=');
+    dividerWrap.addEventListener('click', (e) => {
+      const old = dividerWrap.querySelectorAll('.cat-floating-heart');
+      old.forEach(el => el.remove());
+
+      const msg = document.createElement('span');
+      msg.className = 'cat-floating-heart';
+      msg.textContent = purrSounds[soundIndex % purrSounds.length];
+      soundIndex++;
+
+      const rect = dividerWrap.getBoundingClientRect();
+      const offsetX = e.clientX ? (e.clientX - rect.left) : (rect.width / 2);
+      msg.style.left = Math.max(25, Math.min(rect.width - 25, offsetX)) + 'px';
+
+      dividerWrap.appendChild(msg);
+      setTimeout(() => msg.remove(), 1200);
+    });
   }
 
   // -----------------------------------------------------------
@@ -798,7 +838,7 @@
     // Local storage helpers (offline / fallback cache)
     function getLocalEntries() {
       try {
-        const raw = localStorage.getItem('meowking_guestbook_entries');
+        const raw = safeStorage.get('meowking_guestbook_entries');
         return raw ? JSON.parse(raw) : [];
       } catch (e) {
         return [];
@@ -807,7 +847,7 @@
 
     function saveLocalEntries(entries) {
       try {
-        localStorage.setItem('meowking_guestbook_entries', JSON.stringify(entries));
+        safeStorage.set('meowking_guestbook_entries', JSON.stringify(entries));
       } catch (e) {
         console.error('Failed to save to localStorage', e);
       }
@@ -846,7 +886,7 @@
     let cooldownIntervalId = null;
 
     function getSubmitCooldownRemainingMs() {
-      const last = parseInt(localStorage.getItem(GB_LAST_SUBMIT_KEY), 10);
+      const last = parseInt(safeStorage.get(GB_LAST_SUBMIT_KEY), 10);
       if (isNaN(last)) return 0;
       return Math.max(0, GB_SUBMIT_COOLDOWN_MS - (Date.now() - last));
     }
@@ -1278,7 +1318,7 @@
 
           // Cache to localStorage for offline fallback
           try {
-            localStorage.setItem('meowking_guestbook_cloud_cache', JSON.stringify(firestoreEntries));
+            safeStorage.set('meowking_guestbook_cloud_cache', JSON.stringify(firestoreEntries));
           } catch (e) { }
 
           renderEntriesFeed();
@@ -1498,7 +1538,7 @@
 
         // Start the post-submit cooldown (keeps the button disabled with a
         // countdown instead of immediately allowing another post).
-        localStorage.setItem(GB_LAST_SUBMIT_KEY, String(Date.now()));
+        safeStorage.set(GB_LAST_SUBMIT_KEY, String(Date.now()));
         startSubmitCooldownUI();
 
         // Reset search query to show newest entry
