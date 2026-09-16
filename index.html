@@ -39,6 +39,7 @@
       </a>
 
       <div class="header-controls">
+        <button id="header-music-btn" class="header-music-btn" aria-label="Play or pause music">▶ play music</button>
         <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">light mode</button>
       </div>
     </header>
@@ -50,7 +51,9 @@
         <li><a href="#/articles" data-route="articles">articles</a></li>
         <li><a href="#/projects" data-route="projects">projects</a></li>
         <li><a href="#/notes" data-route="notes">notes</a></li>
-        <li class="nav-item-guestbook"><a href="#/guestbook" data-route="guestbook" class="nav-guestbook-link" title="Sign My Guestbook!"><img src="assets/guestbook.gif" alt="guestbook" class="nav-guestbook-gif"></a></li>
+        <li class="nav-item-guestbook"><a href="#/guestbook" data-route="guestbook" class="nav-guestbook-link"
+            title="Sign My Guestbook!"><img src="assets/guestbook.gif" alt="guestbook" class="nav-guestbook-gif"></a>
+        </li>
         <li><a href="#/about" data-route="about">about</a></li>
         <li><a href="#/links" data-route="links">links</a></li>
       </ul>
@@ -130,7 +133,8 @@
         <div class="box box-about-snippet">
           <div class="box-header" id="about-snippet-title">about me</div>
           <div class="box-content">
-            <p id="about-snippet-greeting"><strong>I'm </strong><img src="assets/meowking-name.gif" alt="meowking" class="about-meowking-gif"></p>
+            <p id="about-snippet-greeting"><strong>I'm </strong><img src="assets/meowking-name.gif" alt="meowking"
+                class="about-meowking-gif"></p>
             <p id="about-snippet-bio">Interested in computers, cybersecurity, technology, the Internet and the weird
               things people do with them.</p>
             <p><a href="#/about" class="more-link" id="about-snippet-link">more about me &rarr;</a></p>
@@ -152,6 +156,56 @@
           <div class="box-header">last updated</div>
           <div class="box-content">
             <div class="last-updated-text" id="stat-last-updated">10 / 06 / 2004</div>
+          </div>
+        </div>
+
+        <!-- Retro Japanese Music Box Widget (Compact) -->
+        <div class="box box-music-player" id="box-music-player">
+          <div class="box-header music-box-header">
+            <span>music box</span>
+            <span class="music-tag" id="music-mode-indicator">CLASSIC</span>
+          </div>
+          <div class="box-content music-box-content">
+            
+            <!-- Category Toggle: Classic vs Anime -->
+            <div class="music-mode-row">
+              <button type="button" class="music-mode-pill active" id="btn-mode-classic" data-mode="classic">
+                classic
+              </button>
+              <button type="button" class="music-mode-pill" id="btn-mode-anime" data-mode="anime">
+                anime
+              </button>
+            </div>
+
+            <!-- Compact ASCII Terminal Display -->
+            <div class="music-mini-screen">
+              <div class="music-screen-row-top">
+                <span class="music-now-label">NOW PLAYING:</span>
+                <span class="music-track-idx" id="music-track-counter">01/31</span>
+              </div>
+              <div class="music-screen-title-row">
+                <span class="music-note-glyph">♪</span>
+                <span class="music-title-text" id="music-track-title">Stay With Me</span>
+              </div>
+              <div class="music-screen-artist-row">
+                <span class="music-artist-text" id="music-track-artist">Miki Matsubara</span>
+                <span class="music-extra-text" id="music-track-extra"></span>
+                <span class="music-vu-meter" id="music-vu-meter">▱▱▱▱▱▱</span>
+              </div>
+            </div>
+
+            <!-- Controls: Prev, Play/Pause, Next, Loop, Vol (No dropdown) -->
+            <div class="music-controls-row">
+              <button type="button" class="music-btn" id="btn-music-prev" title="Previous Track">[◀]</button>
+              <button type="button" class="music-btn music-btn-play" id="btn-music-play" title="Play / Pause">[▶ PLAY]</button>
+              <button type="button" class="music-btn" id="btn-music-next" title="Next Track">[▶]</button>
+              <button type="button" class="music-btn music-btn-loop active" id="btn-music-loop" title="Toggle Loop">🔁</button>
+              <div class="music-vol-wrap" title="Volume">
+                <span class="music-vol-glyph">🔈</span>
+                <input type="range" id="music-volume" class="music-vol-bar" min="0" max="100" value="70" aria-label="Volume">
+              </div>
+            </div>
+
           </div>
         </div>
       </aside>
@@ -184,6 +238,7 @@
   <script src="data/about.js"></script>
   <script src="data/links.js"></script>
   <!-- Content aggregator bridge -->
+  <script src="data/music.js"></script>
   <script src="content.js"></script>
   <!-- Firebase SDKs (Static GitHub Pages Compatible) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>

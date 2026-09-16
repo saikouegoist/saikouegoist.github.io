@@ -20,5 +20,6 @@ window.SITE_CONTENT = {
   get projects() { return window.SITE_PROJECTS || []; },
   get about() { return window.SITE_ABOUT || {}; },
   get coolLinks() { return window.SITE_LINKS || []; },
-  get guestbook() { return window.SITE_GUESTBOOK || []; }
+  get guestbook() { return window.SITE_GUESTBOOK || []; },
+  get music() { return window.SITE_MUSIC || {}; }
 };

@@ -52,6 +52,7 @@
     initVisitorCounter();
     populateSiteInfo();
     initPetCat();
+    initMusicBox();
     window.addEventListener('hashchange', renderRoute);
     renderRoute();
   });
@@ -149,7 +150,10 @@
         }
       }
       if (bioEl) bioEl.textContent = info.aboutSnippet.bio;
-      if (linkEl && info.aboutSnippet.linkText) linkEl.innerHTML = info.aboutSnippet.linkText;
+      if (linkEl) {
+        if (info.aboutSnippet.linkText) linkEl.innerHTML = info.aboutSnippet.linkText;
+        if (info.aboutSnippet.linkHref) linkEl.href = info.aboutSnippet.linkHref;
+      }
     }
 
     const warningTextEl = document.getElementById('warning-text');
@@ -199,8 +203,248 @@
   }
 
   // -----------------------------------------------------------
-  // 5. Routing Engine
+  // Retro Japanese Music Box Engine (Classic & Anime Edition)
   // -----------------------------------------------------------
+  function initMusicBox() {
+    const playerEl = document.getElementById('box-music-player');
+    const headerMusicBtn = document.getElementById('header-music-btn');
+    if (!playerEl && !headerMusicBtn) return;
+
+    const musicData = window.SITE_MUSIC;
+    if (!musicData) return;
+
+    // Elements
+    const titleEl = document.getElementById('music-track-title');
+    const artistEl = document.getElementById('music-track-artist');
+    const extraEl = document.getElementById('music-track-extra');
+    const counterEl = document.getElementById('music-track-counter');
+    const vuMeterEl = document.getElementById('music-vu-meter');
+    const modeIndicator = document.getElementById('music-mode-indicator');
+    const btnClassic = document.getElementById('btn-mode-classic');
+    const btnAnime = document.getElementById('btn-mode-anime');
+    const btnPlay = document.getElementById('btn-music-play');
+    const btnPrev = document.getElementById('btn-music-prev');
+    const btnNext = document.getElementById('btn-music-next');
+    const volumeSlider = document.getElementById('music-volume');
+    const btnLoop = document.getElementById('btn-music-loop');
+
+    // State
+    let currentMode = safeStorage.get('meowking_music_mode') || 'classic';
+    if (currentMode === 'classical') currentMode = 'classic';
+    if (currentMode === 'songs') currentMode = 'anime';
+    if (!musicData[currentMode]) currentMode = 'classic';
+
+    let currentTrackIndex = 0;
+    let isPlaying = false;
+    let isLooping = safeStorage.get('meowking_music_loop') !== 'false'; // default true
+    let volume = parseFloat(safeStorage.get('meowking_music_vol')) || 0.7;
+
+    // Real Audio Player (HTML5 Audio)
+    const audioPlayer = new Audio();
+    audioPlayer.preload = 'auto';
+    let loadedTrackFile = null;
+    let vuInterval = null;
+
+    const VU_PATTERNS = [
+      '▰▱▱▱▱▱', '▰▰▱▱▱▱', '▰▰▰▱▱▱',
+      '▰▰▰▰▱▱', '▰▰▰▰▰▱', '▰▰▰▰▰▰',
+      '▱▰▰▰▰▱', '▱▱▰▰▱▱'
+    ];
+
+    function getTracks() {
+      return (musicData[currentMode] && musicData[currentMode].length > 0)
+        ? musicData[currentMode]
+        : (musicData.classic || []);
+    }
+
+    function startVUMeter() {
+      if (vuInterval) clearInterval(vuInterval);
+      let step = 0;
+      vuInterval = setInterval(() => {
+        if (!isPlaying || !vuMeterEl) return;
+        vuMeterEl.textContent = VU_PATTERNS[step % VU_PATTERNS.length];
+        step++;
+      }, 160);
+    }
+
+    function stopVUMeter() {
+      if (vuInterval) {
+        clearInterval(vuInterval);
+        vuInterval = null;
+      }
+      if (vuMeterEl) vuMeterEl.textContent = '▱▱▱▱▱▱';
+    }
+
+    function updatePlayUI(playing) {
+      isPlaying = playing;
+      if (playing) {
+        if (btnPlay) {
+          btnPlay.textContent = '[⏸ PAUSE]';
+          btnPlay.title = 'Pause playback';
+        }
+        if (headerMusicBtn) {
+          headerMusicBtn.textContent = '⏸ pause music';
+          headerMusicBtn.classList.add('playing');
+        }
+        if (playerEl) playerEl.classList.add('music-active');
+        startVUMeter();
+      } else {
+        if (btnPlay) {
+          btnPlay.textContent = '[▶ PLAY]';
+          btnPlay.title = 'Start playback';
+        }
+        if (headerMusicBtn) {
+          headerMusicBtn.textContent = '▶ play music';
+          headerMusicBtn.classList.remove('playing');
+        }
+        if (playerEl) playerEl.classList.remove('music-active');
+        stopVUMeter();
+      }
+    }
+
+    // Audio Player events
+    audioPlayer.addEventListener('ended', () => {
+      if (isLooping) {
+        audioPlayer.currentTime = 0;
+        audioPlayer.play().catch(() => {});
+      } else {
+        selectTrack(currentTrackIndex + 1);
+      }
+    });
+
+    audioPlayer.addEventListener('error', (e) => {
+      console.warn('Audio playback error:', e);
+      updatePlayUI(false);
+    });
+
+    function startPlayback() {
+      const tracks = getTracks();
+      const track = tracks[currentTrackIndex];
+      if (!track) return;
+
+      if (loadedTrackFile !== track.file) {
+        audioPlayer.src = track.file;
+        loadedTrackFile = track.file;
+      }
+      audioPlayer.volume = volume;
+      audioPlayer.loop = isLooping;
+
+      audioPlayer.play().then(() => {
+        updatePlayUI(true);
+      }).catch(err => {
+        console.warn('Playback prevented or file error:', err);
+        updatePlayUI(false);
+      });
+    }
+
+    function stopPlayback() {
+      try {
+        audioPlayer.pause();
+      } catch (e) { }
+      updatePlayUI(false);
+    }
+
+    function togglePlayback() {
+      if (isPlaying) {
+        stopPlayback();
+      } else {
+        startPlayback();
+      }
+    }
+
+    function updateTrackDisplay() {
+      const tracks = getTracks();
+      const track = tracks[currentTrackIndex] || tracks[0];
+      if (!track) return;
+
+      if (titleEl) titleEl.textContent = track.title;
+      if (artistEl) artistEl.textContent = track.artist || '';
+      if (extraEl) {
+        extraEl.textContent = track.anime ? `[${track.anime}]` : (track.year ? `(${track.year})` : '');
+      }
+      if (counterEl) {
+        counterEl.textContent = `${String(currentTrackIndex + 1).padStart(2, '0')}/${String(tracks.length).padStart(2, '0')}`;
+      }
+
+      if (btnClassic) btnClassic.classList.toggle('active', currentMode === 'classic');
+      if (btnAnime) btnAnime.classList.toggle('active', currentMode === 'anime');
+      if (modeIndicator) modeIndicator.textContent = currentMode === 'classic' ? 'CLASSIC' : 'ANIME';
+    }
+
+    function switchMode(newMode) {
+      if (currentMode === newMode) {
+        if (!isPlaying) {
+          startPlayback();
+        }
+        return;
+      }
+      stopPlayback();
+      currentMode = newMode;
+      safeStorage.set('meowking_music_mode', currentMode);
+      currentTrackIndex = 0;
+      updateTrackDisplay();
+      startPlayback();
+    }
+
+    function selectTrack(index) {
+      const wasPlaying = isPlaying;
+      stopPlayback();
+      const tracks = getTracks();
+      currentTrackIndex = (index + tracks.length) % tracks.length;
+      updateTrackDisplay();
+      if (wasPlaying) {
+        startPlayback();
+      }
+    }
+
+    // Event Listeners
+    if (btnClassic) {
+      btnClassic.addEventListener('click', () => switchMode('classic'));
+    }
+    if (btnAnime) {
+      btnAnime.addEventListener('click', () => switchMode('anime'));
+    }
+    if (btnPlay) {
+      btnPlay.addEventListener('click', togglePlayback);
+    }
+    if (headerMusicBtn) {
+      headerMusicBtn.addEventListener('click', togglePlayback);
+    }
+    if (btnPrev) {
+      btnPrev.addEventListener('click', () => selectTrack(currentTrackIndex - 1));
+    }
+    if (btnNext) {
+      btnNext.addEventListener('click', () => selectTrack(currentTrackIndex + 1));
+    }
+    if (volumeSlider) {
+      volumeSlider.value = Math.round(volume * 100);
+      volumeSlider.addEventListener('input', (e) => {
+        volume = parseInt(e.target.value, 10) / 100;
+        safeStorage.set('meowking_music_vol', volume);
+        audioPlayer.volume = volume;
+      });
+    }
+    if (btnLoop) {
+      btnLoop.classList.toggle('active', isLooping);
+      btnLoop.title = isLooping ? 'Loop: ON (Repeat track)' : 'Loop: OFF (Auto-advance)';
+      btnLoop.addEventListener('click', () => {
+        isLooping = !isLooping;
+        safeStorage.set('meowking_music_loop', isLooping);
+        audioPlayer.loop = isLooping;
+        btnLoop.classList.toggle('active', isLooping);
+        btnLoop.title = isLooping ? 'Loop: ON (Repeat track)' : 'Loop: OFF (Auto-advance)';
+      });
+    }
+
+    // Initial render
+    updateTrackDisplay();
+  }
+
+
+
+
+
+
   function renderRoute() {
     const rawHash = window.location.hash || '';
     const mainContent = document.getElementById('main-content');
@@ -1649,6 +1893,7 @@
   function formatInlineMarkdown(text) {
     if (!text) return '';
     text = text.replace(/`([^`]+)`/g, (_, c) => `<code>${escapeHtml(c)}</code>`);
+    text = text.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
     text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
     // Only allow safe URL schemes for markdown-style links. This blocks

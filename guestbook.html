@@ -14,7 +14,7 @@
     
     <!-- Header -->
     <header class="site-header">
-      <a href="index.html" class="header-brand" id="brand-link">
+      <a href="index.html#/" class="header-brand" id="brand-link">
         <div class="avatar-box">
           <img src="assets/cat.jpg" alt="meowking cat avatar" class="avatar-img" id="site-avatar">
         </div>
@@ -24,7 +24,8 @@
         </div>
       </a>
 
-      <div class="header-controls">
+            <div class="header-controls">
+        <button id="header-music-btn" class="header-music-btn" aria-label="Play or pause music">▶ play music</button>
         <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">light mode</button>
       </div>
     </header>
@@ -32,13 +33,13 @@
     <!-- Top Navigation Bar -->
     <nav class="top-nav" aria-label="Main Navigation">
       <ul class="nav-list" id="top-nav-list">
-        <li><a href="index.html" data-route="home">home</a></li>
-        <li><a href="articles.html" data-route="articles">articles</a></li>
-        <li><a href="projects.html" data-route="projects">projects</a></li>
-        <li><a href="notes.html" data-route="notes">notes</a></li>
-        <li class="nav-item-guestbook"><a href="guestbook.html" data-route="guestbook" class="nav-guestbook-link active" title="Sign My Guestbook!"><img src="assets/guestbook.gif" alt="guestbook" class="nav-guestbook-gif"></a></li>
-        <li><a href="about.html" data-route="about">about</a></li>
-        <li><a href="links.html" data-route="links">links</a></li>
+        <li><a href="index.html#/" data-route="home">home</a></li>
+        <li><a href="index.html#/articles" data-route="articles">articles</a></li>
+        <li><a href="index.html#/projects" data-route="projects">projects</a></li>
+        <li><a href="index.html#/notes" data-route="notes">notes</a></li>
+        <li class="nav-item-guestbook"><a href="index.html#/guestbook" data-route="guestbook" class="nav-guestbook-link active" title="Sign My Guestbook!"><img src="assets/guestbook.gif" alt="guestbook" class="nav-guestbook-gif"></a></li>
+        <li><a href="index.html#/about" data-route="about">about</a></li>
+        <li><a href="index.html#/links" data-route="links">links</a></li>
       </ul>
     </nav>
 
@@ -51,13 +52,13 @@
           <div class="box-header">navigation</div>
           <div class="box-content">
             <ul class="sidebar-nav-list" id="sidebar-nav-list">
-              <li><a href="index.html" data-route="home">home</a></li>
-              <li><a href="articles.html" data-route="articles">articles</a></li>
-              <li><a href="projects.html" data-route="projects">projects</a></li>
-              <li><a href="notes.html" data-route="notes">notes</a></li>
-              <li><a href="guestbook.html" data-route="guestbook" class="active">guestbook</a></li>
-              <li><a href="about.html" data-route="about">about me</a></li>
-              <li><a href="links.html" data-route="links">cool links</a></li>
+              <li><a href="index.html#/" data-route="home">home</a></li>
+              <li><a href="index.html#/articles" data-route="articles">articles</a></li>
+              <li><a href="index.html#/projects" data-route="projects">projects</a></li>
+              <li><a href="index.html#/notes" data-route="notes">notes</a></li>
+              <li><a href="index.html#/guestbook" data-route="guestbook" class="active">guestbook</a></li>
+              <li><a href="index.html#/about" data-route="about">about me</a></li>
+              <li><a href="index.html#/links" data-route="links">cool links</a></li>
             </ul>
           </div>
         </div>
@@ -83,8 +84,8 @@
           <div class="box-header">buttons</div>
           <div class="box-content">
             <div class="badges-shelf" id="badges-shelf">
-              <a href="index.html" class="badge-item"><img src="assets/button-meowking.gif" alt="MEOWKING Web Site"></a>
-              <a href="index.html" class="badge-item"><img src="assets/button-private.gif" alt="No Tracking 100% Private"></a>
+              <a href="index.html#/" class="badge-item"><img src="assets/button-meowking.gif" alt="MEOWKING Web Site"></a>
+              <a href="index.html#/" class="badge-item"><img src="assets/button-private.gif" alt="No Tracking 100% Private"></a>
             </div>
           </div>
         </div>
@@ -102,7 +103,7 @@
           <div class="box-content">
             <p id="about-snippet-greeting"><strong>I'm </strong><img src="assets/meowking-name.gif" alt="meowking" class="about-meowking-gif"></p>
             <p id="about-snippet-bio">Interested in computers, cybersecurity, technology, the Internet and the weird things people do with them.</p>
-            <p><a href="about.html" class="more-link" id="about-snippet-link">more about me &rarr;</a></p>
+            <p><a href="index.html#/about" class="more-link" id="about-snippet-link">more about me &rarr;</a></p>
           </div>
         </div>
 
@@ -113,10 +114,60 @@
           </div>
         </div>
 
-        <div class="box box-last-updated">
+                                <div class="box box-last-updated">
           <div class="box-header">last updated</div>
           <div class="box-content">
             <div class="last-updated-text" id="stat-last-updated">10 / 06 / 2004</div>
+          </div>
+        </div>
+
+        <!-- Retro Japanese Music Box Widget (Compact) -->
+        <div class="box box-music-player" id="box-music-player">
+          <div class="box-header music-box-header">
+            <span>music box</span>
+            <span class="music-tag" id="music-mode-indicator">CLASSIC</span>
+          </div>
+          <div class="box-content music-box-content">
+            
+            <!-- Category Toggle: Classic vs Anime -->
+            <div class="music-mode-row">
+              <button type="button" class="music-mode-pill active" id="btn-mode-classic" data-mode="classic">
+                classic
+              </button>
+              <button type="button" class="music-mode-pill" id="btn-mode-anime" data-mode="anime">
+                anime
+              </button>
+            </div>
+
+            <!-- Compact ASCII Terminal Display -->
+            <div class="music-mini-screen">
+              <div class="music-screen-row-top">
+                <span class="music-now-label">NOW PLAYING:</span>
+                <span class="music-track-idx" id="music-track-counter">01/31</span>
+              </div>
+              <div class="music-screen-title-row">
+                <span class="music-note-glyph">♪</span>
+                <span class="music-title-text" id="music-track-title">Stay With Me</span>
+              </div>
+              <div class="music-screen-artist-row">
+                <span class="music-artist-text" id="music-track-artist">Miki Matsubara</span>
+                <span class="music-extra-text" id="music-track-extra"></span>
+                <span class="music-vu-meter" id="music-vu-meter">▱▱▱▱▱▱</span>
+              </div>
+            </div>
+
+            <!-- Controls: Prev, Play/Pause, Next, Loop, Vol (No dropdown) -->
+            <div class="music-controls-row">
+              <button type="button" class="music-btn" id="btn-music-prev" title="Previous Track">[◀]</button>
+              <button type="button" class="music-btn music-btn-play" id="btn-music-play" title="Play / Pause">[▶ PLAY]</button>
+              <button type="button" class="music-btn" id="btn-music-next" title="Next Track">[▶]</button>
+              <button type="button" class="music-btn music-btn-loop active" id="btn-music-loop" title="Toggle Loop">🔁</button>
+              <div class="music-vol-wrap" title="Volume">
+                <span class="music-vol-glyph">🔈</span>
+                <input type="range" id="music-volume" class="music-vol-bar" min="0" max="100" value="70" aria-label="Volume">
+              </div>
+            </div>
+
           </div>
         </div>
       </aside>
@@ -127,14 +178,14 @@
     <footer class="site-footer">
       <p class="footer-copy" id="footer-copy">&copy; 2026 meowking</p>
       <p class="footer-tagline" id="footer-tagline">best viewed without expectations</p>
-      <div class="footer-links">
-        <a href="index.html">home</a> |
-        <a href="articles.html">articles</a> |
-        <a href="projects.html">projects</a> |
-        <a href="notes.html">notes</a> |
-        <a href="guestbook.html">guestbook</a> |
-        <a href="about.html">about</a> |
-        <a href="links.html">links</a>
+            <div class="footer-links">
+        <a href="index.html#/">home</a> |
+        <a href="index.html#/articles">articles</a> |
+        <a href="index.html#/projects">projects</a> |
+        <a href="index.html#/notes">notes</a> |
+        <a href="index.html#/guestbook">guestbook</a> |
+        <a href="index.html#/about">about</a> |
+        <a href="index.html#/links">links</a>
       </div>
     </footer>
 
@@ -147,6 +198,7 @@
   <script src="data/guestbook.js"></script>
   <script src="data/about.js"></script>
   <script src="data/links.js"></script>
+  <script src="data/music.js"></script>
   <script src="content.js"></script>
   <!-- Firebase SDKs (Static GitHub Pages Compatible) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>

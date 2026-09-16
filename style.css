@@ -157,6 +157,39 @@ body {
 .header-controls {
   display: flex;
   align-items: center;
+  gap: 6px;
+}
+
+.header-music-btn {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-music-btn:hover {
+  border-color: #ffd700;
+  color: #ffffff;
+  background: var(--bg-header);
+}
+
+.header-music-btn.playing {
+  color: #10b981;
+  border-color: #059669;
+  background: rgba(16, 185, 129, 0.12);
+}
+/* Old rule */
+.unused-header-controls {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
@@ -511,6 +544,251 @@ body {
   letter-spacing: 1px;
   text-align: center;
   padding: 6px 0;
+}
+
+/* ==========================================================================
+   Compact Retro Japanese Music Box Player (Right Sidebar)
+   ========================================================================== */
+.box-music-player {
+  position: relative;
+}
+
+.music-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.music-tag {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 1px 5px;
+  color: #fde047;
+  border-radius: 2px;
+}
+
+.music-box-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px 8px;
+}
+
+/* Mode Switch Tabs (Subtle, balanced, neither pops out harshly) */
+.music-mode-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.music-mode-pill {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 2px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+  border-radius: 1px;
+  letter-spacing: 0.3px;
+}
+
+.music-mode-pill:hover {
+  color: var(--text-main);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.music-mode-pill.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  border-color: var(--link-color);
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Compact Retro Phosphor Terminal Screen */
+.music-mini-screen {
+  background: #030712;
+  border: 1px solid var(--border-color);
+  padding: 5px 7px;
+  font-family: var(--font-mono);
+  border-radius: 1px;
+  overflow: hidden;
+  line-height: 1.25;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="light"] .music-mini-screen {
+  background: #090d16;
+}
+
+.music-screen-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.65rem;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+
+.music-track-idx {
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.music-screen-title-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.music-note-glyph {
+  color: #f59e0b;
+  font-size: 0.78rem;
+  animation: music-bounce 1s infinite alternate;
+}
+
+.box-music-player:not(.music-active) .music-note-glyph {
+  animation: none;
+  color: #64748b;
+}
+
+@keyframes music-bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-1px); }
+}
+
+.music-title-text {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fde047;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music-screen-artist-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  color: #94a3b8;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.music-artist-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 125px;
+}
+
+.music-extra-text {
+  color: #64748b;
+  font-size: 0.65rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music-vu-meter {
+  margin-left: auto;
+  font-size: 0.65rem;
+  letter-spacing: -1px;
+  color: #10b981;
+  font-weight: 700;
+}
+
+.box-music-player:not(.music-active) .music-vu-meter {
+  color: #334155;
+}
+
+/* Controls Row */
+.music-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.music-btn {
+  background: var(--bg-card);
+  color: var(--link-color);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 4px;
+  cursor: pointer;
+  text-align: center;
+  border-radius: 1px;
+  transition: all 0.1s ease;
+  line-height: 1;
+}
+
+.music-btn:hover {
+  background: var(--bg-header);
+  color: #ffffff;
+  border-color: #ffd700;
+}
+
+.music-btn:active {
+  transform: translateY(1px);
+}
+
+.music-btn-play {
+  flex: 1;
+  color: #10b981;
+  border-color: #059669;
+  background: var(--bg-page);
+  font-size: 0.72rem;
+  padding: 3px 2px;
+}
+
+.box-music-player.music-active .music-btn-play {
+  color: #fde047;
+  border-color: #d97706;
+}
+
+.music-btn-loop {
+  padding: 3px 4px;
+  font-size: 0.7rem;
+  opacity: 0.5;
+}
+
+.music-btn-loop.active {
+  opacity: 1;
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.music-vol-wrap {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 52px;
+}
+
+.music-vol-glyph {
+  font-size: 0.7rem;
+  user-select: none;
+}
+
+.music-vol-bar {
+  width: 100%;
+  height: 4px;
+  accent-color: #38bdf8;
+  cursor: pointer;
 }
 
 /* --------------------------------------------------------------------------
@@ -970,7 +1248,7 @@ body.reading-mode .article-body {
   .column-right {
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 12px;
   }
 }
@@ -987,6 +1265,9 @@ body.reading-mode .article-body {
   }
 
   .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     align-self: flex-end;
   }
 
@@ -1953,9 +2234,12 @@ iframe {
   }
 
   .header-controls {
-    display: block;
-    margin-top: 7px;
-    text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 8px;
+    width: 100%;
   }
 
   .theme-toggle-btn {
