@@ -359,6 +359,32 @@ body {
   text-decoration: none;
 }
 
+/* Sidebar Tiny Pixel Divider */
+.sidebar-pixel-divider-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2px 0;
+  margin: -4px 0;
+  overflow: hidden;
+  user-select: none;
+}
+
+.sidebar-pixel-divider {
+  display: block;
+  max-width: 100%;
+  height: 9px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  opacity: 0.9;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.sidebar-pixel-divider-wrap:hover .sidebar-pixel-divider {
+  opacity: 1;
+  transform: scale(1.03);
+}
+
 /* Site Stats */
 .stats-list {
   list-style: none;

@@ -76,7 +76,7 @@ window.SITE_CONFIG = {
       link: "#/"
     },
     {
-      image: "assets/button-private.svg",
+      image: "assets/button-private.gif",
       alt: "No Tracking 100% Private",
       link: "#/"
     }
