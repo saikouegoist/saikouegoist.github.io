@@ -141,7 +141,13 @@
     const bioEl = document.getElementById('about-snippet-bio');
     const linkEl = document.getElementById('about-snippet-link');
     if (info.aboutSnippet) {
-      if (greetingEl) greetingEl.innerHTML = `<strong>${escapeHtml(info.aboutSnippet.greeting)}</strong>`;
+      if (greetingEl) {
+        if (info.aboutSnippet.greeting && info.aboutSnippet.greeting.includes('<')) {
+          greetingEl.innerHTML = `<strong>${info.aboutSnippet.greeting}</strong>`;
+        } else {
+          greetingEl.innerHTML = `<strong>${escapeHtml(info.aboutSnippet.greeting)}</strong>`;
+        }
+      }
       if (bioEl) bioEl.textContent = info.aboutSnippet.bio;
       if (linkEl && info.aboutSnippet.linkText) linkEl.innerHTML = info.aboutSnippet.linkText;
     }

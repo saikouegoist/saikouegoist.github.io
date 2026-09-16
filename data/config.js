@@ -47,7 +47,7 @@ window.SITE_CONFIG = {
   // Right sidebar "about me" snippet
   aboutSnippet: {
     title: "about me",
-    greeting: "I'm meowking.",
+    greeting: 'I\'m <img src="assets/meowking-name.gif" alt="meowking" class="about-meowking-gif">',
     bio: "Interested in computers, cybersecurity, technology, the Internet and the weird things people do with them.",
     linkText: "more about me &rarr;",
     linkHref: "#/about"
