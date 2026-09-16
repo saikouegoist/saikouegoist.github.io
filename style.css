@@ -39,26 +39,26 @@
 }
 
 [data-theme="light"] {
-  --bg-page: #efeff3;
-  --bg-card: #ffffff;
+  --bg-page: #dcdfe8;         /* Muted retro stone-gray, eliminating glare */
+  --bg-card: #eaecf2;         /* Soft matte paper tone instead of harsh pure white */
   --bg-header: #15227d;
   --text-header: #ffffff;
-  --border-color: #bbbeca;
-  --text-main: #1a1a1f;
-  --text-muted: #585863;
-  --link-color: #1a22ad;
-  --link-hover: #3742fa;
-  --link-visited: #5b21b6;
+  --border-color: #a4a9b8;    /* Crisp definition against the deeper card tone */
+  --text-main: #141418;
+  --text-muted: #52525e;
+  --link-color: #131cb0;
+  --link-hover: #2f3bf5;
+  --link-visited: #521c9d;
 
-  --warning-border: #dc2626;
-  --warning-bg: #fef2f2;
-  --warning-text: #991b1b;
+  --warning-border: #c53030;
+  --warning-bg: #f3dede;
+  --warning-text: #881313;
 
-  --dotted-border: #c8cbd6;
-  --code-bg: #f1f2f6;
-  --code-text: #0e7490;
-  --tag-bg: #dbeafe;
-  --tag-text: #1d4ed8;
+  --dotted-border: #b1b6c5;
+  --code-bg: #d7dae4;
+  --code-text: #0c5b70;
+  --tag-bg: #cdd7f0;
+  --tag-text: #1e40af;
 }
 
 /* --------------------------------------------------------------------------
@@ -224,6 +224,58 @@ body {
 }
 
 /* --------------------------------------------------------------------------
+   Top Navigation Guestbook Pop-up GIF Badge
+   -------------------------------------------------------------------------- */
+.nav-item-guestbook {
+  display: inline-flex;
+  align-items: center;
+}
+
+.nav-guestbook-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none !important;
+  line-height: 1;
+  position: relative;
+  vertical-align: middle;
+}
+
+.nav-guestbook-gif {
+  display: block;
+  height: 24px;
+  width: auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border-radius: 2px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s ease, filter 0.16s ease;
+}
+
+/* Eye-catching retro POP-UP on hover */
+.nav-guestbook-link:hover .nav-guestbook-gif {
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 0 4px 12px rgba(75, 111, 255, 0.7), 0 0 6px rgba(255, 221, 85, 0.6);
+  filter: brightness(1.1);
+}
+
+.nav-guestbook-link:active .nav-guestbook-gif {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Active route state */
+.nav-list a.nav-guestbook-link.active {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.nav-list a.nav-guestbook-link.active .nav-guestbook-gif {
+  outline: 2px solid #ffd700;
+  outline-offset: 1px;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.85);
+  transform: translateY(-1px);
+}
+
+/* --------------------------------------------------------------------------
    3-Column Main Grid
    -------------------------------------------------------------------------- */
 .main-grid {
@@ -349,12 +401,24 @@ body {
   gap: 8px;
 }
 
+.badge-item {
+  display: inline-block;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.badge-item:hover {
+  transform: translateY(-2px) scale(1.04);
+}
+
 .badge-item img {
   display: block;
   width: 88px;
   height: 31px;
   border: 1px solid var(--border-color);
   image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border-radius: 1px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 /* --------------------------------------------------------------------------
@@ -969,8 +1033,8 @@ body.reading-mode .article-body {
 }
 
 [data-theme="light"] .retro-select option {
-  background: #ffffff;
-  color: #1a1a1f;
+  background: #eaecf2;
+  color: #141418;
 }
 
 /* --------------------------------------------------------------------------
@@ -986,8 +1050,8 @@ body.reading-mode .article-body {
 }
 
 [data-theme="light"] .guestbook-intro-banner {
-  background: #e8ecfa;
-  border-color: #b5bee0;
+  background: #d8ddf0;
+  border-color: #9fa8d0;
 }
 
 .guestbook-features-grid {
@@ -1211,9 +1275,9 @@ body.reading-mode .article-body {
 }
 
 [data-theme="light"] .bbs-ascii-banner {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #0284c7;
+  background: #dce0eb;
+  border-color: #a4a9b8;
+  color: #026ca3;
 }
 
 .bbs-banner-row {
@@ -1268,9 +1332,9 @@ body.reading-mode .article-body {
 }
 
 [data-theme="light"] .bbs-prompt-box {
-  background: #ffffff;
-  border-color: #cbd5e1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background: #eaecf2;
+  border-color: #a4a9b8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
 }
 
 .bbs-prompt-header {
@@ -1288,9 +1352,9 @@ body.reading-mode .article-body {
 }
 
 [data-theme="light"] .bbs-prompt-header {
-  background: #e2e8f0;
-  border-bottom-color: #cbd5e1;
-  color: #334155;
+  background: #d4d8e4;
+  border-bottom-color: #a4a9b8;
+  color: #273446;
 }
 
 .bbs-prompt-header-title {
@@ -1359,8 +1423,8 @@ body.reading-mode .article-body {
 
 [data-theme="light"] .bbs-terminal-input,
 [data-theme="light"] .bbs-terminal-textarea {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  background: #e3e6ef;
+  border-color: #858d9f;
   color: #0f172a;
 }
 
@@ -1373,7 +1437,7 @@ body.reading-mode .article-body {
 
 [data-theme="light"] .bbs-terminal-input:focus,
 [data-theme="light"] .bbs-terminal-textarea:focus {
-  background: #ffffff;
+  background: #eaecf2;
   border-color: #0284c7;
   box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
 }
@@ -1423,8 +1487,8 @@ body.reading-mode .article-body {
 }
 
 [data-theme="light"] .bbs-filter-panel {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: #dee2ec;
+  border-color: #a4a9b8;
 }
 
 .bbs-filter-row-top {
@@ -1527,9 +1591,9 @@ body.reading-mode .article-body {
 }
 
 [data-theme="light"] .bbs-log-feed {
-  background: #ffffff;
-  border-color: #cbd5e1;
-  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.03);
+  background: #eaecf2;
+  border-color: #a4a9b8;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.04);
 }
 
 .bbs-log-entry {
@@ -1540,7 +1604,7 @@ body.reading-mode .article-body {
 }
 
 [data-theme="light"] .bbs-log-entry {
-  border-bottom-color: #e2e8f0;
+  border-bottom-color: #ced3df;
 }
 
 .bbs-log-entry:last-child {
@@ -1850,6 +1914,10 @@ iframe {
 
   .nav-list a.active {
     padding: 0 4px;
+  }
+
+  .nav-guestbook-gif {
+    height: 21px;
   }
 
   /* Mobile is content-first: hide desktop sidebars completely */

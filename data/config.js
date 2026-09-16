@@ -71,7 +71,7 @@ window.SITE_CONFIG = {
   // 88x31 retro pixel badges
   buttons: [
     {
-      image: "assets/button-meowking.svg",
+      image: "assets/button-meowking.gif",
       alt: "MEOWKING Web Site",
       link: "#/"
     },
