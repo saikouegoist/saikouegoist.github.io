@@ -22,6 +22,7 @@ window.SITE_GALLERY = [
   "images/berserk%20episode%2019%20griffith%20%26%20guts.jpg",
   "images/Berserk%20hd%20panel.jpg",
   "images/berserk%20landscape%2090%27s.jpg",
+  "images/berserk.gif",
   "images/BERSERK.jpg",
   "images/download%20%281%29.jpg",
   "images/download.jpg",
