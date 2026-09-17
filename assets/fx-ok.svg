@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="20" viewBox="0 0 30 20">
+  <rect x="1" y="1" width="28" height="18" fill="#0a0a14" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="15" y="14" text-anchor="middle" font-family="monospace" font-size="10" font-weight="bold" fill="#4ade80">
+    OK
+    <animate attributeName="opacity" values="1;0.25;1" dur="1.2s" repeatCount="indefinite"/>
+  </text>
+  <circle cx="25" cy="5" r="1" fill="#fde047">
+    <animate attributeName="opacity" values="1;0.1;1" dur="0.9s" repeatCount="indefinite"/>
+  </circle>
+</svg>

@@ -157,6 +157,8 @@ body {
 .header-controls {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 6px;
 }
 
@@ -178,6 +180,116 @@ body {
   width: auto;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+}
+
+/* Night-owl auto-theme badge */
+.night-owl-badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Animated OK buddy inside the fx button, beside the label */
+#fx-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.fx-ok-gif {
+  display: block;
+  height: 14px;
+  width: auto;
+}
+
+/* Weather FX canvas overlay (below UI chrome, above page) */
+#fx-layer {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 300;
+}
+
+/* Winamp skin toggle button in the music box header */
+.music-head-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.skin-btn {
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  cursor: pointer;
+}
+
+.skin-btn:hover {
+  color: var(--text-main);
+  border-color: var(--link-color);
+}
+
+.skin-btn.active {
+  color: #ffb000;
+  border-color: #ffb000;
+}
+
+/* Winamp skin: amber phosphor on black, beveled chunky buttons */
+#box-music-player.winamp-skin .music-mini-screen {
+  background: #000000;
+  border-color: #3a3a3a;
+}
+
+#box-music-player.winamp-skin .music-title-text,
+#box-music-player.winamp-skin .music-note-glyph {
+  color: #ffb000;
+}
+
+#box-music-player.winamp-skin .music-track-idx,
+#box-music-player.winamp-skin .music-vu-meter {
+  color: #00ff00;
+}
+
+#box-music-player.winamp-skin .music-tag {
+  background: #000000;
+  color: #00ff00;
+  border-color: #0f0f0f;
+}
+
+#box-music-player.winamp-skin .music-btn {
+  background: linear-gradient(#3d3d3d, #1a1a1a);
+  color: #ffb000;
+  border: 1px outset #666666;
+}
+
+#box-music-player.winamp-skin .music-btn:hover {
+  color: #ffd97a;
+  border-color: #ffb000;
+  background: linear-gradient(#4a4a4a, #222222);
+}
+
+#box-music-player.winamp-skin .music-btn-play {
+  color: #00ff00;
+  border-color: #0a4d0a;
+}
+
+/* Konami cat rain */
+.konami-cat {
+  position: fixed;
+  top: -40px;
+  z-index: 600;
+  pointer-events: none;
+  animation: konami-fall 3.4s linear forwards;
+}
+
+@keyframes konami-fall {
+  to { transform: translateY(112vh) rotate(24deg); }
 }
 
 .header-music-btn {
@@ -206,13 +318,6 @@ body {
   border-color: #059669;
   background: rgba(16, 185, 129, 0.12);
 }
-/* Old rule */
-.unused-header-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .theme-toggle-btn {
   background: transparent;
   color: var(--text-main);

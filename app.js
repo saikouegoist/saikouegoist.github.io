@@ -56,6 +56,9 @@
     initRetroClock();
     initRetroTicker();
     initMusicBox();
+    initFx();
+    initSkin();
+    initKonami();
     window.addEventListener('hashchange', renderRoute);
     renderRoute();
   });
@@ -65,8 +68,27 @@
   // -----------------------------------------------------------
   function initTheme() {
     const toggleBtn = document.getElementById('theme-toggle');
-    const savedTheme = safeStorage.get('meowking_theme') || 'dark';
-    setTheme(savedTheme);
+    const stored = safeStorage.get('meowking_theme');
+    let startTheme = stored || 'dark';
+
+    // Night-owl auto mode: first-time visitors (no stored choice) landing
+    // between 10pm and 6am get dark theme plus an owl badge. Any manual
+    // toggle writes the key and permanently wins over the auto behavior.
+    if (!stored) {
+      const hour = new Date().getHours();
+      if (hour >= 22 || hour < 6) {
+        startTheme = 'dark';
+        if (toggleBtn && toggleBtn.parentElement && !document.getElementById('night-owl-badge')) {
+          const badge = document.createElement('span');
+          badge.id = 'night-owl-badge';
+          badge.className = 'night-owl-badge';
+          badge.textContent = '🦉 night owl';
+          toggleBtn.parentElement.appendChild(badge);
+        }
+      }
+    }
+
+    setTheme(startTheme);
 
     if (toggleBtn) {
       toggleBtn.addEventListener('click', () => {
@@ -224,6 +246,33 @@
     setInterval(tick, 1000);
   }
 
+  // Seasonal ticker suffix, zero assets needed. Updates itself by month.
+  function getSeasonalBit() {
+    const m = new Date().getMonth();
+    if (m === 9) return '★ 🎃 SPOOKY SEASON ON THIS SITE ★&nbsp;&nbsp;&nbsp;';
+    if (m === 11) return '★ ❄ HAPPY HOLIDAYS FROM MEOWKING ★&nbsp;&nbsp;&nbsp;';
+    if (m === 0) return '★ 🎆 NEW YEAR, SAME BUGS ★&nbsp;&nbsp;&nbsp;';
+    if (m === 2 || m === 3) return '★ 🌸 SPRING PATCH TUESDAY ★&nbsp;&nbsp;&nbsp;';
+    if (m >= 5 && m <= 7) return '★ ☀ SUMMER UPTIME ★&nbsp;&nbsp;&nbsp;';
+    return '';
+  }
+
+  // Shoutbox: latest guestbook signing, cloud cache first, then local
+  // buffer, then the seed entry. Alias/message are escaped by the caller.
+  function getShoutboxBit() {
+    try {
+      const cloud = JSON.parse(safeStorage.get('meowking_guestbook_cloud_cache') || 'null');
+      const local = JSON.parse(safeStorage.get('meowking_guestbook_entries') || 'null');
+      const seed = (window.SITE_GUESTBOOK || [])[0];
+      const pick = (Array.isArray(cloud) && cloud[0]) ||
+        (Array.isArray(local) && local[0]) || seed;
+      if (pick && pick.alias) {
+        return `★ 📢 LATEST SIGNING: ${escapeHtml(String(pick.alias))} ★&nbsp;&nbsp;&nbsp;`;
+      }
+    } catch (e) { }
+    return '';
+  }
+
   // Retro marquee ticker, driven by rAF so it scrolls even where CSS
   // animations are disabled. Pauses while hovered, like holding a marquee.
   function initRetroTicker() {
@@ -231,6 +280,19 @@
     const bar = document.querySelector('.retro-ticker');
     if (!track || !bar || track.dataset.tickerOn) return;
     track.dataset.tickerOn = '1';
+
+    // Inject shoutbox + seasonal bits into BOTH spans equally so the
+    // half-width seamless loop keeps working. Refreshed every minute so
+    // new signings scroll by without a reload.
+    const spans = track.querySelectorAll('span');
+    const baseHtml = spans.length > 0 ? spans[0].innerHTML : '';
+    function refreshTickerExtras() {
+      const extra = getSeasonalBit() + getShoutboxBit();
+      spans.forEach(sp => { sp.innerHTML = baseHtml + extra; });
+    }
+    refreshTickerExtras();
+    setInterval(refreshTickerExtras, 60000);
+
     let paused = false;
     bar.addEventListener('mouseenter', () => { paused = true; });
     bar.addEventListener('mouseleave', () => { paused = false; });
@@ -549,6 +611,164 @@
 
 
 
+
+  // -----------------------------------------------------------
+  // Weather FX Engine (snow / rain / matrix over a fixed canvas)
+  // -----------------------------------------------------------
+  function initFx() {
+    const btn = document.getElementById('fx-toggle');
+    const MODES = ['off', 'snow', 'rain', 'matrix'];
+    let mode = safeStorage.get('meowking_fx') || 'off';
+    if (!MODES.includes(mode)) mode = 'off';
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      mode = 'off';
+    }
+
+    let canvas = document.getElementById('fx-layer');
+    if (!canvas) {
+      canvas = document.createElement('canvas');
+      canvas.id = 'fx-layer';
+      canvas.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(canvas);
+    }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const SNOW_CHARS = ['❄', '·', '*', '❅'];
+    const MATRIX_CHARS = 'アイウエオカキクケコサシスセソ0123456789'.split('');
+    let parts = [];
+    let rafId = null;
+
+    function newPart(anywhere) {
+      const W = canvas.width, H = canvas.height;
+      if (mode === 'rain') {
+        return { x: Math.random() * (W + 100), y: anywhere ? Math.random() * H : -20, len: 10 + Math.random() * 14, sp: 9 + Math.random() * 7 };
+      }
+      if (mode === 'matrix') {
+        return { x: Math.floor(Math.random() * (W / 16)) * 16, y: anywhere ? Math.random() * H : -20, sp: 2 + Math.random() * 4, ch: MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)] };
+      }
+      return { x: Math.random() * W, y: anywhere ? Math.random() * H : -10, r: 1 + Math.random() * 2.4, sp: 0.4 + Math.random() * 1.1, drift: Math.random() * 1.2, ch: SNOW_CHARS[Math.floor(Math.random() * SNOW_CHARS.length)] };
+    }
+
+    function frame() {
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      if (mode === 'rain') {
+        ctx.strokeStyle = 'rgba(140,180,255,0.55)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        parts.forEach(p => {
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x - 3, p.y + p.len);
+          p.y += p.sp; p.x -= 0.6;
+          if (p.y > H + 20) { p.y = -20; p.x = Math.random() * (W + 100); }
+        });
+        ctx.stroke();
+      } else if (mode === 'matrix') {
+        ctx.font = '14px monospace';
+        parts.forEach(p => {
+          for (let t = 0; t < 7; t++) {
+            ctx.fillStyle = t === 0 ? 'rgba(180,255,180,0.9)' : `rgba(0,180,0,${0.55 - t * 0.07})`;
+            ctx.fillText(p.ch, p.x, p.y - t * 15);
+          }
+          p.y += p.sp;
+          if (Math.random() < 0.02) p.ch = MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)];
+          if (p.y - 105 > H) { p.y = -20; p.x = Math.floor(Math.random() * (W / 16)) * 16; }
+        });
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.font = '12px monospace';
+        const t = performance.now() / 1000;
+        parts.forEach(p => {
+          ctx.fillText(p.ch, p.x + Math.sin(t + p.y * 0.02) * p.drift * 12, p.y);
+          p.y += p.sp;
+          if (p.y > H + 12) { p.y = -12; p.x = Math.random() * W; }
+        });
+      }
+      rafId = requestAnimationFrame(frame);
+    }
+
+    const OK_BADGE = '<img src="assets/fx-ok.svg" class="fx-ok-gif" alt="" aria-hidden="true">';
+    function apply() {
+      if (btn) btn.innerHTML = 'fx:' + mode + OK_BADGE;
+      safeStorage.set('meowking_fx', mode);
+      parts = [];
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      if (mode === 'off' || document.hidden) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+      const n = mode === 'matrix' ? 70 : 130;
+      for (let i = 0; i < n; i++) parts.push(newPart(true));
+      rafId = requestAnimationFrame(frame);
+    }
+
+    document.addEventListener('visibilitychange', apply);
+    if (btn) btn.addEventListener('click', () => {
+      mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+      apply();
+    });
+    apply();
+  }
+
+  // -----------------------------------------------------------
+  // Winamp Skin Toggle for the music box (CSS does the painting)
+  // -----------------------------------------------------------
+  function initSkin() {
+    const btn = document.getElementById('skin-btn');
+    const box = document.getElementById('box-music-player');
+    let skin = safeStorage.get('meowking_skin') || 'default';
+    if (skin !== 'winamp') skin = 'default';
+    function apply() {
+      if (box) box.classList.toggle('winamp-skin', skin === 'winamp');
+      if (btn) btn.classList.toggle('active', skin === 'winamp');
+      safeStorage.set('meowking_skin', skin);
+    }
+    if (btn) btn.addEventListener('click', () => {
+      skin = skin === 'winamp' ? 'default' : 'winamp';
+      apply();
+    });
+    apply();
+  }
+
+  // -----------------------------------------------------------
+  // Konami Code Easter Egg (cat rain, 5s cooldown)
+  // -----------------------------------------------------------
+  function initKonami() {
+    const SEQ = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+    let pos = 0;
+    let cooling = false;
+    document.addEventListener('keydown', (e) => {
+      // Ignore keystrokes typed into inputs/textareas/selects so chatting
+      // in the guestbook can never trigger (or corrupt) the sequence.
+      if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+      const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      pos = (k === SEQ[pos]) ? pos + 1 : (k === SEQ[0] ? 1 : 0);
+      if (pos === SEQ.length) { pos = 0; catRain(); }
+    });
+    function catRain() {
+      if (cooling) return;
+      cooling = true;
+      setTimeout(() => { cooling = false; }, 5000);
+      for (let i = 0; i < 36; i++) {
+        const s = document.createElement('span');
+        s.className = 'konami-cat';
+        s.textContent = Math.random() < 0.5 ? '=^.^=' : '🐱';
+        s.style.left = (Math.random() * 100) + 'vw';
+        s.style.animationDelay = (Math.random() * 1.2) + 's';
+        s.style.fontSize = (0.9 + Math.random() * 1.2) + 'rem';
+        document.body.appendChild(s);
+        setTimeout(() => s.remove(), 4800);
+      }
+    }
+  }
 
   function renderRoute() {
     const rawHash = window.location.hash || '';

@@ -19,14 +19,18 @@
 
 ```
 meowking/
-├── assets/
-│   ├── cat.jpg                  # Avatar image (gritty grainy kitten)
-│   ├── button-meowking.svg      # Retro 88x31 "MEOWKING WEB SITE" button
-│   └── button-private.svg       # Retro 88x31 "NO TRACK" badge
-├── index.html                   # Main site HTML structure & SPA shell
+├── assets/                      # Images, GIFs, SVG badges, audio library
+├── articles/                    # Standalone Markdown articles (*.md)
+├── temples/                     # Hidden Temple pages (*.md, via secret footer glyph)
+├── data/                        # Manual content: config, articles, notes,
+│                                # projects, temples, about, links, music, guestbook
+├── index.html                   # Main SPA shell (+ about/articles/notes/
+│                                # projects/links/guestbook static mirrors)
+├── 404.html                     # Retro mocking not-found page
 ├── style.css                    # Complete stylesheet & dark/light theme
-├── content.js                   # THE CENTRALIZED DATA FILE (articles, notes, projects)
-├── app.js                       # Routing engine, markdown renderer, theme & counter
+├── content.js                   # Bridge bundling data/* into SITE_CONTENT
+├── app.js                       # Router, markdown, theme, music, FX, guestbook
+├── firestore.rules              # Guestbook security rules (paste in Firebase console)
 ├── .nojekyll                    # Tells GitHub Pages to serve all files as static
 └── README.md                    # This documentation
 ```
