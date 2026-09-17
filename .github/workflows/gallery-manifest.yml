@@ -14,8 +14,13 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    concurrency:
+      group: gallery-manifest
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
@@ -29,7 +34,7 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add data/gallery.js
             git commit -m "Auto-update gallery manifest from images/"
-            git pull --rebase
+            git pull --rebase --autostash
             python scripts/build-gallery-manifest.py
             if ! git diff --quiet -- data/gallery.js; then
               git add data/gallery.js

@@ -1041,9 +1041,11 @@ body {
 
 /* Let the Temple title bar wrap on narrow screens so the
    page counter + prev/next never overflow. Ignored by old browsers. */
-.box-header:has(.temple-head-nav) {
-  flex-wrap: wrap;
-  gap: 4px;
+@supports selector(:has(*)) {
+  .box-header:has(.temple-head-nav) {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
 }
 
 .temple-head-btn {
@@ -2888,6 +2890,10 @@ iframe {
    Homepage Image Gallery (fixed 540x240 frame, retro box styling)
    Manifest auto-generated from images/ by scripts/build-gallery-manifest.py
    -------------------------------------------------------------------------- */
+.box-gallery {
+  overflow: hidden;
+}
+
 .gallery-box-content {
   display: flex;
   flex-direction: column;
@@ -2919,6 +2925,12 @@ iframe {
   padding: 0;
   margin: 0 auto;
   overflow: hidden;
+  cursor: zoom-in;
+}
+
+.gallery-frame:focus-visible {
+  outline: 2px solid var(--link-color);
+  outline-offset: 2px;
 }
 
 .gallery-frame img {
@@ -2968,4 +2980,88 @@ iframe {
   .gallery-frame {
     height: 200px;
   }
+}
+
+/* --------------------------------------------------------------------------
+   Gallery fullscreen lightbox (click frame to open, Esc/arrows to navigate)
+   -------------------------------------------------------------------------- */
+.gallery-lightbox[hidden] {
+  display: none;
+}
+
+.gallery-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.gallery-lb-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.gallery-lb-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: min(880px, 92vw);
+  max-height: 92vh;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 10px 12px 12px;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6);
+}
+
+.gallery-lb-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.gallery-lb-counter {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.gallery-lb-img {
+  display: block;
+  max-width: 100%;
+  max-height: 68vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  background: #000000;
+  border: 1px solid var(--border-color);
+}
+
+.gallery-lb-caption {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gallery-lb-controls {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+body.gallery-lb-open {
+  overflow: hidden;
 }

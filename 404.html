@@ -82,7 +82,7 @@
         <p class="big-404">4 0 4</p>
         <div class="mock-line">&gt; <span id="mock-text">loading insult...</span><span class="cursor">_</span></div>
         <p style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">requested: <span id="bad-url">unknown</span></p>
-        <a class="home-btn" href="./">&larr; retreat to homepage</a>
+        <a class="home-btn" id="home-link" href="./">&larr; retreat to homepage</a>
       </div>
     </div>
     <p class="foot">best viewed without expectations — and with working URLs</p>
@@ -104,6 +104,17 @@
       mocks[Math.floor(Math.random() * mocks.length)];
     try {
       document.getElementById('bad-url').textContent = location.pathname;
+    } catch (e) {}
+    // GitHub Pages serves 404.html at the missing path, so ./ can point
+    // back into the missing folder. Resolve to the repo root instead:
+    // /<repo>/ for project pages, / for user/apex sites.
+    try {
+      var parts = location.pathname.split('/').filter(Boolean);
+      var home = '/';
+      if (parts.length >= 2) home = '/' + parts[0] + '/';
+      else if (parts.length === 1 && location.pathname.slice(-1) === '/') home = location.pathname;
+      var link = document.getElementById('home-link');
+      if (link) link.setAttribute('href', home);
     } catch (e) {}
   </script>
 </body>

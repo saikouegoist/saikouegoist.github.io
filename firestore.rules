@@ -56,7 +56,12 @@ service cloud.firestore {
         // site owner should be able to add one, e.g. from the Firebase
         // Console or a trusted admin tool, not this public-facing form.
         request.resource.data.adminReply == null &&
-        request.resource.data.createdAt == request.time;
+        // createdAt is normally FieldValue.serverTimestamp() (== request.time).
+        // Allow a tolerance window so old browsers falling back to a client
+        // Date are not hard-rejected.
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.createdAt <= request.time + duration.value(5, 'm') &&
+        request.time - request.resource.data.createdAt <= duration.value(24, 'h');
 
       // Never allow public updates or deletes. This is what stops anyone
       // from editing/deleting someone else's entry, or attaching a forged

@@ -15,6 +15,10 @@
   // bar) set up by the current route, torn down before the next route renders.
   let readingModeCleanup = null;
 
+  // Cleanup callback for gallery autoplay + lightbox, torn down on
+  // route change so the 3s slideshow never keeps ticking off-home.
+  let galleryCleanup = null;
+
   // Safe storage helper (prevents SecurityError crashes in private browsing or iframe contexts)
   const safeStorage = {
     get(key) {
@@ -35,7 +39,8 @@
       about: window.SITE_ABOUT || (window.SITE_CONTENT && window.SITE_CONTENT.about) || {},
       coolLinks: window.SITE_LINKS || (window.SITE_CONTENT && window.SITE_CONTENT.coolLinks) || [],
       guestbook: window.SITE_GUESTBOOK || (window.SITE_CONTENT && window.SITE_CONTENT.guestbook) || [],
-      gallery: window.SITE_GALLERY || (window.SITE_CONTENT && window.SITE_CONTENT.gallery) || []
+      gallery: window.SITE_GALLERY || (window.SITE_CONTENT && window.SITE_CONTENT.gallery) || [],
+      music: window.SITE_MUSIC || (window.SITE_CONTENT && window.SITE_CONTENT.music) || null
     };
   }
 
@@ -43,8 +48,13 @@
   function getYear(item) {
     if (item.year) return String(item.year);
     if (item.date) return String(item.date).slice(0, 4);
-    return '2026';
+    return String(new Date().getFullYear());
   }
+
+  // Navigation token: incremented on every route change so async
+  // article/temple fetches from a previous page can never overwrite
+  // the current page when they resolve out of order.
+  let routeToken = 0;
 
   // -----------------------------------------------------------
   // 1. Initialization
@@ -159,7 +169,7 @@
     const badgesShelf = document.getElementById('badges-shelf');
     if (badgesShelf && info.buttons && Array.isArray(info.buttons)) {
       badgesShelf.innerHTML = info.buttons
-        .map(btn => `<a href="${btn.link || '#/'}" class="badge-item"><img src="${btn.image}" alt="${btn.alt || 'badge'}"></a>`)
+        .map(btn => `<a href="${escapeHtml(safeHref(btn.link, '#/'))}" class="badge-item"><img src="${escapeHtml(safeImageSrc(btn.image, 'assets/cat.jpg'))}" alt="${escapeHtml(btn.alt || 'badge')}"></a>`)
         .join('');
     }
 
@@ -169,16 +179,14 @@
     const linkEl = document.getElementById('about-snippet-link');
     if (info.aboutSnippet) {
       if (greetingEl) {
-        if (info.aboutSnippet.greeting && info.aboutSnippet.greeting.includes('<')) {
-          greetingEl.innerHTML = `<strong>${info.aboutSnippet.greeting}</strong>`;
-        } else {
-          greetingEl.innerHTML = `<strong>${escapeHtml(info.aboutSnippet.greeting)}</strong>`;
-        }
+        // Greeting may intentionally contain a single <img> (animated
+        // name gif). Anything else is escaped to block stored XSS via config.
+        greetingEl.innerHTML = `<strong>${sanitizeGreeting(info.aboutSnippet.greeting)}</strong>`;
       }
       if (bioEl) bioEl.textContent = info.aboutSnippet.bio;
       if (linkEl) {
-        if (info.aboutSnippet.linkText) linkEl.innerHTML = info.aboutSnippet.linkText;
-        if (info.aboutSnippet.linkHref) linkEl.href = info.aboutSnippet.linkHref;
+        if (info.aboutSnippet.linkText) linkEl.textContent = info.aboutSnippet.linkText;
+        if (info.aboutSnippet.linkHref) linkEl.href = safeHref(info.aboutSnippet.linkHref, '#/about');
       }
     }
 
@@ -292,21 +300,28 @@
       spans.forEach(sp => { sp.innerHTML = baseHtml + extra; });
     }
     refreshTickerExtras();
-    setInterval(refreshTickerExtras, 60000);
+    const tickerRefreshId = setInterval(refreshTickerExtras, 60000);
 
     let paused = false;
-    bar.addEventListener('mouseenter', () => { paused = true; });
-    bar.addEventListener('mouseleave', () => { paused = false; });
     let x = 0;
     let last = performance.now();
     const SPEED_PX_PER_SEC = 45;
+    // Gentler (not frozen) when the OS asks for reduced motion, so the
+    // ticker still visibly scrolls instead of looking broken.
+    const reduceMotion = Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const speed = reduceMotion ? 15 : SPEED_PX_PER_SEC;
+    document.addEventListener('visibilitychange', () => { last = performance.now(); });
+    bar.addEventListener('mouseenter', () => { paused = true; });
+    bar.addEventListener('mouseleave', () => { paused = false; });
     function frame(now) {
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
-      if (!paused) {
+      // Never burn CPU while the tab is hidden; rAF is already throttled
+      // there but the 60s refresh interval above keeps content fresh.
+      if (!paused && !document.hidden) {
         const half = track.scrollWidth / 2;
         if (half > 0) {
-          x -= SPEED_PX_PER_SEC * dt;
+          x -= speed * dt;
           if (-x >= half) x += half;
           track.style.transform = 'translate3d(' + x + 'px,0,0)';
         }
@@ -324,7 +339,7 @@
     const headerMusicBtn = document.getElementById('header-music-btn');
     if (!playerEl && !headerMusicBtn) return;
 
-    const musicData = window.SITE_MUSIC;
+    const musicData = getSiteData().music || window.SITE_MUSIC;
     if (!musicData) return;
 
     // Elements
@@ -355,7 +370,8 @@
     let isPlaying = false;
     let isLooping = safeStorage.get('meowking_music_loop') !== 'false'; // default true
     let volume = parseFloat(safeStorage.get('meowking_music_vol'));
-    if (isNaN(volume)) volume = 0.7;
+    if (!isFinite(volume)) volume = 0.7;
+    volume = Math.min(1, Math.max(0, volume));
 
     // Real Audio Player (HTML5 Audio)
     const audioPlayer = new Audio();
@@ -449,16 +465,24 @@
 
     // Audio Player events
     audioPlayer.addEventListener('ended', () => {
+      const tracks = getTracks();
       if (isLooping) {
-        audioPlayer.currentTime = 0;
-        audioPlayer.play().catch(() => { });
-      } else {
+        try { audioPlayer.currentTime = 0; } catch (e) { }
+        audioPlayer.play().catch(() => { updatePlayUI(false); });
+      } else if (currentTrackIndex < tracks.length - 1) {
+        // Auto-advance, but stop at the end of the playlist (no wrap).
         selectTrack(currentTrackIndex + 1);
+      } else {
+        updatePlayUI(false);
       }
     });
 
     audioPlayer.addEventListener('error', (e) => {
       console.warn('Audio playback error:', e);
+      // Drop the poisoned src so the next retry reloads instead of
+      // re-playing a failed buffer forever.
+      loadedTrackFile = null;
+      try { audioPlayer.removeAttribute('src'); audioPlayer.load(); } catch (err) { }
       updatePlayUI(false);
     });
 
@@ -471,7 +495,7 @@
         audioPlayer.src = track.file;
         loadedTrackFile = track.file;
       }
-      audioPlayer.volume = volume;
+      audioPlayer.volume = Math.min(1, Math.max(0, volume));
       audioPlayer.loop = isLooping;
 
       // Older browsers return undefined instead of a promise here.
@@ -524,7 +548,16 @@
       if (titleEl) titleEl.textContent = track.title || '';
       if (artistEl) artistEl.textContent = track.artist || '';
       if (extraEl) {
-        extraEl.textContent = track.anime ? `[${track.anime}]` : (track.year ? `(${track.year})` : '');
+        if (track.anime) {
+          extraEl.textContent = `[${track.anime}]`;
+        } else if (track.year) {
+          // Numeric years render as (1979); free-form subtitles
+          // (e.g. Japanese titles stored in year) render bare.
+          const y = String(track.year);
+          extraEl.textContent = /^\d{3,4}[a-z]?$/i.test(y.trim()) ? `(${y})` : y;
+        } else {
+          extraEl.textContent = '';
+        }
       }
       if (counterEl) {
         counterEl.textContent = `${String(currentTrackIndex + 1).padStart(2, '0')}/${String(tracks.length).padStart(2, '0')}`;
@@ -542,12 +575,19 @@
         }
         return;
       }
+      const wasPlaying = isPlaying;
       stopPlayback();
       currentMode = newMode;
       safeStorage.set('meowking_music_mode', currentMode);
       currentTrackIndex = 0;
+      // Force reload: the two playlists may share a file path and the
+      // new first track must always start from 0, not resume mid-track.
+      loadedTrackFile = null;
+      try { audioPlayer.currentTime = 0; } catch (e) { }
       updateTrackDisplay();
-      startPlayback();
+      if (wasPlaying) {
+        startPlayback();
+      }
     }
 
     function selectTrack(index) {
@@ -587,9 +627,11 @@
     if (volumeSlider) {
       volumeSlider.value = Math.round(volume * 100);
       volumeSlider.addEventListener('input', (e) => {
-        volume = parseInt(e.target.value, 10) / 100;
+        let v = parseInt(e.target.value, 10) / 100;
+        if (!isFinite(v)) v = 0.7;
+        volume = Math.min(1, Math.max(0, v));
         safeStorage.set('meowking_music_vol', volume);
-        audioPlayer.volume = volume;
+        try { audioPlayer.volume = volume; } catch (err) { }
       });
     }
     if (btnLoop) {
@@ -784,6 +826,16 @@
 
     updateActiveNav(route.split('/')[0]);
 
+    // Invalidate any in-flight article/temple fetch from the previous page.
+    routeToken++;
+
+    // Tear down gallery autoplay + lightbox first so the slideshow
+    // never survives a route change.
+    if (galleryCleanup) {
+      galleryCleanup();
+      galleryCleanup = null;
+    }
+
     // Tear down any reading-mode UI (e.g. the scroll progress bar) left
     // over from the previous route before rendering the new one.
     if (readingModeCleanup) {
@@ -883,7 +935,7 @@
           ${articles.map(art => `
             <li class="writing-item">
               <a href="#/articles/${escapeHtml(art.id)}" class="writing-title-link">${escapeHtml(art.title)}</a>
-              <div class="writing-meta">${art.date || ''} · ${art.readTime || ''}</div>
+              <div class="writing-meta">${escapeHtml(art.date || '')}${art.date && art.readTime ? ' · ' : ''}${escapeHtml(art.readTime || '')}</div>
             </li>
           `).join('')}
         </ul>
@@ -959,14 +1011,16 @@
         <div class="box-header"><span>gallery</span><span class="gallery-count" id="gallery-counter">01/${String(images.length).padStart(2, '0')}</span></div>
         <div class="box-content gallery-box-content">
           <div class="gallery-scroll">
-            <div class="gallery-frame${startFit === 'whole' ? ' fit-whole' : ''}" id="gallery-frame">
+            <div class="gallery-frame${startFit === 'whole' ? ' fit-whole' : ''}" id="gallery-frame" title="Click to view fullscreen" tabindex="0" role="button" aria-label="Open gallery fullscreen viewer">
               <img id="gallery-img" src="${escapeHtml(images[0])}" alt="${escapeHtml(galleryAltText(images[0], 0))}">
             </div>
           </div>
           <div class="gallery-controls" id="gallery-controls">
             ${showControls ? `
             <button type="button" class="gallery-btn" id="gallery-prev" title="Previous image">[&lt; prev]</button>
-            <button type="button" class="gallery-btn" id="gallery-next" title="Next image">[next &gt;]</button>` : ''}
+            <button type="button" class="gallery-btn" id="gallery-next" title="Next image">[next &gt;]</button>
+            <button type="button" class="gallery-btn" id="gallery-random" title="Show a random image">[? random]</button>
+            <button type="button" class="gallery-btn" id="gallery-auto" title="Toggle 3s slideshow">[auto: off]</button>` : ''}
             <button type="button" class="gallery-btn" id="gallery-fit" title="Toggle fill frame / show whole image">[fit: ${startFit}]</button>
           </div>
         </div>
@@ -982,24 +1036,154 @@
     const counter = document.getElementById('gallery-counter');
     const btnPrev = document.getElementById('gallery-prev');
     const btnNext = document.getElementById('gallery-next');
+    const btnRandom = document.getElementById('gallery-random');
+    const btnAuto = document.getElementById('gallery-auto');
     const btnFit = document.getElementById('gallery-fit');
     if (!img) return;
 
     let index = 0;
+    let autoTimer = null;
     const pad = (n) => String(n).padStart(2, '0');
+
+    // --- Fullscreen lightbox (singleton, built on demand) ---
+    function getLightbox() {
+      let lb = document.getElementById('gallery-lightbox');
+      if (lb) return lb;
+      lb = document.createElement('div');
+      lb.id = 'gallery-lightbox';
+      lb.className = 'gallery-lightbox';
+      lb.hidden = true;
+      lb.innerHTML = `
+        <div class="gallery-lb-backdrop" data-lb-close></div>
+        <div class="gallery-lb-inner" role="dialog" aria-modal="true" aria-label="Gallery image viewer">
+          <div class="gallery-lb-top">
+            <span class="gallery-lb-counter" id="gallery-lb-counter">01/01</span>
+            <button type="button" class="gallery-btn" id="gallery-lb-close" title="Close (Esc)">[x close]</button>
+          </div>
+          <img id="gallery-lb-img" class="gallery-lb-img" src="" alt="">
+          <div class="gallery-lb-caption" id="gallery-lb-caption"></div>
+          <div class="gallery-lb-controls">
+            <button type="button" class="gallery-btn" id="gallery-lb-prev" title="Previous (Left arrow)">[&lt; prev]</button>
+            <button type="button" class="gallery-btn" id="gallery-lb-next" title="Next (Right arrow)">[next &gt;]</button>
+          </div>
+        </div>`;
+      document.body.appendChild(lb);
+      return lb;
+    }
+
+    function syncLightbox() {
+      const lb = document.getElementById('gallery-lightbox');
+      if (!lb || lb.hidden) return;
+      const lbImg = document.getElementById('gallery-lb-img');
+      const lbCounter = document.getElementById('gallery-lb-counter');
+      const lbCaption = document.getElementById('gallery-lb-caption');
+      if (lbImg) {
+        lbImg.src = images[index];
+        lbImg.alt = galleryAltText(images[index], index);
+      }
+      if (lbCounter) lbCounter.textContent = pad(index + 1) + '/' + pad(images.length);
+      if (lbCaption) lbCaption.textContent = galleryAltText(images[index], index);
+    }
+
+    function onLbKey(e) {
+      if (e.key === 'Escape') { closeLightbox(); return; }
+      // Ignore arrows typed into form fields behind the overlay.
+      if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+      if (e.key === 'ArrowLeft') { e.preventDefault(); show(index - 1); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); show(index + 1); }
+    }
+
+    function openLightbox() {
+      const lb = getLightbox();
+      lb.hidden = false;
+      document.body.classList.add('gallery-lb-open');
+      syncLightbox();
+      document.addEventListener('keydown', onLbKey);
+      const btnClose = document.getElementById('gallery-lb-close');
+      const btnLbPrev = document.getElementById('gallery-lb-prev');
+      const btnLbNext = document.getElementById('gallery-lb-next');
+      const backdrop = lb.querySelector('[data-lb-close]');
+      if (btnClose && !btnClose.dataset.wired) {
+        btnClose.dataset.wired = '1';
+        btnClose.addEventListener('click', closeLightbox);
+      }
+      if (btnLbPrev && !btnLbPrev.dataset.wired) {
+        btnLbPrev.dataset.wired = '1';
+        btnLbPrev.addEventListener('click', () => show(index - 1));
+      }
+      if (btnLbNext && !btnLbNext.dataset.wired) {
+        btnLbNext.dataset.wired = '1';
+        btnLbNext.addEventListener('click', () => show(index + 1));
+      }
+      if (backdrop && !backdrop.dataset.wired) {
+        backdrop.dataset.wired = '1';
+        backdrop.addEventListener('click', closeLightbox);
+      }
+      if (btnClose) btnClose.focus();
+    }
+
+    function closeLightbox() {
+      const lb = document.getElementById('gallery-lightbox');
+      if (lb) lb.hidden = true;
+      document.body.classList.remove('gallery-lb-open');
+      document.removeEventListener('keydown', onLbKey);
+      if (frame) frame.focus();
+    }
+
     function show(i) {
       index = (i + images.length) % images.length;
       img.src = images[index];
       img.alt = galleryAltText(images[index], index);
       if (counter) counter.textContent = pad(index + 1) + '/' + pad(images.length);
+      syncLightbox();
     }
+
+    function showRandom() {
+      if (images.length < 2) return;
+      let next = index;
+      // Avoid repeating the same image twice in a row.
+      while (next === index) {
+        next = Math.floor(Math.random() * images.length);
+      }
+      show(next);
+    }
+
+    function stopAuto() {
+      if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+      if (btnAuto) btnAuto.textContent = '[auto: off]';
+    }
+
+    function toggleAuto() {
+      if (autoTimer) { stopAuto(); return; }
+      autoTimer = setInterval(() => show(index + 1), 3000);
+      if (btnAuto) btnAuto.textContent = '[auto: on]';
+    }
+
     if (btnPrev) btnPrev.addEventListener('click', () => show(index - 1));
     if (btnNext) btnNext.addEventListener('click', () => show(index + 1));
+    if (btnRandom) btnRandom.addEventListener('click', showRandom);
+    if (btnAuto) btnAuto.addEventListener('click', toggleAuto);
     if (btnFit && frame) btnFit.addEventListener('click', () => {
       const whole = frame.classList.toggle('fit-whole');
       safeStorage.set('meowking_gallery_fit', whole ? 'whole' : 'cover');
       btnFit.textContent = whole ? '[fit: whole]' : '[fit: cover]';
     });
+    if (frame) {
+      frame.addEventListener('click', openLightbox);
+      frame.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLightbox(); }
+      });
+    }
+
+    // Autoplay + lightbox must die on route change (renderRoute runs this).
+    galleryCleanup = () => {
+      stopAuto();
+      const lb = document.getElementById('gallery-lightbox');
+      if (lb) lb.remove();
+      document.body.classList.remove('gallery-lb-open');
+      document.removeEventListener('keydown', onLbKey);
+      galleryCleanup = null;
+    };
   }
 
   // -----------------------------------------------------------
@@ -1064,7 +1248,8 @@
 
       const countEl = document.getElementById('articles-count');
       if (countEl) countEl.textContent = filtered.length;
-      document.getElementById('articles-container').innerHTML = renderArticleList(filtered);
+      const listEl = document.getElementById('articles-container');
+      if (listEl) listEl.innerHTML = renderArticleList(filtered);
     }
 
     const searchInput = document.getElementById('article-search');
@@ -1110,6 +1295,7 @@
   // ARTICLE DETAIL / READER VIEW (Async Markdown File Loading)
   // -----------------------------------------------------------
   async function renderArticleDetail(container, articleId) {
+    const myToken = ++routeToken;
     const siteData = getSiteData();
     const article = (siteData.articles || []).find(a => a.id === articleId);
 
@@ -1182,6 +1368,10 @@
 
     if (!rawContent) rawContent = article.content || '';
 
+    // Stale navigation guard: if the user already moved to another
+    // article, never paint this fetch into the new page.
+    if (myToken !== routeToken) return;
+
     // Strip frontmatter if present (e.g. --- title: ... ---)
     rawContent = rawContent.trimStart();
     if (rawContent.startsWith('---')) {
@@ -1191,7 +1381,8 @@
       }
     }
 
-    const bodyEl = document.getElementById('article-markdown-body');
+    if (myToken !== routeToken) return;
+    const bodyEl = container.querySelector('#article-markdown-body');
     if (bodyEl) {
       bodyEl.innerHTML = parseMarkdown(rawContent);
     }
@@ -1252,7 +1443,7 @@
             ${temples.map(t => `
               <li class="writing-item">
                 <a href="#/temples/${escapeHtml(t.id)}" class="writing-title-link">${escapeHtml(t.title || t.id)}</a>
-                <div class="writing-meta">${t.date || ''}</div>
+                <div class="writing-meta">${escapeHtml(t.date || '')}</div>
               </li>
             `).join('')}
           </ul>
@@ -1262,6 +1453,7 @@
   }
 
   async function renderTempleDetail(container, templeId) {
+    const myToken = ++routeToken;
     const siteData = getSiteData();
     const temples = siteData.temples || [];
     const idx = temples.findIndex(t => t.id === templeId);
@@ -1322,13 +1514,15 @@
 
     if (!rawContent) rawContent = page.content || '';
 
+    if (myToken !== routeToken) return;
     rawContent = rawContent.trimStart();
     if (rawContent.startsWith('---')) {
       const secondDivider = rawContent.indexOf('---', 3);
       if (secondDivider !== -1) rawContent = rawContent.slice(secondDivider + 3).trim();
     }
 
-    const bodyEl = document.getElementById('temple-markdown-body');
+    if (myToken !== routeToken) return;
+    const bodyEl = container.querySelector('#temple-markdown-body');
     if (bodyEl) bodyEl.innerHTML = parseMarkdown(rawContent);
   }
 
@@ -1393,7 +1587,8 @@
 
       const countEl = document.getElementById('notes-count');
       if (countEl) countEl.textContent = filtered.length;
-      document.getElementById('notes-container').innerHTML = renderNoteList(filtered);
+      const listEl = document.getElementById('notes-container');
+      if (listEl) listEl.innerHTML = renderNoteList(filtered);
     }
 
     const searchInput = document.getElementById('note-search');
@@ -1493,7 +1688,8 @@
 
       const countEl = document.getElementById('projects-count');
       if (countEl) countEl.textContent = filtered.length;
-      document.getElementById('projects-container').innerHTML = renderProjectList(filtered);
+      const listEl = document.getElementById('projects-container');
+      if (listEl) listEl.innerHTML = renderProjectList(filtered);
     }
 
     const searchInput = document.getElementById('project-search');
@@ -1532,8 +1728,8 @@
             ${(proj.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
           </div>
           <div class="project-links">
-            ${proj.demo ? `<a href="${escapeHtml(proj.demo)}" target="_blank" rel="noopener">⚡ Live Demo</a>` : ''}
-            ${proj.github ? `<a href="${escapeHtml(proj.github)}" target="_blank" rel="noopener">🐙 GitHub</a>` : ''}
+            ${proj.demo ? `<a href="${escapeHtml(safeHref(proj.demo))}" target="_blank" rel="noopener">⚡ Live Demo</a>` : ''}
+            ${proj.github ? `<a href="${escapeHtml(safeHref(proj.github))}" target="_blank" rel="noopener">🐙 GitHub</a>` : ''}
           </div>
         </div>
       `;
@@ -1590,7 +1786,7 @@
               <div class="links-group">
                 ${(cat.items || []).map(item => `
                   <div class="link-entry">
-                    <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">&rarr; ${escapeHtml(item.name)}</a>
+                    <a href="${escapeHtml(safeHref(item.url))}" target="_blank" rel="noopener">&rarr; ${escapeHtml(item.name)}</a>
                     <span class="link-desc">— ${escapeHtml(item.description)}</span>
                   </div>
                 `).join('')}
@@ -2411,7 +2607,8 @@
     text = text.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (_, lang, code) => {
       const index = codeBlocks.length;
       const cleanCode = escapeHtml(code.trim());
-      const langAttr = lang ? ` class="language-${lang}"` : '';
+      const safeLang = String(lang || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 20);
+      const langAttr = safeLang ? ` class="language-${safeLang}"` : '';
       codeBlocks.push(`<pre><code${langAttr}>${cleanCode}</code></pre>`);
       return `__CODE_BLOCK_${index}__`;
     });
@@ -2420,27 +2617,31 @@
     // paragraph wrapping never swallows it (it previously rendered literally).
     text = text.replace(/^[ \t]*---[ \t]*$/gm, '__HR__');
 
-    text = text.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
-    text = text.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-    text = text.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-    text = text.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+    // Headings and blockquotes are escaped BEFORE inline formatting so
+    // raw HTML (e.g. <img onerror>) can never survive in trusted content.
+    text = text.replace(/^#### (.*$)/gim, (_, m) => '<h4>' + formatInlineMarkdown(m, false) + '</h4>');
+    text = text.replace(/^### (.*$)/gim, (_, m) => '<h3>' + formatInlineMarkdown(m, false) + '</h3>');
+    text = text.replace(/^## (.*$)/gim, (_, m) => '<h2>' + formatInlineMarkdown(m, false) + '</h2>');
+    text = text.replace(/^# (.*$)/gim, (_, m) => '<h1>' + formatInlineMarkdown(m, false) + '</h1>');
 
-    text = text.replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>');
-    text = formatInlineMarkdown(text);
+    text = text.replace(/^\> (.*$)/gim, (_, m) => '<blockquote>' + formatInlineMarkdown(m, false) + '</blockquote>');
+    text = formatInlineMarkdown(text, false);
 
     // Lists are extracted into placeholders BEFORE paragraph wrapping so the
     // <ul>/<ol> containers can never nest inside each other (the old code
     // re-wrapped <li>s that were already inside a <ul>).
+    // Supports -, *, + bullets and ordered lists. Items are inline-formatted
+    // (escaped) individually so HTML inside list items cannot execute.
     const listBlocks = [];
-    text = text.replace(/^[ \t]*-[ \t]+.*(?:\n[ \t]*-[ \t]+.*)*/gm, (m) => {
+    text = text.replace(/^[ \t]*[-*+][ \t]+.*(?:\n[ \t]*[-*+][ \t]+.*)*/gm, (m) => {
       const items = m.split('\n')
-        .map((l) => '<li>' + l.replace(/^[ \t]*-[ \t]+/, '').trim() + '</li>').join('');
+        .map((l) => '<li>' + formatInlineMarkdown(l.replace(/^[ \t]*[-*+][ \t]+/, '').trim(), false) + '</li>').join('');
       listBlocks.push('<ul>' + items + '</ul>');
       return `__LIST_BLOCK_${listBlocks.length - 1}__`;
     });
     text = text.replace(/^[ \t]*\d+\.[ \t]+.*(?:\n[ \t]*\d+\.[ \t]+.*)*/gm, (m) => {
       const items = m.split('\n')
-        .map((l) => '<li>' + l.replace(/^[ \t]*\d+\.[ \t]+/, '').trim() + '</li>').join('');
+        .map((l) => '<li>' + formatInlineMarkdown(l.replace(/^[ \t]*\d+\.[ \t]+/, '').trim(), false) + '</li>').join('');
       listBlocks.push('<ol>' + items + '</ol>');
       return `__LIST_BLOCK_${listBlocks.length - 1}__`;
     });
@@ -2449,6 +2650,16 @@
     text = paragraphs.map(p => {
       p = p.trim();
       if (!p) return '';
+      // A heading/quote sharing a chunk with following text (single
+      // newline, no blank line) must still wrap the trailing text.
+      const headMatch = p.match(/^<h[1-4]>.*<\/h[1-4]>/);
+      if (headMatch && p.length > headMatch[0].length) {
+        return headMatch[0] + `<p>${p.slice(headMatch[0].length).trim().replace(/\n/g, '<br>')}</p>`;
+      }
+      const quoteMatch = p.match(/^<blockquote>.*<\/blockquote>/);
+      if (quoteMatch && p.length > quoteMatch[0].length) {
+        return quoteMatch[0] + `<p>${p.slice(quoteMatch[0].length).trim().replace(/\n/g, '<br>')}</p>`;
+      }
       if (p.startsWith('<h') || p.startsWith('<ul>') || p.startsWith('<ol>') || p.startsWith('<blockquote>') || p.startsWith('__CODE_BLOCK_') || p.startsWith('__LIST_BLOCK_') || p.startsWith('__HR__')) {
         return p;
       }
@@ -2465,28 +2676,33 @@
       text = text.replace(`<p>__LIST_BLOCK_${i}__</p>`, block);
     });
 
-    text = text.replace(/__HR__/g, '<hr>');
     text = text.replace(/<p>__HR__<\/p>/g, '<hr>');
+    text = text.replace(/__HR__/g, '<hr>');
 
     return text;
   }
 
   window.parseMarkdownMicro = parseMarkdown;
 
-  // When preEscaped is true the caller already ran escapeHtml() over the
-  // whole string (e.g. guestbook entries), so code spans must NOT be
-  // escaped a second time or entities display literally ("&amp;amp;").
+  // Inline markdown with single-escape guarantee: the input is always
+  // escaped exactly once up front, so raw HTML can never survive and
+  // entities are never double-escaped (fixes &amp;amp; in guestbook).
+  // preEscaped is kept for backwards compatibility but ignored.
   function formatInlineMarkdown(text, preEscaped) {
     if (!text) return '';
-    if (preEscaped) text = escapeHtml(text);
     if (typeof text !== 'string') text = String(text);
-    text = text.replace(/`([^`]+)`/g, (_, c) => `<code>${preEscaped ? c : escapeHtml(c)}</code>`);
+    void preEscaped;
+    text = escapeHtml(text);
+    // Inline code: content is already escaped above, insert as-is.
+    text = text.replace(/`([^`]+)`/g, (_, c) => `<code>${c}</code>`);
     // Images: ![alt](src). Relative paths allowed (same-origin); dangerous
     // schemes (javascript:, data:, etc.) fall back to plain alt text.
+    // alt/src are already escaped, so they are used as-is (no re-escape).
     text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
       const src = url.trim();
-      if (/^\s*(javascript|data|vbscript|file):/i.test(src)) return escapeHtml(alt);
-      return `<img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy">`;
+      if (/^\s*(javascript|data|vbscript|file):/i.test(src)) return alt;
+      if (!isSafeImageSrc(src)) return alt;
+      return `<img src="${src}" alt="${alt}" loading="lazy">`;
     });
     text = text.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
     text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -2494,11 +2710,12 @@
     // Only allow safe URL schemes for markdown-style links. This blocks
     // javascript:, data:, vbscript:, etc. from being used to smuggle
     // executable code in via user-submitted content (e.g. the guestbook).
+    // Label/href are already escaped, so they are used as-is.
     text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, url) => {
       const trimmedUrl = url.trim();
       const isSafe = /^(https?:|mailto:|#|\/)/i.test(trimmedUrl);
-      const safeHref = isSafe ? trimmedUrl : '#';
-      return `<a href="${escapeHtml(safeHref)}" target="_blank" rel="noopener">${label}</a>`;
+      const safeHrefValue = isSafe ? trimmedUrl : '#';
+      return `<a href="${safeHrefValue}" target="_blank" rel="noopener">${label}</a>`;
     });
     return text;
   }
@@ -2511,6 +2728,53 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  // URL sanitizers: block javascript:/data:/vbscript:/file: everywhere
+  // (projects, links, badges, markdown). Relative paths and
+  // https?/mailto:/#// are allowed.
+  function safeHref(url, fallback) {
+    const fb = fallback || '#';
+    if (typeof url !== 'string') return fb;
+    const t = url.trim();
+    if (!t) return fb;
+    if (/^\s*(javascript|data|vbscript|file):/i.test(t)) return fb;
+    if (/^(https?:|mailto:|#|\/)/i.test(t)) return t;
+    // Relative paths like assets/x.gif or index.html#/about have no
+    // scheme — allow them, block everything else with a scheme (blob:, etc).
+    if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(t)) return t;
+    return fb;
+  }
+
+  function isSafeImageSrc(src) {
+    if (typeof src !== 'string') return false;
+    const t = src.trim();
+    if (!t) return false;
+    if (/^\s*(javascript|data|vbscript|file):/i.test(t)) return false;
+    if (/^(https?:|#|\/)/i.test(t)) return true;
+    if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(t)) return true;
+    return false;
+  }
+
+  function safeImageSrc(src, fallback) {
+    const fb = fallback || 'assets/cat.jpg';
+    if (isSafeImageSrc(src)) return String(src).trim();
+    return fb;
+  }
+
+  // About-snippet greeting: escape everything, then restore at most one
+  // whitelisted <img> (the animated name gif) with a safe src. Strips
+  // event-handler attributes and dangerous schemes.
+  function sanitizeGreeting(raw) {
+    if (raw == null) return '';
+    const s = String(raw);
+    if (!s.includes('<')) return escapeHtml(s);
+    const m = s.match(/<img\s+[^>]*src\s*=\s*["']([^"']+)["'][^>]*>/i);
+    const prefix = escapeHtml(s.split('<')[0]);
+    if (!m) return escapeHtml(s);
+    const src = safeImageSrc(m[1], '');
+    if (!src) return escapeHtml(s);
+    return `${prefix} <img src="${escapeHtml(src)}" alt="meowking" class="about-meowking-gif">`;
   }
 
 })();
