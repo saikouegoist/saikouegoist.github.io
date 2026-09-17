@@ -31,6 +31,7 @@
       articles: window.SITE_ARTICLES || (window.SITE_CONTENT && window.SITE_CONTENT.articles) || [],
       notes: window.SITE_NOTES || (window.SITE_CONTENT && window.SITE_CONTENT.notes) || [],
       projects: window.SITE_PROJECTS || (window.SITE_CONTENT && window.SITE_CONTENT.projects) || [],
+      temples: window.SITE_TEMPLES || (window.SITE_CONTENT && window.SITE_CONTENT.temples) || [],
       about: window.SITE_ABOUT || (window.SITE_CONTENT && window.SITE_CONTENT.about) || {},
       coolLinks: window.SITE_LINKS || (window.SITE_CONTENT && window.SITE_CONTENT.coolLinks) || [],
       guestbook: window.SITE_GUESTBOOK || (window.SITE_CONTENT && window.SITE_CONTENT.guestbook) || []
@@ -387,7 +388,7 @@
     audioPlayer.addEventListener('ended', () => {
       if (isLooping) {
         audioPlayer.currentTime = 0;
-        audioPlayer.play().catch(() => {});
+        audioPlayer.play().catch(() => { });
       } else {
         selectTrack(currentTrackIndex + 1);
       }
@@ -572,7 +573,8 @@
     // Distraction-free reading layout: hides the left/right sidebars and
     // footer, keeps the header/top-nav, and widens the article pane.
     const isArticleReading = route.startsWith('articles/');
-    document.body.classList.toggle('reading-mode', isArticleReading);
+    const isTempleReading = route.startsWith('temples/') || route === 'temples' || route === 'unknown';
+    document.body.classList.toggle('reading-mode', isArticleReading || isTempleReading);
 
     if (route === 'home' || route === '') {
       renderHome(mainContent);
@@ -581,6 +583,16 @@
     } else if (isArticleReading) {
       const articleId = route.replace('articles/', '');
       renderArticleDetail(mainContent, articleId);
+    } else if (route === 'temples' || route === 'unknown') {
+      const temples = getSiteData().temples || [];
+      if (temples.length > 0) {
+        renderTempleDetail(mainContent, temples[0].id);
+      } else {
+        renderTemples(mainContent);
+      }
+    } else if (isTempleReading) {
+      const templeId = route.replace('temples/', '').replace('unknown/', '');
+      renderTempleDetail(mainContent, templeId);
     } else if (route === 'notes') {
       renderNotes(mainContent);
     } else if (route === 'projects') {
@@ -595,7 +607,7 @@
       renderNotFound(mainContent);
     }
 
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    window.scrollTo(0, 0);
   }
 
   function updateActiveNav(activeKey) {
@@ -780,7 +792,7 @@
           <a href="#/articles/${escapeHtml(art.id)}">${escapeHtml(art.title)}</a>
         </h2>
         <div class="article-card-meta">
-          <span>📅 ${art.date || ''}</span>
+          <span>📅 ${escapeHtml(art.date || '')}</span>
           ${art.readTime ? `<span>⏱️ ${escapeHtml(art.readTime)}</span>` : ''}
           ${art.file ? `<span style="color: var(--text-muted);">📄 ${escapeHtml(art.file)}</span>` : ''}
         </div>
@@ -822,7 +834,7 @@
 
             <h1 class="article-full-title">${escapeHtml(article.title)}</h1>
             <div class="article-card-meta">
-              <span>Published: ${article.date}</span>
+              <span>Published: ${escapeHtml(article.date || '')}</span>
               ${article.readTime ? `<span>Reading time: ${escapeHtml(article.readTime)}</span>` : ''}
             </div>
 
@@ -904,6 +916,115 @@
       window.removeEventListener('resize', updateProgress);
       bar.remove();
     };
+  }
+
+  // -----------------------------------------------------------
+  // UNKNOWN / TEMPLES VIEWS (list + reader with Prev/Next)
+  // Renders .md files from temples/ registered in data/temples.js
+  // -----------------------------------------------------------
+  function renderTemples(container) {
+    const siteData = getSiteData();
+    const temples = siteData.temples || [];
+
+    if (temples.length === 0) {
+      container.innerHTML = `
+        <div class="box">
+          <div class="box-header">Temple</div>
+          <div class="box-content">
+            <p>Nothing here yet</p>
+            <p><a href="#/" class="back-btn">&larr; back home</a></p>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="box">
+        <div class="box-header">Temple</div>
+        <div class="box-content">
+          <ul class="writings-list">
+            ${temples.map(t => `
+              <li class="writing-item">
+                <a href="#/temples/${escapeHtml(t.id)}" class="writing-title-link">${escapeHtml(t.title || t.id)}</a>
+                <div class="writing-meta">${t.date || ''}</div>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      </div>
+    `;
+  }
+
+  async function renderTempleDetail(container, templeId) {
+    const siteData = getSiteData();
+    const temples = siteData.temples || [];
+    const idx = temples.findIndex(t => t.id === templeId);
+    const page = idx !== -1 ? temples[idx] : null;
+
+    if (!page) {
+      container.innerHTML = `
+        <div class="box">
+          <div class="box-header">Temple - not found</div>
+          <div class="box-content">
+            <p>The requested page could not be found.</p>
+            <p><a href="#/temples" class="back-btn">&larr; back</a></p>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    const prev = idx > 0 ? temples[idx - 1] : null;
+    const next = idx < temples.length - 1 ? temples[idx + 1] : null;
+
+    container.innerHTML = `
+      <div class="box article-full">
+        <div class="box-header"><span>Temple <span class="temple-page-num">${String(idx + 1).padStart(2, '0')}/${String(temples.length).padStart(2, '0')}</span></span><span class="temple-head-nav">${prev ? `<a href="#/temples/${escapeHtml(prev.id)}" class="temple-head-btn">&larr; prev</a>` : `<span class="temple-head-btn disabled">&larr; prev</span>`}${next ? `<a href="#/temples/${escapeHtml(next.id)}" class="temple-head-btn">next &rarr;</a>` : `<span class="temple-head-btn disabled">next &rarr;</span>`}</span></div>
+        <div class="box-content">
+          <div class="reading-pane-inner">
+            <h1 class="article-full-title">${escapeHtml(page.title || page.id)}</h1>
+            <div class="article-card-meta"><span>${escapeHtml(page.date || '')}</span></div>
+            <div class="article-body" id="temple-markdown-body">
+              <p style="color: var(--text-muted);">Loading...</p>
+            </div>
+            <div class="temple-bottom-row">
+              <button type="button" class="temple-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">&uarr; top</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    readingModeCleanup = setupReadingProgressBar();
+
+    let rawContent = articleContentCache['temple:' + page.id] || '';
+    if (typeof rawContent !== 'string') rawContent = String(rawContent);
+
+    if (!rawContent && page.file) {
+      try {
+        const response = await fetch(page.file);
+        if (response.ok) {
+          rawContent = await response.text();
+          articleContentCache['temple:' + page.id] = rawContent;
+        } else {
+          rawContent = page.content || `*Could not load file: ${page.file} (HTTP ${response.status})*`;
+        }
+      } catch (err) {
+        rawContent = page.content || `*Note: run a local server (e.g. \`python -m http.server\`) to preview external .md locally. On GitHub Pages this loads automatically.*`;
+      }
+    }
+
+    if (!rawContent) rawContent = page.content || '';
+
+    rawContent = rawContent.trimStart();
+    if (rawContent.startsWith('---')) {
+      const secondDivider = rawContent.indexOf('---', 3);
+      if (secondDivider !== -1) rawContent = rawContent.slice(secondDivider + 3).trim();
+    }
+
+    const bodyEl = document.getElementById('temple-markdown-body');
+    if (bodyEl) bodyEl.innerHTML = parseMarkdown(rawContent);
   }
 
   // -----------------------------------------------------------
@@ -994,7 +1115,7 @@
     return notes.map(note => `
       <div class="note-item">
         <div class="note-meta">
-          <span>📅 ${note.date || ''}</span>
+          <span>📅 ${escapeHtml(note.date || '')}</span>
           <div class="tag-list">
             ${(note.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join('')}
           </div>
@@ -1458,14 +1579,18 @@
 
     // Combine cloud, local, and seed entries
     function getAllCombinedEntries() {
-      // If we have live Firestore entries, use them as primary
+      const locals = getLocalEntries() || [];
+      // If we have live Firestore entries, use them as primary, but keep
+      // offline-saved entries that never reached the cloud. Matched by
+      // content so already-synced posts don't show up twice.
       if (firestoreEntries && firestoreEntries.length > 0) {
-        return firestoreEntries;
+        const cloudKeys = new Set(firestoreEntries.map(e => `${e.alias}||${e.message}||${e.timestamp}`));
+        const pending = locals.filter(e => !cloudKeys.has(`${e.alias}||${e.message}||${e.timestamp}`));
+        return [...pending, ...firestoreEntries];
       }
 
       // Check cached Firestore or local storage entries
-      const locals = getLocalEntries();
-      if (locals && locals.length > 0) {
+      if (locals.length > 0) {
         return [...locals, ...seedEntries];
       }
 
@@ -1937,11 +2062,17 @@
     }
 
     // If the visitor navigates away, renderRoute() runs this cleanup: stop
-    // the cooldown countdown so it can't tick against detached DOM forever.
+    // the cooldown countdown so it can't tick against detached DOM forever,
+    // and detach the Firestore live listener so listeners never stack up
+    // across repeat visits to the guestbook.
     readingModeCleanup = () => {
       if (cooldownIntervalId) {
         clearInterval(cooldownIntervalId);
         cooldownIntervalId = null;
+      }
+      if (gbUnsubscribe) {
+        try { gbUnsubscribe(); } catch (e) { }
+        gbUnsubscribe = null;
       }
     };
 
@@ -2045,6 +2176,13 @@
     if (preEscaped) text = escapeHtml(text);
     if (typeof text !== 'string') text = String(text);
     text = text.replace(/`([^`]+)`/g, (_, c) => `<code>${preEscaped ? c : escapeHtml(c)}</code>`);
+    // Images: ![alt](src). Relative paths allowed (same-origin); dangerous
+    // schemes (javascript:, data:, etc.) fall back to plain alt text.
+    text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
+      const src = url.trim();
+      if (/^\s*(javascript|data|vbscript|file):/i.test(src)) return escapeHtml(alt);
+      return `<img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy">`;
+    });
     text = text.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
     text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');

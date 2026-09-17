@@ -8,8 +8,7 @@
 
 - **Aesthetic**: Faithfully replicates the classic personal web shrine layout with royal blue header boxes, subtle borders, retro typography, and a 3-column desktop grid.
 - **Zero Build Step**: Built with 100% native HTML5, CSS3, and modern Vanilla JavaScript. No Node.js, Webpack, or framework compilation required.
-- **Centralized Content**: Add, edit, or delete articles, notes, projects, and site settings by updating a single file: `content.js`.
-- **Integrated Content Studio**: Includes `editor.html`—a visual writing tool with live Markdown preview and 1-click download/copy to update your content without touching code.
+- **Centralized Content**: Add, edit, or delete articles, notes, projects, and site settings by editing files in `data/` manually.
 - **GitHub Pages Ready**: Out-of-the-box support for `yourusername.github.io/meowking/` or a custom domain.
 - **Theme Toggle**: Switch between Dark Mode (default obsidian & royal blue) and Light Mode (crisp retro paper) with persistent `localStorage`.
 - **Offline Capable**: Double-click `index.html` on your computer to open and view the site locally without even running a web server!
@@ -27,9 +26,7 @@ meowking/
 ├── index.html                   # Main site HTML structure & SPA shell
 ├── style.css                    # Complete stylesheet & dark/light theme
 ├── content.js                   # THE CENTRALIZED DATA FILE (articles, notes, projects)
-├── content.json                 # JSON mirror for automated tools / API backup
 ├── app.js                       # Routing engine, markdown renderer, theme & counter
-├── editor.html                  # Visual Content Studio / Post Creator
 ├── .nojekyll                    # Tells GitHub Pages to serve all files as static
 └── README.md                    # This documentation
 ```
@@ -46,7 +43,7 @@ You can deploy this site to GitHub Pages in under 2 minutes.
 2. Name your repository `meowking` (or `yourusername.github.io` if you want it as your primary site).
 3. Set the repository to **Public** and click **Create repository**.
 4. On the repository page, click **uploading an existing file**.
-5. Drag and drop all the files and folders from this folder (`index.html`, `style.css`, `content.js`, `app.js`, `editor.html`, `.nojekyll`, and the `assets/` folder).
+5. Drag and drop all the files and folders from this folder (`index.html`, `style.css`, `content.js`, `app.js`, `.nojekyll`, and the `assets/` folder).
 6. Click **Commit changes**.
 7. Go to **Settings** → **Pages** (in the left sidebar).
 8. Under **Branch**, select `main` (or `master`), leave folder as `/ (root)`, and click **Save**.
@@ -87,18 +84,7 @@ After pushing:
 
 You **never** need to touch `index.html` or `style.css` to manage your content. Everything is driven by `content.js`.
 
-### Method 1: Using the Visual Content Studio (`editor.html`)
-
-1. Open `editor.html` directly in your browser.
-2. Choose what you want to create:
-   - **📝 New Article**: Write title, tags, and Markdown body with a live side-by-side preview.
-   - **💬 New Note**: Add a quick thought or code snippet.
-   - **🚀 New Project**: Add a portfolio item with tags, GitHub URL, and live demo link.
-3. Click **Download updated content.js** and replace the existing `content.js` in your project!
-
----
-
-### Method 2: Direct Editing of `content.js`
+### Direct Editing (manual)
 
 Open [content.js](content.js) in any code editor (Notepad, VS Code, etc.).
 

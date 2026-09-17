@@ -18,6 +18,7 @@ window.SITE_CONTENT = {
   get articles() { return window.SITE_ARTICLES || []; },
   get notes() { return window.SITE_NOTES || []; },
   get projects() { return window.SITE_PROJECTS || []; },
+  get temples() { return window.SITE_TEMPLES || []; },
   get about() { return window.SITE_ABOUT || {}; },
   get coolLinks() { return window.SITE_LINKS || []; },
   get guestbook() { return window.SITE_GUESTBOOK || []; },

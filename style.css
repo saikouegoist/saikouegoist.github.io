@@ -160,6 +160,26 @@ body {
   gap: 6px;
 }
 
+/* Low-key footer gif shortcut (only you know where it goes) */
+.secret-temple-link {
+  display: inline-block;
+  margin-top: 10px;
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+
+.secret-temple-link:hover {
+  opacity: 1;
+}
+
+.secret-temple-link img {
+  display: block;
+  height: 16px;
+  width: auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
 .header-music-btn {
   background: var(--bg-card);
   color: var(--text-main);
@@ -898,6 +918,76 @@ body {
   color: var(--text-main);
 }
 
+.temple-page-num {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 1px 6px;
+  color: #fde047;
+}
+
+.temple-head-nav {
+  display: inline-flex;
+  gap: 4px;
+}
+
+/* Let the Temple title bar wrap on narrow screens so the
+   page counter + prev/next never overflow. Ignored by old browsers. */
+.box-header:has(.temple-head-nav) {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.temple-head-btn {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: #fff;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: 0 6px;
+  line-height: 1.5;
+}
+
+a.temple-head-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.temple-head-btn.disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.temple-bottom-row {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 500;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.temple-top-btn {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.temple-top-btn:hover {
+  border-color: #ffd700;
+  color: #ffffff;
+  background: var(--bg-header);
+}
+
 /* --------------------------------------------------------------------------
    Dedicated Views (Articles, Notes, Projects, About, Links)
    -------------------------------------------------------------------------- */
@@ -1051,6 +1141,14 @@ body {
   font-size: 0.9rem;
   line-height: 1.4;
   margin: 14px 0;
+}
+
+.article-body img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 12px 0;
+  border: 1px solid var(--border-color);
 }
 
 .article-body code {
@@ -1999,6 +2097,22 @@ body.reading-mode .article-body {
   background: #eaecf2;
   border-color: #a4a9b8;
   box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.04);
+}
+
+.btn-retro-secondary {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 5px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-retro-secondary:hover {
+  border-color: #38bdf8;
+  color: #38bdf8;
 }
 
 .bbs-log-entry {
