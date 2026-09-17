@@ -52,6 +52,8 @@
     initVisitorCounter();
     populateSiteInfo();
     initPetCat();
+    initRetroClock();
+    initRetroTicker();
     initMusicBox();
     window.addEventListener('hashchange', renderRoute);
     renderRoute();
@@ -203,6 +205,54 @@
   }
 
   // -----------------------------------------------------------
+  // Retro Background Stars + System Time Clock Widget
+  // -----------------------------------------------------------
+  function initRetroClock() {
+    const timeEl = document.getElementById('retro-clock-time');
+    if (!timeEl) return;
+    const pad = (n) => String(n).padStart(2, '0');
+    function tick() {
+      const now = new Date();
+      // Colons ride in spans so CSS can blink them like a 90s LCD.
+      // pad() output is digits only, safe for innerHTML.
+      timeEl.innerHTML = pad(now.getHours()) +
+        '<span class="clock-colon">:</span>' + pad(now.getMinutes()) +
+        '<span class="clock-colon">:</span>' + pad(now.getSeconds());
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  // Retro marquee ticker, driven by rAF so it scrolls even where CSS
+  // animations are disabled. Pauses while hovered, like holding a marquee.
+  function initRetroTicker() {
+    const track = document.querySelector('.retro-ticker-track');
+    const bar = document.querySelector('.retro-ticker');
+    if (!track || !bar || track.dataset.tickerOn) return;
+    track.dataset.tickerOn = '1';
+    let paused = false;
+    bar.addEventListener('mouseenter', () => { paused = true; });
+    bar.addEventListener('mouseleave', () => { paused = false; });
+    let x = 0;
+    let last = performance.now();
+    const SPEED_PX_PER_SEC = 45;
+    function frame(now) {
+      const dt = Math.min(0.1, (now - last) / 1000);
+      last = now;
+      if (!paused) {
+        const half = track.scrollWidth / 2;
+        if (half > 0) {
+          x -= SPEED_PX_PER_SEC * dt;
+          if (-x >= half) x += half;
+          track.style.transform = 'translate3d(' + x + 'px,0,0)';
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // -----------------------------------------------------------
   // Retro Japanese Music Box Engine (Classic & Anime Edition)
   // -----------------------------------------------------------
   function initMusicBox() {
@@ -240,7 +290,8 @@
     let currentTrackIndex = 0;
     let isPlaying = false;
     let isLooping = safeStorage.get('meowking_music_loop') !== 'false'; // default true
-    let volume = parseFloat(safeStorage.get('meowking_music_vol')) || 0.7;
+    let volume = parseFloat(safeStorage.get('meowking_music_vol'));
+    if (isNaN(volume)) volume = 0.7;
 
     // Real Audio Player (HTML5 Audio)
     const audioPlayer = new Audio();
@@ -263,9 +314,9 @@
     ];
 
     function getTracks() {
-      return (musicData[currentMode] && musicData[currentMode].length > 0)
-        ? musicData[currentMode]
-        : (musicData.classic || []);
+      const modeTracks = musicData[currentMode];
+      if (Array.isArray(modeTracks) && modeTracks.length > 0) return modeTracks;
+      return Array.isArray(musicData.classic) ? musicData.classic : [];
     }
 
     function startVUMeter() {
@@ -359,12 +410,25 @@
       audioPlayer.volume = volume;
       audioPlayer.loop = isLooping;
 
-      audioPlayer.play().then(() => {
-        updatePlayUI(true);
-      }).catch(err => {
+      // Older browsers return undefined instead of a promise here.
+      let playResult = null;
+      try {
+        playResult = audioPlayer.play();
+      } catch (err) {
         console.warn('Playback prevented or file error:', err);
         updatePlayUI(false);
-      });
+        return;
+      }
+      if (playResult && typeof playResult.then === 'function') {
+        playResult.then(() => {
+          updatePlayUI(true);
+        }).catch(err => {
+          console.warn('Playback prevented or file error:', err);
+          updatePlayUI(false);
+        });
+      } else {
+        updatePlayUI(true);
+      }
     }
 
     function stopPlayback() {
@@ -385,9 +449,15 @@
     function updateTrackDisplay() {
       const tracks = getTracks();
       const track = tracks[currentTrackIndex] || tracks[0];
-      if (!track) return;
+      if (!track) {
+        if (titleEl) titleEl.textContent = '-- no tracks --';
+        if (artistEl) artistEl.textContent = '';
+        if (extraEl) extraEl.textContent = '';
+        if (counterEl) counterEl.textContent = '00/00';
+        return;
+      }
 
-      if (titleEl) titleEl.textContent = track.title;
+      if (titleEl) titleEl.textContent = track.title || '';
       if (artistEl) artistEl.textContent = track.artist || '';
       if (extraEl) {
         extraEl.textContent = track.anime ? `[${track.anime}]` : (track.year ? `(${track.year})` : '');
@@ -420,6 +490,7 @@
       const wasPlaying = isPlaying;
       stopPlayback();
       const tracks = getTracks();
+      if (!tracks.length) return;
       currentTrackIndex = (index + tracks.length) % tracks.length;
       updateTrackDisplay();
       if (wasPlaying) {
@@ -578,8 +649,8 @@
         <ul class="writings-list">
           ${articles.map(art => `
             <li class="writing-item">
-              <a href="#/articles/${art.id}" class="writing-title-link">${escapeHtml(art.title)}</a>
-              <div class="writing-meta">${art.date} · ${art.readTime || ''}</div>
+              <a href="#/articles/${escapeHtml(art.id)}" class="writing-title-link">${escapeHtml(art.title)}</a>
+              <div class="writing-meta">${art.date || ''} · ${art.readTime || ''}</div>
             </li>
           `).join('')}
         </ul>
@@ -601,7 +672,9 @@
     const thoughts = info.randomThoughts || [
       "Everyone wants their website to look like an app now. I wanted mine to look like a website."
     ];
-    const pickedThought = thoughts[Math.floor(Math.random() * thoughts.length)];
+    const pickedThought = thoughts.length > 0
+      ? thoughts[Math.floor(Math.random() * thoughts.length)]
+      : "Everyone wants their website to look like an app now. I wanted mine to look like a website.";
 
     const randomThoughtHtml = `
       <div class="box box-random-thought">
@@ -668,9 +741,9 @@
 
         const q = searchQuery.toLowerCase().trim();
         const matchSearch = !q ||
-          a.title.toLowerCase().includes(q) ||
-          (a.excerpt || '').toLowerCase().includes(q) ||
-          (a.tags || []).some(t => t.toLowerCase().includes(q));
+          String(a.title || '').toLowerCase().includes(q) ||
+          String(a.excerpt || '').toLowerCase().includes(q) ||
+          (a.tags || []).some(t => String(t || '').toLowerCase().includes(q));
 
         return matchYear && matchSearch;
       });
@@ -704,10 +777,10 @@
     return articles.map(art => `
       <article class="article-card">
         <h2 class="article-card-title">
-          <a href="#/articles/${art.id}">${escapeHtml(art.title)}</a>
+          <a href="#/articles/${escapeHtml(art.id)}">${escapeHtml(art.title)}</a>
         </h2>
         <div class="article-card-meta">
-          <span>📅 ${art.date}</span>
+          <span>📅 ${art.date || ''}</span>
           ${art.readTime ? `<span>⏱️ ${escapeHtml(art.readTime)}</span>` : ''}
           ${art.file ? `<span style="color: var(--text-muted);">📄 ${escapeHtml(art.file)}</span>` : ''}
         </div>
@@ -775,6 +848,7 @@
 
     // Fetch markdown content from file if needed
     let rawContent = article.content || articleContentCache[article.id] || '';
+    if (typeof rawContent !== 'string') rawContent = String(rawContent);
 
     if (!rawContent && article.file) {
       try {
@@ -792,6 +866,7 @@
     }
 
     // Strip frontmatter if present (e.g. --- title: ... ---)
+    rawContent = rawContent.trimStart();
     if (rawContent.startsWith('---')) {
       const secondDivider = rawContent.indexOf('---', 3);
       if (secondDivider !== -1) {
@@ -884,8 +959,8 @@
 
         const q = searchQuery.toLowerCase().trim();
         const matchSearch = !q ||
-          n.content.toLowerCase().includes(q) ||
-          (n.tags || []).some(t => t.toLowerCase().includes(q));
+          String(n.content || '').toLowerCase().includes(q) ||
+          (n.tags || []).some(t => String(t || '').toLowerCase().includes(q));
 
         return matchYear && matchSearch;
       });
@@ -919,7 +994,7 @@
     return notes.map(note => `
       <div class="note-item">
         <div class="note-meta">
-          <span>📅 ${note.date}</span>
+          <span>📅 ${note.date || ''}</span>
           <div class="tag-list">
             ${(note.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join('')}
           </div>
@@ -982,10 +1057,10 @@
 
         const q = searchQuery.toLowerCase().trim();
         const matchSearch = !q ||
-          p.title.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q) ||
-          (p.details || '').toLowerCase().includes(q) ||
-          (p.tags || []).some(t => t.toLowerCase().includes(q));
+          String(p.title || '').toLowerCase().includes(q) ||
+          String(p.description || '').toLowerCase().includes(q) ||
+          String(p.details || '').toLowerCase().includes(q) ||
+          (p.tags || []).some(t => String(t || '').toLowerCase().includes(q));
 
         return matchYear && matchSearch;
       });
@@ -1031,8 +1106,8 @@
             ${(proj.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
           </div>
           <div class="project-links">
-            ${proj.demo ? `<a href="${proj.demo}" target="_blank" rel="noopener">⚡ Live Demo</a>` : ''}
-            ${proj.github ? `<a href="${proj.github}" target="_blank" rel="noopener">🐙 GitHub</a>` : ''}
+            ${proj.demo ? `<a href="${escapeHtml(proj.demo)}" target="_blank" rel="noopener">⚡ Live Demo</a>` : ''}
+            ${proj.github ? `<a href="${escapeHtml(proj.github)}" target="_blank" rel="noopener">🐙 GitHub</a>` : ''}
           </div>
         </div>
       `;
@@ -1089,7 +1164,7 @@
               <div class="links-group">
                 ${(cat.items || []).map(item => `
                   <div class="link-entry">
-                    <a href="${item.url}" target="_blank" rel="noopener">&rarr; ${escapeHtml(item.name)}</a>
+                    <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">&rarr; ${escapeHtml(item.name)}</a>
                     <span class="link-desc">— ${escapeHtml(item.description)}</span>
                   </div>
                 `).join('')}
@@ -1147,6 +1222,7 @@
     }
 
     let firestoreEntries = [];
+    let gbUnsubscribe = null;
     let isConnectedToFirestore = false;
     let currentIcon = "🐱";
     // Whitelist of avatar icons offered by the UI. Any guestbook entry whose
@@ -1467,16 +1543,16 @@
         const nickColorClass = getNickColorClass(entry.alias);
 
         // Format clean timestamp
-        const tsDisplay = entry.timestamp ? entry.timestamp.slice(0, 16) : '2026-09-15 12:00';
+        const tsDisplay = entry.timestamp ? String(entry.timestamp).slice(0, 16) : '2026-09-15 12:00';
 
         // Clean website link if present
         let websiteChipHtml = '';
         if (entry.website) {
-          let url = entry.website.trim();
+          let url = String(entry.website).trim();
           if (!/^https?:\/\//i.test(url) && !url.startsWith('#')) {
             url = 'https://' + url;
           }
-          const displayUrl = escapeHtml(entry.website.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''));
+          const displayUrl = escapeHtml(url.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''));
           websiteChipHtml = `
             <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="bbs-site-link" title="Visit ${escapeHtml(entry.alias)}'s website">
               🌐 ${displayUrl} ↗
@@ -1485,14 +1561,14 @@
         }
 
         const safeIcon = ALLOWED_GB_ICONS.includes(entry.icon) ? entry.icon : '🐱';
-        const formattedMsg = formatInlineMarkdown(escapeHtml(entry.message));
+        const formattedMsg = formatInlineMarkdown(entry.message, true);
 
         let sysopReplyHtml = '';
         if (entry.adminReply) {
           sysopReplyHtml = `
             <div class="bbs-sysop-reply">
               <span class="bbs-sysop-tag">*** [sysop note]:</span>
-              ${formatInlineMarkdown(escapeHtml(entry.adminReply))}
+              ${formatInlineMarkdown(entry.adminReply, true)}
             </div>
           `;
         }
@@ -1562,11 +1638,18 @@
         return;
       }
 
+      // Drop any previous listener (e.g. from the Sync button) so repeated
+      // syncs never stack duplicate subscriptions.
+      if (gbUnsubscribe) {
+        try { gbUnsubscribe(); } catch (e) { }
+        gbUnsubscribe = null;
+      }
+
       try {
         updateConnectionStatus(false, 'CONNECTING...');
 
         // Subscribe to guestbook collection in real-time
-        db.collection('guestbook').onSnapshot((snapshot) => {
+        gbUnsubscribe = db.collection('guestbook').onSnapshot((snapshot) => {
           isConnectedToFirestore = true;
           updateConnectionStatus(true, 'LIVE FIREBASE SYNC');
 
@@ -1853,6 +1936,15 @@
       startSubmitCooldownUI();
     }
 
+    // If the visitor navigates away, renderRoute() runs this cleanup: stop
+    // the cooldown countdown so it can't tick against detached DOM forever.
+    readingModeCleanup = () => {
+      if (cooldownIntervalId) {
+        clearInterval(cooldownIntervalId);
+        cooldownIntervalId = null;
+      }
+    };
+
     // Connect to Firestore and start listening
     setupFirestoreListener();
   }
@@ -1876,15 +1968,21 @@
   // -----------------------------------------------------------
   function parseMarkdown(md) {
     if (!md) return '';
+    if (typeof md !== 'string') md = String(md);
     let text = md.replace(/\r\n/g, '\n').trim();
 
     const codeBlocks = [];
     text = text.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (_, lang, code) => {
       const index = codeBlocks.length;
       const cleanCode = escapeHtml(code.trim());
-      codeBlocks.push(`<pre><code class="language-${lang}">${cleanCode}</code></pre>`);
+      const langAttr = lang ? ` class="language-${lang}"` : '';
+      codeBlocks.push(`<pre><code${langAttr}>${cleanCode}</code></pre>`);
       return `__CODE_BLOCK_${index}__`;
     });
+
+    // A standalone --- line is a horizontal rule. It gets a placeholder so
+    // paragraph wrapping never swallows it (it previously rendered literally).
+    text = text.replace(/^[ \t]*---[ \t]*$/gm, '__HR__');
 
     text = text.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
     text = text.replace(/^### (.*$)/gim, '<h3>$1</h3>');
@@ -1894,20 +1992,28 @@
     text = text.replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>');
     text = formatInlineMarkdown(text);
 
-    text = text.replace(/^\s*-\s+(.*$)/gim, '<li>$1</li>');
-    text = text.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>');
-    text = text.replace(/<\/ul>\s*<ul>/g, '');
-
-    text = text.replace(/^\s*\d+\.\s+(.*$)/gim, '<oli>$1</oli>');
-    text = text.replace(/<oli>(.*?)<\/oli>/g, '<li>$1</li>');
-    text = text.replace(/(<li>[\s\S]*?<\/li>)/g, '<ol>$1</ol>');
-    text = text.replace(/<\/ol>\s*<ol>/g, '');
+    // Lists are extracted into placeholders BEFORE paragraph wrapping so the
+    // <ul>/<ol> containers can never nest inside each other (the old code
+    // re-wrapped <li>s that were already inside a <ul>).
+    const listBlocks = [];
+    text = text.replace(/^[ \t]*-[ \t]+.*(?:\n[ \t]*-[ \t]+.*)*/gm, (m) => {
+      const items = m.split('\n')
+        .map((l) => '<li>' + l.replace(/^[ \t]*-[ \t]+/, '').trim() + '</li>').join('');
+      listBlocks.push('<ul>' + items + '</ul>');
+      return `__LIST_BLOCK_${listBlocks.length - 1}__`;
+    });
+    text = text.replace(/^[ \t]*\d+\.[ \t]+.*(?:\n[ \t]*\d+\.[ \t]+.*)*/gm, (m) => {
+      const items = m.split('\n')
+        .map((l) => '<li>' + l.replace(/^[ \t]*\d+\.[ \t]+/, '').trim() + '</li>').join('');
+      listBlocks.push('<ol>' + items + '</ol>');
+      return `__LIST_BLOCK_${listBlocks.length - 1}__`;
+    });
 
     const paragraphs = text.split(/\n\n+/);
     text = paragraphs.map(p => {
       p = p.trim();
       if (!p) return '';
-      if (p.startsWith('<h') || p.startsWith('<ul>') || p.startsWith('<ol>') || p.startsWith('<blockquote>') || p.startsWith('__CODE_BLOCK_')) {
+      if (p.startsWith('<h') || p.startsWith('<ul>') || p.startsWith('<ol>') || p.startsWith('<blockquote>') || p.startsWith('__CODE_BLOCK_') || p.startsWith('__LIST_BLOCK_') || p.startsWith('__HR__')) {
         return p;
       }
       return `<p>${p.replace(/\n/g, '<br>')}</p>`;
@@ -1918,14 +2024,27 @@
       text = text.replace(`<p>__CODE_BLOCK_${i}__</p>`, block);
     });
 
+    listBlocks.forEach((block, i) => {
+      text = text.replace(`__LIST_BLOCK_${i}__`, block);
+      text = text.replace(`<p>__LIST_BLOCK_${i}__</p>`, block);
+    });
+
+    text = text.replace(/__HR__/g, '<hr>');
+    text = text.replace(/<p>__HR__<\/p>/g, '<hr>');
+
     return text;
   }
 
   window.parseMarkdownMicro = parseMarkdown;
 
-  function formatInlineMarkdown(text) {
+  // When preEscaped is true the caller already ran escapeHtml() over the
+  // whole string (e.g. guestbook entries), so code spans must NOT be
+  // escaped a second time or entities display literally ("&amp;amp;").
+  function formatInlineMarkdown(text, preEscaped) {
     if (!text) return '';
-    text = text.replace(/`([^`]+)`/g, (_, c) => `<code>${escapeHtml(c)}</code>`);
+    if (preEscaped) text = escapeHtml(text);
+    if (typeof text !== 'string') text = String(text);
+    text = text.replace(/`([^`]+)`/g, (_, c) => `<code>${preEscaped ? c : escapeHtml(c)}</code>`);
     text = text.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
     text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');

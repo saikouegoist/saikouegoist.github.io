@@ -2542,3 +2542,125 @@ iframe {
     font-size: 1.32rem;
   }
 }
+
+/* ==========================================================================
+   MEOWKING - Retro Chrome Layer (Win95 bevels, widgets)
+   Plain black background, exactly as before.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   6. Win95 Beveled Box Borders (outset 3D bevel + inset shadow)
+   -------------------------------------------------------------------------- */
+:root {
+  --bevel-light: #55555e;
+  --bevel-dark: #101014;
+}
+
+[data-theme="light"] {
+  --bevel-light: #ffffff;
+  --bevel-dark: #7a7f8f;
+}
+
+.box,
+.top-nav {
+  border-top: 1px solid var(--bevel-light);
+  border-left: 1px solid var(--bevel-light);
+  border-right: 2px solid var(--bevel-dark);
+  border-bottom: 2px solid var(--bevel-dark);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.06), 3px 3px 0 rgba(0, 0, 0, 0.35);
+}
+
+/* --------------------------------------------------------------------------
+   7. Embossed Box Headers (bottom border + phosphor text glow)
+   -------------------------------------------------------------------------- */
+.box-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12);
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.7), 0 0 8px rgba(150, 170, 255, 0.45);
+}
+
+/* --------------------------------------------------------------------------
+   8. Retro Digital Clock ("system time" sidebar widget, 90s LCD style)
+   -------------------------------------------------------------------------- */
+.box-system-time .box-content {
+  background: #04140a;
+  text-align: center;
+  padding: 10px 8px;
+  border-top: 2px solid #000000;
+  border-left: 2px solid #000000;
+  border-right: 1px solid #2a2f35;
+  border-bottom: 1px solid #2a2f35;
+  box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.9);
+}
+
+.clock-time {
+  font-family: var(--font-mono);
+  font-size: 1.65rem;
+  font-weight: bold;
+  letter-spacing: 3px;
+  color: #4dff6a;
+  animation: retro-clock-flicker 7s linear infinite;
+}
+
+.clock-colon {
+  animation: retro-colon-blink 1s steps(1) infinite;
+}
+
+@keyframes retro-colon-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.15; }
+}
+
+@keyframes retro-clock-flicker {
+  0%, 91%, 94%, 100% { opacity: 1; }
+  92%, 93% { opacity: 0.55; }
+}
+
+[data-theme="light"] .box-system-time .box-content {
+  background: #e4ecda;
+  border-top: 2px solid #9aa392;
+  border-left: 2px solid #9aa392;
+  border-right: 1px solid #ffffff;
+  border-bottom: 1px solid #ffffff;
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="light"] .clock-time {
+  color: #0a6a28;
+  text-shadow: none;
+  animation: none;
+}
+
+/* --------------------------------------------------------------------------
+   9. Scrolling Marquee Ticker Bar (gold-on-black, JS-driven, pauses on hover)
+   -------------------------------------------------------------------------- */
+.retro-ticker {
+  background: #000000;
+  border-top: 1px solid var(--bevel-light);
+  border-bottom: 1px solid var(--bevel-light);
+  color: #ffd75e;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  text-shadow: 0 0 6px rgba(255, 215, 94, 0.5);
+}
+
+.retro-ticker-track {
+  display: inline-flex;
+  width: max-content;
+  padding: 6px 0;
+  will-change: transform;
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion: keep the retro look, drop the animation
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .clock-time,
+  .clock-colon {
+    animation: none;
+  }
+}
