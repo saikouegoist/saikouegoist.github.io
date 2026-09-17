@@ -2892,13 +2892,14 @@ iframe {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  /* Tight side padding (scoped to this box only): the 540px frame plus its
-     1px border is 542px wide, and the center column only yields ~542px after
-     the box border, so default 14px gutters would clip the frame. */
-  padding: 12px 2px;
+  /* Fluid frame now (100% / max 540px, border-box), so we can give it
+     breathing room from the outer box border. Equal L/R = even borders. */
+  padding: 12px 10px;
 }
 
 .gallery-scroll {
+  display: flex;
+  justify-content: center;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -2909,9 +2910,10 @@ iframe {
 }
 
 .gallery-frame {
-  width: 540px;
+  width: 100%;
+  max-width: 540px;
   height: 240px;
-  box-sizing: content-box;
+  box-sizing: border-box;
   background: #000000;
   border: 1px solid var(--border-color);
   padding: 0;
@@ -2921,8 +2923,8 @@ iframe {
 
 .gallery-frame img {
   display: block;
-  width: 540px;
-  height: 240px;
+  width: 100%;
+  height: 100%;
   padding: 0;
   margin: 0;
   border: 0;
@@ -2943,6 +2945,8 @@ iframe {
 .gallery-controls {
   display: flex;
   gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .gallery-btn {
@@ -2958,4 +2962,10 @@ iframe {
 .gallery-btn:hover {
   color: var(--text-main);
   border-color: var(--link-color);
+}
+
+@media (max-width: 640px) {
+  .gallery-frame {
+    height: 200px;
+  }
 }

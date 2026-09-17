@@ -1160,8 +1160,9 @@
     // tear it down automatically when the visitor navigates away.
     readingModeCleanup = setupReadingProgressBar();
 
-    // Fetch markdown content from file if needed
-    let rawContent = article.content || articleContentCache[article.id] || '';
+    // Fetch markdown from file first so edits to articles/*.md take effect.
+    // Inline `article.content` is the offline (file://) / fallback copy.
+    let rawContent = articleContentCache[article.id] || '';
     if (typeof rawContent !== 'string') rawContent = String(rawContent);
 
     if (!rawContent && article.file) {
@@ -1171,13 +1172,15 @@
           rawContent = await response.text();
           articleContentCache[article.id] = rawContent;
         } else {
-          rawContent = `*Could not load external file: ${article.file} (HTTP ${response.status})*`;
+          rawContent = article.content || `*Could not load external file: ${article.file} (HTTP ${response.status})*`;
         }
       } catch (err) {
         // Fallback for file:/// protocol if CORS restricts local fetch
-        rawContent = `*Note: To view external markdown files locally, run a lightweight local server (e.g. \`python -m http.server\` or \`npx serve\`). On GitHub Pages, this file will load automatically.*`;
+        rawContent = article.content || `*Note: To view external markdown files locally, run a lightweight local server (e.g. \`python -m http.server\` or \`npx serve\`). On GitHub Pages, this file will load automatically.*`;
       }
     }
+
+    if (!rawContent) rawContent = article.content || '';
 
     // Strip frontmatter if present (e.g. --- title: ... ---)
     rawContent = rawContent.trimStart();
