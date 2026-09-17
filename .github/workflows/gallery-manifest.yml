@@ -1,0 +1,39 @@
+# Regenerate data/gallery.js whenever images/ changes, so the homepage
+# gallery picks up added/removed images with no manual list edits.
+name: gallery-manifest
+
+on:
+  push:
+    paths:
+      - "images/**"
+      - "scripts/build-gallery-manifest.py"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - run: python scripts/build-gallery-manifest.py
+      - name: Commit updated manifest
+        run: |
+          if git diff --quiet -- data/gallery.js; then
+            echo "gallery manifest unchanged"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data/gallery.js
+            git commit -m "Auto-update gallery manifest from images/"
+            git pull --rebase
+            python scripts/build-gallery-manifest.py
+            if ! git diff --quiet -- data/gallery.js; then
+              git add data/gallery.js
+              git commit -m "Auto-update gallery manifest from images/"
+            fi
+            git push
+          fi

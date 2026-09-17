@@ -9,7 +9,7 @@ A complete guide to managing your articles, notes, projects, links, and about in
 All content is modular and separated into dedicated files for fast, effortless editing:
 
 ```
-d:\iii/
+meowking/
 ├── articles/                <-- Put your standalone Markdown (.md) article files here
 │   ├── why-the-old-web-matters.md
 │   ├── minimalist-cybersecurity-habits.md
@@ -203,6 +203,7 @@ Open `data/about.js`:
 | Task | File to Edit |
 | :--- | :--- |
 | **Write an article** | Create `articles/your-post.md`, register in `data/articles.js` |
+| **Add a gallery image** | Drop `.png`/`.jpg`/`.jpeg`/`.gif`/`.webp` into `images/` and push (manifest auto-updates, never hand-edit `data/gallery.js`) |
 | **Delete an article** | Remove from `data/articles.js` |
 | **Add a quick thought** | Add to `data/notes.js` |
 | **Add a project** | Add to `data/projects.js` |

@@ -22,5 +22,6 @@ window.SITE_CONTENT = {
   get about() { return window.SITE_ABOUT || {}; },
   get coolLinks() { return window.SITE_LINKS || []; },
   get guestbook() { return window.SITE_GUESTBOOK || []; },
+  get gallery() { return window.SITE_GALLERY || []; },
   get music() { return window.SITE_MUSIC || {}; }
 };

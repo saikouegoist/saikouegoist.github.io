@@ -34,7 +34,8 @@
       temples: window.SITE_TEMPLES || (window.SITE_CONTENT && window.SITE_CONTENT.temples) || [],
       about: window.SITE_ABOUT || (window.SITE_CONTENT && window.SITE_CONTENT.about) || {},
       coolLinks: window.SITE_LINKS || (window.SITE_CONTENT && window.SITE_CONTENT.coolLinks) || [],
-      guestbook: window.SITE_GUESTBOOK || (window.SITE_CONTENT && window.SITE_CONTENT.guestbook) || []
+      guestbook: window.SITE_GUESTBOOK || (window.SITE_CONTENT && window.SITE_CONTENT.guestbook) || [],
+      gallery: window.SITE_GALLERY || (window.SITE_CONTENT && window.SITE_CONTENT.gallery) || []
     };
   }
 
@@ -917,7 +918,88 @@
       </div>
     `;
 
-    container.innerHTML = welcomeHtml + writingsHtml + randomThoughtHtml;
+    container.innerHTML = welcomeHtml + writingsHtml + randomThoughtHtml + renderGalleryBox();
+    initGalleryBox();
+  }
+
+  // -----------------------------------------------------------
+  // HOMEPAGE IMAGE GALLERY (auto-generated manifest, one at a time)
+  // Reads window.SITE_GALLERY written by scripts/build-gallery-manifest.py
+  // from the contents of images/. No manual filename list.
+  // -----------------------------------------------------------
+  function getGalleryImages() {
+    const siteData = getSiteData();
+    const raw = siteData.gallery || [];
+    return raw
+      .map((entry) => (typeof entry === 'string' ? entry : (entry && (entry.src || entry.file)) || ''))
+      .filter((src) => typeof src === 'string' && src.length > 0);
+  }
+
+  function galleryAltText(src, index) {
+    try {
+      const base = decodeURIComponent(String(src).split('/').pop().split('?')[0]);
+      const stem = base.replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ').trim();
+      if (stem) return stem.slice(0, 80);
+    } catch (e) { }
+    return 'gallery image ' + (index + 1);
+  }
+
+  function renderGalleryBox() {
+    const images = getGalleryImages();
+    if (images.length === 0) return '';
+
+    const showControls = images.length > 1;
+    const startFit = (function () {
+      try {
+        return safeStorage.get('meowking_gallery_fit') === 'whole' ? 'whole' : 'cover';
+      } catch (e) { return 'cover'; }
+    })();
+    return `
+      <div class="box box-gallery">
+        <div class="box-header"><span>gallery</span><span class="gallery-count" id="gallery-counter">01/${String(images.length).padStart(2, '0')}</span></div>
+        <div class="box-content gallery-box-content">
+          <div class="gallery-scroll">
+            <div class="gallery-frame${startFit === 'whole' ? ' fit-whole' : ''}" id="gallery-frame">
+              <img id="gallery-img" src="${escapeHtml(images[0])}" alt="${escapeHtml(galleryAltText(images[0], 0))}">
+            </div>
+          </div>
+          <div class="gallery-controls" id="gallery-controls">
+            ${showControls ? `
+            <button type="button" class="gallery-btn" id="gallery-prev" title="Previous image">[&lt; prev]</button>
+            <button type="button" class="gallery-btn" id="gallery-next" title="Next image">[next &gt;]</button>` : ''}
+            <button type="button" class="gallery-btn" id="gallery-fit" title="Toggle fill frame / show whole image">[fit: ${startFit}]</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function initGalleryBox() {
+    const images = getGalleryImages();
+    if (images.length === 0) return;
+    const img = document.getElementById('gallery-img');
+    const frame = document.getElementById('gallery-frame');
+    const counter = document.getElementById('gallery-counter');
+    const btnPrev = document.getElementById('gallery-prev');
+    const btnNext = document.getElementById('gallery-next');
+    const btnFit = document.getElementById('gallery-fit');
+    if (!img) return;
+
+    let index = 0;
+    const pad = (n) => String(n).padStart(2, '0');
+    function show(i) {
+      index = (i + images.length) % images.length;
+      img.src = images[index];
+      img.alt = galleryAltText(images[index], index);
+      if (counter) counter.textContent = pad(index + 1) + '/' + pad(images.length);
+    }
+    if (btnPrev) btnPrev.addEventListener('click', () => show(index - 1));
+    if (btnNext) btnNext.addEventListener('click', () => show(index + 1));
+    if (btnFit && frame) btnFit.addEventListener('click', () => {
+      const whole = frame.classList.toggle('fit-whole');
+      safeStorage.set('meowking_gallery_fit', whole ? 'whole' : 'cover');
+      btnFit.textContent = whole ? '[fit: whole]' : '[fit: cover]';
+    });
   }
 
   // -----------------------------------------------------------

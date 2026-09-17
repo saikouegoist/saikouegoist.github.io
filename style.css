@@ -2883,3 +2883,79 @@ iframe {
     animation: none;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Homepage Image Gallery (fixed 540x240 frame, retro box styling)
+   Manifest auto-generated from images/ by scripts/build-gallery-manifest.py
+   -------------------------------------------------------------------------- */
+.gallery-box-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* Tight side padding (scoped to this box only): the 540px frame plus its
+     1px border is 542px wide, and the center column only yields ~542px after
+     the box border, so default 14px gutters would clip the frame. */
+  padding: 12px 2px;
+}
+
+.gallery-scroll {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.gallery-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.gallery-frame {
+  width: 540px;
+  height: 240px;
+  box-sizing: content-box;
+  background: #000000;
+  border: 1px solid var(--border-color);
+  padding: 0;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.gallery-frame img {
+  display: block;
+  width: 540px;
+  height: 240px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  object-fit: cover;
+  object-position: center;
+}
+
+.gallery-frame.fit-whole img {
+  object-fit: contain;
+}
+
+.gallery-count {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.gallery-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.gallery-btn {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.gallery-btn:hover {
+  color: var(--text-main);
+  border-color: var(--link-color);
+}

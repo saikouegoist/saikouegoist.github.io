@@ -20,10 +20,14 @@
 ```
 meowking/
 ├── assets/                      # Images, GIFs, SVG badges, audio library
+├── images/                      # Homepage gallery source (auto-scanned, any .png/.jpg/.jpeg/.gif/.webp)
 ├── articles/                    # Standalone Markdown articles (*.md)
 ├── temples/                     # Hidden Temple pages (*.md, via secret footer glyph)
+├── scripts/                     # build-gallery-manifest.py (regenerates data/gallery.js)
+├── .github/workflows/           # gallery-manifest.yml (auto-updates gallery on push)
 ├── data/                        # Manual content: config, articles, notes,
 │                                # projects, temples, about, links, music, guestbook
+│                                # + gallery.js (AUTO-GENERATED from images/, do not hand-edit)
 ├── index.html                   # Main SPA shell (+ about/articles/notes/
 │                                # projects/links/guestbook static mirrors)
 ├── 404.html                     # Retro mocking not-found page
