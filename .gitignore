@@ -1,7 +1,6 @@
 # meowking - local-only files (never deploy these)
 # editor.html is a private content-writing tool for your own computer.
 # The guard-editor workflow fails CI if it is ever committed.
-editor.html
 
 # OS junk
 .DS_Store

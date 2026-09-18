@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>meowking content studio (local only)</title>
+  <!-- Local-only tool: NEVER commit this file (see .gitignore + guard-editor workflow).
+       It makes zero network requests on purpose. -->
+  <link rel="stylesheet" href="style.css">
+  <style>
+    [hidden] { display: none !important; }
+    .ed-wrap { max-width: 860px; margin: 0 auto; }
+    .ed-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+    .ed-tab {
+      background: var(--bg-card); color: var(--text-main);
+      border: 1px solid var(--border-color); font-family: var(--font-mono);
+      font-size: 0.9rem; padding: 6px 14px; cursor: pointer;
+    }
+    .ed-tab.active { background: var(--bg-header); color: #fff; font-weight: bold; }
+    .ed-form { display: flex; flex-direction: column; gap: 10px; }
+    .ed-field { display: flex; flex-direction: column; gap: 4px; }
+    .ed-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 640px) { .ed-row { grid-template-columns: 1fr; } }
+    .ed-label { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); }
+    .ed-input, .ed-textarea, .ed-select {
+      background: var(--bg-page); color: var(--text-main);
+      border: 1px solid var(--border-color); padding: 7px 10px;
+      font-family: var(--font-mono); font-size: 0.9rem; outline: none; width: 100%;
+    }
+    .ed-textarea { min-height: 180px; resize: vertical; line-height: 1.5; }
+    .ed-textarea-short { min-height: 70px; }
+    .ed-input:focus, .ed-textarea:focus, .ed-select:focus { border-color: var(--link-color); }
+    .ed-input[readonly] { opacity: 0.75; }
+    .ed-btn {
+      background: var(--bg-header); color: #fff; border: 1px solid #4338ca;
+      padding: 8px 16px; font-family: var(--font-ui); font-weight: 700;
+      font-size: 0.9rem; cursor: pointer;
+    }
+    .ed-btn:hover { background: #1f30a8; }
+    .ed-btn-secondary {
+      background: var(--bg-card); color: var(--text-main);
+      border: 1px solid var(--border-color); font-family: var(--font-mono);
+      font-size: 0.8rem; padding: 6px 12px; cursor: pointer;
+    }
+    .ed-btn-secondary:hover { border-color: var(--link-color); }
+    .ed-btn-danger {
+      background: transparent; color: #f87171; border: 1px solid #7f1d1d;
+      font-family: var(--font-mono); font-size: 0.78rem; padding: 4px 10px; cursor: pointer;
+    }
+    .ed-btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .ed-msg { font-family: var(--font-mono); font-size: 0.85rem; min-height: 1.2em; }
+    .ed-msg-error { color: #f87171; }
+    .ed-msg-ok { color: #4ade80; }
+    .ed-item {
+      border: 1px solid var(--border-color); padding: 8px 10px; margin-bottom: 8px;
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    }
+    .ed-item-title { font-weight: bold; }
+    .ed-item-meta { font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted); }
+    .ed-preview {
+      border: 1px dashed var(--border-color); padding: 10px 12px;
+      background: rgba(255,255,255,0.02);
+    }
+    .ed-preview-label { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; }
+    .ed-gate { max-width: 420px; margin: 60px auto 0; }
+    .ed-hint { font-size: 0.88rem; color: var(--text-muted); }
+    .ed-hint code { font-family: var(--font-mono); font-size: 0.82em; }
+    .ed-steps { margin: 0; padding-left: 20px; }
+    .ed-steps li { margin-bottom: 6px; }
+    .ed-steps li:last-child { margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  <div class="site-wrapper ed-wrap">
+
+    <header class="site-header">
+      <a href="#/" class="header-brand" id="brand-link">
+        <div class="avatar-box">
+          <img src="assets/cat.jpg" alt="meowking cat avatar" class="avatar-img">
+        </div>
+        <div class="title-group">
+          <h1 class="site-title">content studio</h1>
+          <span class="site-tagline">local only — never commit this file</span>
+        </div>
+      </a>
+      <div class="header-controls">
+        <a href="index.html#/" class="badge-item" title="back to homepage"><img src="assets/button-meowking.gif" alt="home"></a>
+        <button id="lock-btn" class="theme-toggle-btn" aria-label="Lock studio" hidden>lock</button>
+      </div>
+    </header>
+
+    <!-- Password gate -->
+    <div id="gate" class="box ed-gate">
+      <div class="box-header" id="gate-title">unlock studio</div>
+      <div class="box-content">
+        <div class="ed-form">
+          <p class="ed-hint" id="gate-hint">Enter your studio password. Only a hash is stored, in this browser only.</p>
+          <div class="ed-field">
+            <label class="ed-label" for="gate-pw">password</label>
+            <input type="password" id="gate-pw" class="ed-input" autocomplete="current-password">
+          </div>
+          <div class="ed-field" id="gate-pw2-wrap" hidden>
+            <label class="ed-label" for="gate-pw2">confirm password</label>
+            <input type="password" id="gate-pw2" class="ed-input" autocomplete="new-password">
+          </div>
+          <div class="ed-btn-row">
+            <button type="button" id="gate-btn" class="ed-btn">unlock</button>
+          </div>
+          <div class="ed-msg" id="gate-msg" role="alert"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Studio -->
+    <div id="studio" hidden>
+      <div class="box" id="load-warn" hidden>
+        <div class="box-header">warning</div>
+        <div class="box-content"><p class="ed-msg-error" id="load-warn-text"></p></div>
+      </div>
+
+      <div class="ed-tabs" role="tablist">
+        <button type="button" class="ed-tab active" id="tab-articles" data-tab="articles">articles</button>
+        <button type="button" class="ed-tab" id="tab-notes" data-tab="notes">notes</button>
+        <button type="button" class="ed-tab" id="tab-projects" data-tab="projects">projects</button>
+      </div>
+
+      <!-- ARTICLES -->
+      <div id="tabwrap-articles">
+      <div class="box" style="margin-bottom:14px;">
+        <div class="box-header"><span>how to add / remove articles</span></div>
+        <div class="box-content">
+          <ol class="ed-steps">
+            <li>Fill the form below and press <strong>save article</strong> — it is only staged, nothing on disk changes yet.</li>
+            <li>Press <strong>download current .md</strong> and put the file in <code>articles/</code>. Then press <strong>download data/articles.js</strong> and overwrite <code>data/articles.js</code>. You need <strong>both</strong> — the .md alone shows nothing.</li>
+            <li>Refresh <code>index.html</code> to preview. To change or remove later, use <strong>edit / delete</strong> in existing articles below, then download <code>data/articles.js</code> again.</li>
+            <li>Push to publish.</li>
+          </ol>
+        </div>
+      </div>
+      <div id="panel-articles" class="box">
+        <div class="box-header"><span id="art-form-title">new article</span></div>
+        <div class="box-content">
+          <div class="ed-form">
+            <div class="ed-row">
+              <div class="ed-field">
+                <label class="ed-label" for="art-title">title *</label>
+                <input type="text" id="art-title" class="ed-input" placeholder="My Post Title" maxlength="120">
+              </div>
+              <div class="ed-field">
+                <label class="ed-label" for="art-slug">slug * (url + filename)</label>
+                <input type="text" id="art-slug" class="ed-input" placeholder="my-post-title" maxlength="80">
+              </div>
+            </div>
+            <div class="ed-row">
+              <div class="ed-field">
+                <label class="ed-label" for="art-date">date * (YYYY-MM-DD)</label>
+                <input type="text" id="art-date" class="ed-input" placeholder="2026-09-18" maxlength="10">
+              </div>
+              <div class="ed-field">
+                <label class="ed-label" for="art-readtime">read time (auto)</label>
+                <input type="text" id="art-readtime" class="ed-input" placeholder="3 min read" maxlength="20">
+              </div>
+            </div>
+            <div class="ed-field">
+              <label class="ed-label" for="art-tags">tags (comma separated)</label>
+              <input type="text" id="art-tags" class="ed-input" placeholder="retro, css, design" maxlength="200">
+            </div>
+            <div class="ed-field">
+              <label class="ed-label" for="art-excerpt">excerpt * (one-line summary)</label>
+              <input type="text" id="art-excerpt" class="ed-input" placeholder="What this post is about." maxlength="300">
+            </div>
+            <div class="ed-field">
+              <label class="ed-label" for="art-md">markdown *</label>
+              <textarea id="art-md" class="ed-textarea" placeholder="### Heading&#10;&#10;Write here. Code fences, lists, quotes and **bold** all work."></textarea>
+            </div>
+            <div class="ed-preview">
+              <div class="ed-preview-label">live preview (your site's real renderer)</div>
+              <div id="art-preview" class="article-body"><p class="ed-hint">Start writing to preview…</p></div>
+            </div>
+            <div class="ed-btn-row">
+              <button type="button" id="art-save" class="ed-btn">save article</button>
+              <button type="button" id="art-cancel" class="ed-btn-secondary" hidden>cancel edit</button>
+            </div>
+            <div class="ed-msg" id="art-msg" role="alert"></div>
+            <div class="ed-hint" id="art-draft"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="box" style="margin-top:14px;">
+        <div class="box-header"><span>existing articles (<span id="art-count">0</span>)</span></div>
+        <div class="box-content">
+          <div class="filter-controls-row">
+            <input type="text" id="art-filter-q" class="filter-input" placeholder="Search title, excerpt, or #tag...">
+            <div class="filter-dropdown-wrapper">
+              <label class="filter-label" for="art-filter-year">Year:</label>
+              <select id="art-filter-year" class="retro-select"></select>
+            </div>
+          </div>
+          <div id="art-list"></div>
+          <div class="ed-btn-row" style="margin-top:10px;">
+            <button type="button" id="art-dl-js" class="ed-btn-secondary">download data/articles.js</button>
+            <button type="button" id="art-dl-md" class="ed-btn-secondary">download current .md</button>
+          </div>
+          <p class="ed-hint">After downloading: put <code>slug.md</code> in <code>articles/</code>, overwrite <code>data/articles.js</code>, refresh <code>index.html</code>.</p>
+        </div>
+      </div>
+      </div>
+
+      <!-- NOTES -->
+      <div id="tabwrap-notes" hidden>
+      <div class="box" style="margin-bottom:14px;">
+        <div class="box-header"><span>how to add / remove notes</span></div>
+        <div class="box-content">
+          <ol class="ed-steps">
+            <li>Write the note below and press <strong>save note</strong> — staged only, nothing on disk changes yet.</li>
+            <li>Press <strong>download data/notes.js</strong> and overwrite <code>data/notes.js</code>, then refresh <code>index.html</code>.</li>
+            <li>To change or remove later, use <strong>edit / delete</strong> in existing notes below, then download again. Push to publish.</li>
+          </ol>
+        </div>
+      </div>
+      <div id="panel-notes" class="box">
+        <div class="box-header"><span id="note-form-title">new note</span></div>
+        <div class="box-content">
+          <div class="ed-form">
+            <div class="ed-field">
+              <label class="ed-label" for="note-content">content *</label>
+              <textarea id="note-content" class="ed-textarea ed-textarea-short" placeholder="Quick thought, tip, or terminal one-liner…"></textarea>
+            </div>
+            <div class="ed-row">
+              <div class="ed-field">
+                <label class="ed-label" for="note-tags">tags (comma separated)</label>
+                <input type="text" id="note-tags" class="ed-input" placeholder="linux, tips" maxlength="200">
+              </div>
+              <div class="ed-field">
+                <label class="ed-label" for="note-date">date * (YYYY-MM-DD)</label>
+                <input type="text" id="note-date" class="ed-input" maxlength="10">
+              </div>
+            </div>
+            <div class="ed-btn-row">
+              <button type="button" id="note-save" class="ed-btn">save note</button>
+              <button type="button" id="note-cancel" class="ed-btn-secondary" hidden>cancel edit</button>
+            </div>
+            <div class="ed-msg" id="note-msg" role="alert"></div>
+            <div class="ed-hint" id="note-draft"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="box" id="notes-list-box" style="margin-top:14px;">
+        <div class="box-header"><span>existing notes (<span id="note-count">0</span>)</span></div>
+        <div class="box-content">
+          <div class="filter-controls-row">
+            <input type="text" id="note-filter-q" class="filter-input" placeholder="Search content or #tag...">
+            <div class="filter-dropdown-wrapper">
+              <label class="filter-label" for="note-filter-year">Year:</label>
+              <select id="note-filter-year" class="retro-select"></select>
+            </div>
+          </div>
+          <div id="note-list"></div>
+          <div class="ed-btn-row" style="margin-top:10px;">
+            <button type="button" id="note-dl-js" class="ed-btn-secondary">download data/notes.js</button>
+          </div>
+          <p class="ed-hint">After downloading: overwrite <code>data/notes.js</code>, refresh <code>index.html</code>.</p>
+        </div>
+      </div>
+      </div>
+
+      <!-- PROJECTS -->
+      <div id="tabwrap-projects" hidden>
+      <div class="box" style="margin-bottom:14px;">
+        <div class="box-header"><span>how to add / remove projects</span></div>
+        <div class="box-content">
+          <ol class="ed-steps">
+            <li>Fill the form below and press <strong>save project</strong> — staged only, nothing on disk changes yet. The status badge color is automatic.</li>
+            <li>Press <strong>download data/projects.js</strong> and overwrite <code>data/projects.js</code>, then refresh <code>index.html</code>.</li>
+            <li>To change or remove later, use <strong>edit / delete</strong> in existing projects below, then download again. Push to publish.</li>
+          </ol>
+        </div>
+      </div>
+      <div id="panel-projects" class="box">
+        <div class="box-header"><span id="proj-form-title">new project</span></div>
+        <div class="box-content">
+          <div class="ed-form">
+            <div class="ed-row">
+              <div class="ed-field">
+                <label class="ed-label" for="proj-title">title *</label>
+                <input type="text" id="proj-title" class="ed-input" placeholder="My Cool Tool" maxlength="120">
+              </div>
+              <div class="ed-field">
+                <label class="ed-label" for="proj-id">id * (slug)</label>
+                <input type="text" id="proj-id" class="ed-input" placeholder="my-cool-tool" maxlength="80">
+              </div>
+            </div>
+            <div class="ed-row">
+              <div class="ed-field">
+                <label class="ed-label" for="proj-date">date * (YYYY-MM-DD)</label>
+                <input type="text" id="proj-date" class="ed-input" maxlength="10">
+              </div>
+              <div class="ed-field">
+                <label class="ed-label" for="proj-status">status * (badge color is automatic)</label>
+                <select id="proj-status" class="ed-select">
+                  <option value="Active">Active (green)</option>
+                  <option value="W.I.P">W.I.P (amber)</option>
+                  <option value="Archived">Archived (grey)</option>
+                </select>
+              </div>
+            </div>
+            <div class="ed-field">
+              <label class="ed-label" for="proj-desc">description *</label>
+              <input type="text" id="proj-desc" class="ed-input" placeholder="What it does, in one or two sentences." maxlength="400">
+            </div>
+            <div class="ed-field">
+              <label class="ed-label" for="proj-tags">tech tags (comma separated)</label>
+              <input type="text" id="proj-tags" class="ed-input" placeholder="Rust, CLI, Linux" maxlength="200">
+            </div>
+            <div class="ed-row">
+              <div class="ed-field">
+                <label class="ed-label" for="proj-github">github url (optional)</label>
+                <input type="text" id="proj-github" class="ed-input" placeholder="https://github.com/you/tool" maxlength="200">
+              </div>
+              <div class="ed-field">
+                <label class="ed-label" for="proj-demo">demo url (optional)</label>
+                <input type="text" id="proj-demo" class="ed-input" placeholder="https://…" maxlength="200">
+              </div>
+            </div>
+            <div class="ed-field">
+              <label class="ed-label" for="proj-details">technical details (optional)</label>
+              <textarea id="proj-details" class="ed-textarea ed-textarea-short" placeholder="Architecture notes…"></textarea>
+            </div>
+            <div class="ed-btn-row">
+              <button type="button" id="proj-save" class="ed-btn">save project</button>
+              <button type="button" id="proj-cancel" class="ed-btn-secondary" hidden>cancel edit</button>
+            </div>
+            <div class="ed-msg" id="proj-msg" role="alert"></div>
+            <div class="ed-hint" id="proj-draft"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="box" id="projects-list-box" style="margin-top:14px;">
+        <div class="box-header"><span>existing projects (<span id="proj-count">0</span>)</span></div>
+        <div class="box-content">
+          <div class="filter-controls-row">
+            <input type="text" id="proj-filter-q" class="filter-input" placeholder="Search title, description, or tech...">
+            <div class="filter-dropdown-wrapper">
+              <label class="filter-label" for="proj-filter-year">Year:</label>
+              <select id="proj-filter-year" class="retro-select"></select>
+            </div>
+          </div>
+          <div id="proj-list"></div>
+          <div class="ed-btn-row" style="margin-top:10px;">
+            <button type="button" id="proj-dl-js" class="ed-btn-secondary">download data/projects.js</button>
+          </div>
+          <p class="ed-hint">After downloading: overwrite <code>data/projects.js</code>, refresh <code>index.html</code>.</p>
+        </div>
+      </div>
+      </div>
+
+      <footer class="site-footer">
+        <p class="footer-tagline">studio runs fully offline — nothing leaves this computer until you push</p>
+      </footer>
+    </div>
+  </div>
+
+  <script>window.MEOWKING_NOAUTOINIT = true;</script>
+  <script src="data/articles.js"></script>
+  <script src="data/notes.js"></script>
+  <script src="data/projects.js"></script>
+  <script src="app.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    /*SHA256-START*/
+    // Compact SHA-256 (ASCII input). Used only for the local password gate.
+    function sha256(ascii) {
+      function rr(v, a) { return (v >>> a) | (v << (32 - a)); }
+      var maxWord = Math.pow(2, 32), result = '';
+      var words = [], asciiBitLength = ascii.length * 8;
+      var hash = sha256.h = sha256.h || [], k = sha256.k = sha256.k || [];
+      var primeCounter = k.length, isComposite = {};
+      for (var candidate = 2; primeCounter < 64; candidate++) {
+        if (!isComposite[candidate]) {
+          for (var i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }
+          hash[primeCounter] = (Math.pow(candidate, 0.5) * maxWord) | 0;
+          k[primeCounter++] = (Math.pow(candidate, 1 / 3) * maxWord) | 0;
+        }
+      }
+      ascii += '\x80';
+      while (ascii.length % 64 - 56) ascii += '\x00';
+      for (var i = 0; i < ascii.length; i++) {
+        var j = ascii.charCodeAt(i);
+        if (j >> 8) return '';
+        words[i >> 2] |= j << ((3 - i) % 4) * 8;
+      }
+      words[words.length] = ((asciiBitLength / maxWord) | 0);
+      words[words.length] = (asciiBitLength);
+      for (var j = 0; j < words.length;) {
+        var w = words.slice(j, j += 16), oldHash = hash;
+        hash = hash.slice(0, 8);
+        for (var i = 0; i < 64; i++) {
+          var w15 = w[i - 15], w2 = w[i - 2];
+          var a = hash[0], e = hash[4];
+          var temp1 = hash[7]
+            + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25))
+            + ((e & hash[5]) ^ ((~e) & hash[6]))
+            + k[i]
+            + (w[i] = (i < 16) ? w[i] : (
+              w[i - 16]
+              + (rr(w15, 7) ^ rr(w15, 18) ^ (w15 >>> 3))
+              + w[i - 7]
+              + (rr(w2, 17) ^ rr(w2, 19) ^ (w2 >>> 10))
+            ) | 0);
+          var temp2 = (rr(a, 2) ^ rr(a, 13) ^ rr(a, 22))
+            + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+          hash = [(temp1 + temp2) | 0].concat(hash);
+          hash[4] = (hash[4] + temp1) | 0;
+        }
+        for (var i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }
+      }
+      for (var i = 0; i < 8; i++) {
+        for (var j = 3; j + 1; j--) {
+          var b = (hash[i] >> (j * 8)) & 255;
+          result += ((b < 16) ? 0 : '') + b.toString(16);
+        }
+      }
+      return result;
+    }
+    function hashPw(pw) {
+      // UTF-8 safe: hash the percent-encoded form (ASCII only for sha256()).
+      return sha256(unescape(encodeURIComponent('meowking-studio::' + pw)));
+    }
+    /*SHA256-END*/
+
+    var esc = window.escapeHtmlMicro || function (s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    };
+    var mdPreview = window.parseMarkdownMicro || function (s) { return '<p>' + esc(s) + '</p>'; };
+
+    function $(id) { return document.getElementById(id); }
+    function showMsg(id, text, ok) {
+      var el = $(id);
+      if (!el) return;
+      el.textContent = text;
+      el.className = 'ed-msg ' + (ok ? 'ed-msg-ok' : 'ed-msg-error');
+    }
+
+    // ---------------- Password gate ----------------
+    var HASH_KEY = 'meowking_editor_hash';
+    var gate = $('gate'), studio = $('studio'), lockBtn = $('lock-btn');
+    var gatePw = $('gate-pw'), gatePw2 = $('gate-pw2'), gatePw2Wrap = $('gate-pw2-wrap');
+    var gateBtn = $('gate-btn'), gateMsg = $('gate-msg');
+    var gateTitle = $('gate-title'), gateHint = $('gate-hint');
+    var storedHash = null;
+    try { storedHash = localStorage.getItem(HASH_KEY); } catch (e) { storedHash = null; }
+
+    function unlock() {
+      gate.hidden = true;
+      studio.hidden = false;
+      lockBtn.hidden = false;
+    }
+    function lock() {
+      studio.hidden = true;
+      lockBtn.hidden = true;
+      gate.hidden = false;
+      gatePw.value = ''; gatePw2.value = '';
+      showMsg('gate-msg', '', true);
+      setupGate();
+    }
+
+    function setupGate() {
+      try { storedHash = localStorage.getItem(HASH_KEY); } catch (e) { storedHash = null; }
+      if (!storedHash) {
+        gateTitle.textContent = 'set studio password';
+        gateHint.textContent = 'First run: choose a password. Only its hash is kept, in this browser only.';
+        gatePw2Wrap.hidden = false;
+        gateBtn.textContent = 'set password';
+      } else {
+        gateTitle.textContent = 'unlock studio';
+        gateHint.textContent = 'Enter your studio password. Only a hash is stored, in this browser only.';
+        gatePw2Wrap.hidden = true;
+        gateBtn.textContent = 'unlock';
+      }
+    }
+
+    gateBtn.addEventListener('click', function () {
+      var pw = gatePw.value || '';
+      if (!storedHash) {
+        if (pw.length < 4) { showMsg('gate-msg', 'Use at least 4 characters.', false); return; }
+        if (pw !== gatePw2.value) { showMsg('gate-msg', 'Passwords do not match.', false); return; }
+        try { localStorage.setItem(HASH_KEY, hashPw(pw)); } catch (e) {
+          showMsg('gate-msg', 'Browser storage blocked — password cannot be saved.', false); return;
+        }
+        unlock();
+        return;
+      }
+      if (hashPw(pw) === storedHash) { unlock(); }
+      else { showMsg('gate-msg', 'Wrong password.', false); }
+    });
+    gatePw.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); gateBtn.click(); }
+    });
+    lockBtn.addEventListener('click', lock);
+    setupGate();
+
+    // ---------------- State (working copies) ----------------
+    function clone(v) { return JSON.parse(JSON.stringify(v == null ? [] : v)); }
+    var articles = clone(window.SITE_ARTICLES);
+    var notes = clone(window.SITE_NOTES);
+    var projects = clone(window.SITE_PROJECTS);
+
+    (function reportLoadState() {
+      var problems = [];
+      if (!Array.isArray(window.SITE_ARTICLES)) problems.push('data/articles.js failed to load (check its syntax) — starting with an empty list.');
+      if (!Array.isArray(window.SITE_NOTES)) problems.push('data/notes.js failed to load (check its syntax) — starting with an empty list.');
+      if (!Array.isArray(window.SITE_PROJECTS)) problems.push('data/projects.js failed to load (check its syntax) — starting with an empty list.');
+      if (!window.parseMarkdownMicro) problems.push('app.js failed to load — live preview disabled.');
+      if (problems.length) {
+        $('load-warn').hidden = false;
+        $('load-warn-text').textContent = problems.join(' ');
+      }
+    })();
+
+    // ---------------- Shared helpers ----------------
+    function todayLocal() {
+      var d = new Date();
+      function p(n) { return String(n).padStart(2, '0'); }
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    }
+    function slugify(s) {
+      return String(s || '').toLowerCase().trim()
+        .replace(/['’]/g, '').replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '').replace(/-+/g, '-').slice(0, 80);
+    }
+    function parseTags(s) {
+      return String(s || '').split(',').map(function (t) { return t.trim(); })
+        .filter(function (t) { return t.length > 0; });
+    }
+    function validDate(s) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s || ''))) return false;
+      var d = new Date(String(s) + 'T12:00:00');
+      return !isNaN(d.getTime());
+    }
+    function readTimeFor(mdText) {
+      var words = String(mdText || '').trim().split(/\s+/).filter(Boolean).length;
+      return Math.max(1, Math.ceil(words / 200)) + ' min read';
+    }
+    function download(filename, text) {
+      var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    }
+
+    // Entries per page in the existing-items lists below (matches the site).
+    var ED_PAGE_SIZE = 49;
+
+    // Year helper mirroring the site's getYear(): explicit year wins,
+    // otherwise derived from the date, otherwise the current year.
+    function edYear(it) {
+      if (it.year) return String(it.year);
+      if (it.date) return String(it.date).slice(0, 4);
+      return String(new Date().getFullYear());
+    }
+
+    // Rebuilds a year <select> from current items (only years present,
+    // with counts, newest first). Keeps the selection when still valid.
+    function buildYearOptions(sel, items, current) {
+      if (!sel) return 'all';
+      var counts = {};
+      items.forEach(function (it) {
+        var y = edYear(it);
+        counts[y] = (counts[y] || 0) + 1;
+      });
+      var years = Object.keys(counts).sort().reverse();
+      if (years.indexOf(current) === -1) current = 'all';
+      sel.innerHTML = '<option value="all">All (' + items.length + ')</option>' +
+        years.map(function (y) {
+          return '<option value="' + esc(y) + '"' +
+            (y === current ? ' selected' : '') + '>' +
+            esc(y) + ' (' + counts[y] + ')</option>';
+        }).join('');
+      return current;
+    }
+
+    function matchTags(tags, q) {
+      return (tags || []).some(function (t) {
+        return String(t || '').toLowerCase().indexOf(q) !== -1;
+      });
+    }
+
+    /*EMIT-START*/
+    // File emitters: pure functions (no DOM) so output is always valid JS.
+    // All strings go through JSON.stringify — backticks, ${}, quotes and
+    // newlines in your writing can never break the generated files.
+    function jsStr(s) { return JSON.stringify(String(s == null ? '' : s)); }
+    function jsArr(a) {
+      return '[' + (a || []).map(function (t) { return jsStr(t); }).join(', ') + ']';
+    }
+    var EMIT_HEAD = '/**\n' +
+      ' * MEOWKING - managed with editor.html (local content studio)\n' +
+      ' * -------------------------------------------------------------\n' +
+      ' * Safe to regenerate any time. Full field guide: ARCHIVE_GUIDE.md\n' +
+      ' */\n\n';
+
+    function emitArticles(arr) {
+      var body = (arr || []).map(function (a) {
+        return '  {\n' +
+          '    id: ' + jsStr(a.id) + ',\n' +
+          '    title: ' + jsStr(a.title) + ',\n' +
+          '    date: ' + jsStr(a.date) + ',\n' +
+          '    year: ' + jsStr(a.year || String(a.date || '').slice(0, 4)) + ',\n' +
+          '    readTime: ' + jsStr(a.readTime) + ',\n' +
+          '    tags: ' + jsArr(a.tags) + ',\n' +
+          '    excerpt: ' + jsStr(a.excerpt) + ',\n' +
+          '    file: ' + jsStr(a.file) + ',\n' +
+          '    content: ' + jsStr(a.content) + '\n' +
+          '  }';
+      }).join(',\n');
+      return EMIT_HEAD + 'window.SITE_ARTICLES = [\n' + body + '\n];\n';
+    }
+    function emitNotes(arr) {
+      var body = (arr || []).map(function (n) {
+        return '  {\n' +
+          '    id: ' + jsStr(n.id) + ',\n' +
+          '    date: ' + jsStr(n.date) + ',\n' +
+          '    year: ' + jsStr(n.year || String(n.date || '').slice(0, 4)) + ',\n' +
+          '    tags: ' + jsArr(n.tags) + ',\n' +
+          '    content: ' + jsStr(n.content) + '\n' +
+          '  }';
+      }).join(',\n');
+      return EMIT_HEAD + 'window.SITE_NOTES = [\n' + body + '\n];\n';
+    }
+    function emitProjects(arr) {
+      var body = (arr || []).map(function (p) {
+        return '  {\n' +
+          '    id: ' + jsStr(p.id) + ',\n' +
+          '    title: ' + jsStr(p.title) + ',\n' +
+          '    year: ' + jsStr(p.year || String(p.date || '').slice(0, 4)) + ',\n' +
+          '    date: ' + jsStr(p.date) + ',\n' +
+          '    status: ' + jsStr(p.status) + ',\n' +
+          '    statusType: ' + jsStr(p.statusType) + ',\n' +
+          '    description: ' + jsStr(p.description) + ',\n' +
+          '    tags: ' + jsArr(p.tags) + ',\n' +
+          '    github: ' + jsStr(p.github) + ',\n' +
+          '    demo: ' + jsStr(p.demo) + ',\n' +
+          '    details: ' + jsStr(p.details) + '\n' +
+          '  }';
+      }).join(',\n');
+      return EMIT_HEAD + 'window.SITE_PROJECTS = [\n' + body + '\n];\n';
+    }
+    /*EMIT-END*/
+
+    // ---------------- Tabs ----------------
+    // Each tab owns one wrapper holding its steps + form + existing-items,
+    // so switching tabs toggles exactly three blocks — lists can never bleed
+    // across tabs again.
+    var tabwraps = { articles: $('tabwrap-articles'), notes: $('tabwrap-notes'), projects: $('tabwrap-projects') };
+    document.querySelectorAll('.ed-tab').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.ed-tab').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var name = btn.getAttribute('data-tab');
+        Object.keys(tabwraps).forEach(function (k) { tabwraps[k].hidden = (k !== name); });
+      });
+    });
+
+    // ---------------- Articles ----------------
+    var editingArtId = null;
+    var artPage = 1;
+    var artFQ = '', artFY = 'all';
+    function artForm() {
+      return {
+        title: $('art-title').value.trim(),
+        slug: $('art-slug').value.trim(),
+        date: $('art-date').value.trim(),
+        readTime: $('art-readtime').value.trim(),
+        tags: parseTags($('art-tags').value),
+        excerpt: $('art-excerpt').value.trim(),
+        md: $('art-md').value
+      };
+    }
+    function validateArticle(f, isEdit) {
+      if (!f.title) return 'Title is required.';
+      if (!f.slug) return 'Slug is required.';
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(f.slug)) return 'Slug must be lowercase letters, numbers and dashes.';
+      if (!isEdit && articles.some(function (a) { return a.id === f.slug; })) return 'Slug already exists — pick another.';
+      if (isEdit && articles.some(function (a) { return a.id === f.slug && a.id !== editingArtId; })) return 'Slug already exists — pick another.';
+      if (!validDate(f.date)) return 'Date must be real and YYYY-MM-DD.';
+      if (!f.excerpt) return 'Excerpt is required.';
+      if (!f.md.trim()) return 'Markdown body is required.';
+      return '';
+    }
+    function filteredArticles() {
+      var q = artFQ.toLowerCase().trim();
+      return articles.filter(function (a) {
+        if (artFY !== 'all' && edYear(a) !== artFY) return false;
+        if (!q) return true;
+        return String(a.title || '').toLowerCase().indexOf(q) !== -1 ||
+          String(a.excerpt || '').toLowerCase().indexOf(q) !== -1 ||
+          matchTags(a.tags, q);
+      });
+    }
+    function renderArtList() {
+      var list = $('art-list');
+      $('art-count').textContent = articles.length;
+      artFY = buildYearOptions($('art-filter-year'), articles, artFY);
+      var shown = filteredArticles();
+      if (!articles.length) { list.innerHTML = '<p class="ed-hint">No articles yet.</p>'; return; }
+      if (!shown.length) { list.innerHTML = '<p class="ed-hint">No articles match the filter.</p>'; return; }
+      var totalPages = Math.max(1, Math.ceil(shown.length / ED_PAGE_SIZE));
+      if (artPage > totalPages) artPage = totalPages;
+      var html = shown.slice((artPage - 1) * ED_PAGE_SIZE, artPage * ED_PAGE_SIZE).map(function (a) {
+        return '<div class="ed-item">' +
+          '<div><div class="ed-item-title">' + esc(a.title) + '</div>' +
+          '<div class="ed-item-meta">' + esc(a.id) + ' · ' + esc(a.date || '') + '</div></div>' +
+          '<div class="ed-btn-row">' +
+          '<button type="button" class="ed-btn-secondary" data-act="edit" data-id="' + esc(a.id) + '">edit</button>' +
+          '<button type="button" class="ed-btn-danger" data-act="del" data-id="' + esc(a.id) + '">delete</button>' +
+          '</div></div>';
+      }).join('');
+      if (totalPages > 1) {
+        html += '<div class="pager-row">' +
+          '<button type="button" class="pager-btn" data-pager="prev"' + (artPage <= 1 ? ' disabled' : '') + '>&larr; prev</button>' +
+          '<span class="pager-info">Page ' + artPage + ' of ' + totalPages + '</span>' +
+          '<button type="button" class="pager-btn" data-pager="next"' + (artPage >= totalPages ? ' disabled' : '') + '>next &rarr;</button>' +
+          '</div>';
+      }
+      list.innerHTML = html;
+    }
+    function resetArtForm() {
+      editingArtId = null;
+      $('art-form-title').textContent = 'new article';
+      ['art-title', 'art-slug', 'art-tags', 'art-excerpt', 'art-md'].forEach(function (id) { $(id).value = ''; });
+      $('art-date').value = todayLocal();
+      $('art-readtime').value = '';
+      $('art-preview').innerHTML = '<p class="ed-hint">Start writing to preview…</p>';
+      $('art-cancel').hidden = true;
+      showMsg('art-msg', '', true);
+    }
+    $('art-title').addEventListener('input', function () {
+      if (!editingArtId && !$('art-slug').dataset.touched) {
+        $('art-slug').value = slugify($('art-title').value);
+      }
+    });
+    $('art-slug').addEventListener('input', function () { $('art-slug').dataset.touched = '1'; });
+    $('art-md').addEventListener('input', function () {
+      var md = $('art-md').value;
+      $('art-readtime').value = md.trim() ? readTimeFor(md) : '';
+      $('art-preview').innerHTML = md.trim() ? mdPreview(md) : '<p class="ed-hint">Start writing to preview…</p>';
+    });
+    $('art-filter-q').addEventListener('input', function (e) {
+      artFQ = e.target.value; artPage = 1; renderArtList();
+    });
+    $('art-filter-year').addEventListener('change', function (e) {
+      artFY = e.target.value; artPage = 1; renderArtList();
+    });
+    $('art-save').addEventListener('click', function () {
+      var f = artForm();
+      if (!f.readTime && f.md.trim()) f.readTime = readTimeFor(f.md);
+      var err = validateArticle(f, Boolean(editingArtId));
+      if (err) { showMsg('art-msg', err, false); return; }
+      var entry = {
+        id: f.slug, title: f.title, date: f.date,
+        year: f.date.slice(0, 4), readTime: f.readTime || readTimeFor(f.md),
+        tags: f.tags, excerpt: f.excerpt,
+        file: 'articles/' + f.slug + '.md', content: f.md
+      };
+      if (editingArtId) {
+        var i = articles.findIndex(function (a) { return a.id === editingArtId; });
+        if (i !== -1) articles[i] = entry;
+      } else {
+        articles.unshift(entry);
+      }
+      staged.articles = true;
+      artPage = 1;
+      persistWork();
+      renderArtList();
+      resetArtForm();
+      persistDraft('articles');
+      showMsg('art-msg', 'Staged — download data/articles.js below (.md too for new articles) to keep it.', true);
+    });
+    $('art-cancel').addEventListener('click', function () { resetArtForm(); clearTypeDraft('articles'); });
+    $('art-list').addEventListener('click', function (e) {
+      var pg = e.target && e.target.closest ? e.target.closest('[data-pager]') : null;
+      if (pg && !pg.disabled) {
+        if (pg.getAttribute('data-pager') === 'prev' && artPage > 1) artPage--;
+        else if (pg.getAttribute('data-pager') === 'next') artPage++;
+        renderArtList();
+        return;
+      }
+      var btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      var id = btn.getAttribute('data-id');
+      var entry = articles.find(function (a) { return a.id === id; });
+      if (!entry) return;
+      if (btn.getAttribute('data-act') === 'del') {
+        if (!window.confirm('Delete "' + entry.title + '" from the list? (Files change only after you download.)')) return;
+        articles = articles.filter(function (a) { return a.id !== id; });
+        persistWork();
+        if (editingArtId === id) { resetArtForm(); clearTypeDraft('articles'); }
+        renderArtList();
+        return;
+      }
+      editingArtId = id;
+      $('art-form-title').textContent = 'edit article';
+      $('art-title').value = entry.title || '';
+      $('art-slug').value = entry.id || '';
+      $('art-slug').dataset.touched = '1';
+      $('art-date').value = entry.date || '';
+      $('art-readtime').value = entry.readTime || '';
+      $('art-tags').value = (entry.tags || []).join(', ');
+      $('art-excerpt').value = entry.excerpt || '';
+      $('art-md').value = entry.content || '';
+      $('art-md').dispatchEvent(new Event('input'));
+      $('art-cancel').hidden = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showMsg('art-msg', 'Loaded from the embedded copy. If you hand-edited articles/' + entry.id + '.md, paste it above — the file wins on the live site.', true);
+    });
+    $('art-dl-js').addEventListener('click', function () {
+      download('articles.js', emitArticles(articles));
+      markDownloaded('articles', 'jsDone');
+      showMsg('art-msg', 'Downloaded articles.js — overwrite data/articles.js with it.', true);
+    });
+    $('art-dl-md').addEventListener('click', function () {
+      var f = artForm();
+      if (!f.slug || !f.md.trim()) { showMsg('art-msg', 'Enter a slug and markdown first.', false); return; }
+      download(f.slug + '.md', f.md);
+      markDownloaded('articles', 'mdDone');
+      showMsg('art-msg', 'Downloaded ' + f.slug + '.md — put it in articles/.', true);
+    });
+
+    // ---------------- Notes ----------------
+    var editingNoteId = null;
+    var notePage = 1;
+    var noteFQ = '', noteFY = 'all';
+    function nextNoteId() {
+      var max = 0;
+      notes.forEach(function (n) {
+        var m = /^note-(\d+)$/.exec(n.id || '');
+        if (m) max = Math.max(max, parseInt(m[1], 10));
+      });
+      return 'note-' + String(max + 1).padStart(3, '0');
+    }
+    function filteredNotes() {
+      var q = noteFQ.toLowerCase().trim();
+      return notes.filter(function (n) {
+        if (noteFY !== 'all' && edYear(n) !== noteFY) return false;
+        if (!q) return true;
+        return String(n.content || '').toLowerCase().indexOf(q) !== -1 ||
+          matchTags(n.tags, q);
+      });
+    }
+    function renderNoteList() {
+      var list = $('note-list');
+      $('note-count').textContent = notes.length;
+      noteFY = buildYearOptions($('note-filter-year'), notes, noteFY);
+      var shown = filteredNotes();
+      if (!notes.length) { list.innerHTML = '<p class="ed-hint">No notes yet.</p>'; return; }
+      if (!shown.length) { list.innerHTML = '<p class="ed-hint">No notes match the filter.</p>'; return; }
+      var totalPages = Math.max(1, Math.ceil(shown.length / ED_PAGE_SIZE));
+      if (notePage > totalPages) notePage = totalPages;
+      var html = shown.slice((notePage - 1) * ED_PAGE_SIZE, notePage * ED_PAGE_SIZE).map(function (n) {
+        var preview = String(n.content || '').slice(0, 90);
+        return '<div class="ed-item">' +
+          '<div><div class="ed-item-title">' + esc(preview) + (String(n.content || '').length > 90 ? '…' : '') + '</div>' +
+          '<div class="ed-item-meta">' + esc(n.id) + ' · ' + esc(n.date || '') + '</div></div>' +
+          '<div class="ed-btn-row">' +
+          '<button type="button" class="ed-btn-secondary" data-act="edit" data-id="' + esc(n.id) + '">edit</button>' +
+          '<button type="button" class="ed-btn-danger" data-act="del" data-id="' + esc(n.id) + '">delete</button>' +
+          '</div></div>';
+      }).join('');
+      if (totalPages > 1) {
+        html += '<div class="pager-row">' +
+          '<button type="button" class="pager-btn" data-pager="prev"' + (notePage <= 1 ? ' disabled' : '') + '>&larr; prev</button>' +
+          '<span class="pager-info">Page ' + notePage + ' of ' + totalPages + '</span>' +
+          '<button type="button" class="pager-btn" data-pager="next"' + (notePage >= totalPages ? ' disabled' : '') + '>next &rarr;</button>' +
+          '</div>';
+      }
+      list.innerHTML = html;
+    }
+    function resetNoteForm() {
+      editingNoteId = null;
+      $('note-form-title').textContent = 'new note';
+      $('note-content').value = ''; $('note-tags').value = '';
+      $('note-date').value = todayLocal();
+      $('note-cancel').hidden = true;
+      showMsg('note-msg', '', true);
+    }
+    $('note-filter-q').addEventListener('input', function (e) {
+      noteFQ = e.target.value; notePage = 1; renderNoteList();
+    });
+    $('note-filter-year').addEventListener('change', function (e) {
+      noteFY = e.target.value; notePage = 1; renderNoteList();
+    });
+    $('note-save').addEventListener('click', function () {
+      var content = $('note-content').value.trim();
+      var date = $('note-date').value.trim();
+      if (!content) { showMsg('note-msg', 'Content is required.', false); return; }
+      if (!validDate(date)) { showMsg('note-msg', 'Date must be real and YYYY-MM-DD.', false); return; }
+      var entry = {
+        id: editingNoteId || nextNoteId(), date: date,
+        year: date.slice(0, 4), tags: parseTags($('note-tags').value), content: content
+      };
+      if (editingNoteId) {
+        var i = notes.findIndex(function (n) { return n.id === editingNoteId; });
+        if (i !== -1) notes[i] = entry;
+      } else {
+        notes.unshift(entry);
+      }
+      staged.notes = true;
+      notePage = 1;
+      persistWork();
+      renderNoteList();
+      resetNoteForm();
+      persistDraft('notes');
+      showMsg('note-msg', 'Staged — download data/notes.js to keep it.', true);
+    });
+    $('note-cancel').addEventListener('click', function () { resetNoteForm(); clearTypeDraft('notes'); });
+    $('note-list').addEventListener('click', function (e) {
+      var pg = e.target && e.target.closest ? e.target.closest('[data-pager]') : null;
+      if (pg && !pg.disabled) {
+        if (pg.getAttribute('data-pager') === 'prev' && notePage > 1) notePage--;
+        else if (pg.getAttribute('data-pager') === 'next') notePage++;
+        renderNoteList();
+        return;
+      }
+      var btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      var id = btn.getAttribute('data-id');
+      var entry = notes.find(function (n) { return n.id === id; });
+      if (!entry) return;
+      if (btn.getAttribute('data-act') === 'del') {
+        if (!window.confirm('Delete this note? (Files change only after you download.)')) return;
+        notes = notes.filter(function (n) { return n.id !== id; });
+        persistWork();
+        if (editingNoteId === id) { resetNoteForm(); clearTypeDraft('notes'); }
+        renderNoteList();
+        return;
+      }
+      editingNoteId = id;
+      $('note-form-title').textContent = 'edit note';
+      $('note-content').value = entry.content || '';
+      $('note-tags').value = (entry.tags || []).join(', ');
+      $('note-date').value = entry.date || '';
+      $('note-cancel').hidden = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    $('note-dl-js').addEventListener('click', function () {
+      download('notes.js', emitNotes(notes));
+      markDownloaded('notes', 'jsDone');
+      showMsg('note-msg', 'Downloaded notes.js — overwrite data/notes.js with it.', true);
+    });
+
+    // ---------------- Projects ----------------
+    var STATUS_TYPE = { 'Active': 'success', 'W.I.P': 'warning', 'Archived': 'neutral' };
+    var editingProjId = null;
+    var projPage = 1;
+    var projFQ = '', projFY = 'all';
+    function filteredProjects() {
+      var q = projFQ.toLowerCase().trim();
+      return projects.filter(function (p) {
+        if (projFY !== 'all' && edYear(p) !== projFY) return false;
+        if (!q) return true;
+        return String(p.title || '').toLowerCase().indexOf(q) !== -1 ||
+          String(p.description || '').toLowerCase().indexOf(q) !== -1 ||
+          String(p.details || '').toLowerCase().indexOf(q) !== -1 ||
+          matchTags(p.tags, q);
+      });
+    }
+    function renderProjList() {
+      var list = $('proj-list');
+      $('proj-count').textContent = projects.length;
+      projFY = buildYearOptions($('proj-filter-year'), projects, projFY);
+      var shown = filteredProjects();
+      if (!projects.length) { list.innerHTML = '<p class="ed-hint">No projects yet.</p>'; return; }
+      if (!shown.length) { list.innerHTML = '<p class="ed-hint">No projects match the filter.</p>'; return; }
+      var totalPages = Math.max(1, Math.ceil(shown.length / ED_PAGE_SIZE));
+      if (projPage > totalPages) projPage = totalPages;
+      var html = shown.slice((projPage - 1) * ED_PAGE_SIZE, projPage * ED_PAGE_SIZE).map(function (p) {
+        return '<div class="ed-item">' +
+          '<div><div class="ed-item-title">' + esc(p.title) + '</div>' +
+          '<div class="ed-item-meta">' + esc(p.id) + ' · ' + esc(p.status || '') + ' · ' + esc(p.date || '') + '</div></div>' +
+          '<div class="ed-btn-row">' +
+          '<button type="button" class="ed-btn-secondary" data-act="edit" data-id="' + esc(p.id) + '">edit</button>' +
+          '<button type="button" class="ed-btn-danger" data-act="del" data-id="' + esc(p.id) + '">delete</button>' +
+          '</div></div>';
+      }).join('');
+      if (totalPages > 1) {
+        html += '<div class="pager-row">' +
+          '<button type="button" class="pager-btn" data-pager="prev"' + (projPage <= 1 ? ' disabled' : '') + '>&larr; prev</button>' +
+          '<span class="pager-info">Page ' + projPage + ' of ' + totalPages + '</span>' +
+          '<button type="button" class="pager-btn" data-pager="next"' + (projPage >= totalPages ? ' disabled' : '') + '>next &rarr;</button>' +
+          '</div>';
+      }
+      list.innerHTML = html;
+    }
+    function resetProjForm() {
+      editingProjId = null;
+      $('proj-form-title').textContent = 'new project';
+      ['proj-title', 'proj-id', 'proj-desc', 'proj-tags', 'proj-github', 'proj-demo', 'proj-details'].forEach(function (id) { $(id).value = ''; });
+      $('proj-date').value = todayLocal();
+      $('proj-status').value = 'Active';
+      $('proj-cancel').hidden = true;
+      showMsg('proj-msg', '', true);
+    }
+    $('proj-title').addEventListener('input', function () {
+      if (!editingProjId && !$('proj-id').dataset.touched) {
+        $('proj-id').value = slugify($('proj-title').value);
+      }
+    });
+    $('proj-id').addEventListener('input', function () { $('proj-id').dataset.touched = '1'; });
+    $('proj-filter-q').addEventListener('input', function (e) {
+      projFQ = e.target.value; projPage = 1; renderProjList();
+    });
+    $('proj-filter-year').addEventListener('change', function (e) {
+      projFY = e.target.value; projPage = 1; renderProjList();
+    });
+    $('proj-save').addEventListener('click', function () {
+      var title = $('proj-title').value.trim();
+      var id = $('proj-id').value.trim();
+      var date = $('proj-date').value.trim();
+      var status = $('proj-status').value;
+      var desc = $('proj-desc').value.trim();
+      if (!title) { showMsg('proj-msg', 'Title is required.', false); return; }
+      if (!id) { showMsg('proj-msg', 'ID is required.', false); return; }
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) { showMsg('proj-msg', 'ID must be lowercase letters, numbers and dashes.', false); return; }
+      if (projects.some(function (p) { return p.id === id && p.id !== editingProjId; })) { showMsg('proj-msg', 'ID already exists — pick another.', false); return; }
+      if (!validDate(date)) { showMsg('proj-msg', 'Date must be real and YYYY-MM-DD.', false); return; }
+      if (!desc) { showMsg('proj-msg', 'Description is required.', false); return; }
+      var entry = {
+        id: id, title: title, year: date.slice(0, 4), date: date,
+        status: status, statusType: STATUS_TYPE[status] || 'success',
+        description: desc, tags: parseTags($('proj-tags').value),
+        github: $('proj-github').value.trim(), demo: $('proj-demo').value.trim(),
+        details: $('proj-details').value.trim()
+      };
+      if (editingProjId) {
+        var i = projects.findIndex(function (p) { return p.id === editingProjId; });
+        if (i !== -1) projects[i] = entry;
+      } else {
+        projects.unshift(entry);
+      }
+      staged.projects = true;
+      projPage = 1;
+      persistWork();
+      renderProjList();
+      resetProjForm();
+      persistDraft('projects');
+      showMsg('proj-msg', 'Staged — download data/projects.js to keep it.', true);
+    });
+    $('proj-cancel').addEventListener('click', function () { resetProjForm(); clearTypeDraft('projects'); });
+    $('proj-list').addEventListener('click', function (e) {
+      var pg = e.target && e.target.closest ? e.target.closest('[data-pager]') : null;
+      if (pg && !pg.disabled) {
+        if (pg.getAttribute('data-pager') === 'prev' && projPage > 1) projPage--;
+        else if (pg.getAttribute('data-pager') === 'next') projPage++;
+        renderProjList();
+        return;
+      }
+      var btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      var id = btn.getAttribute('data-id');
+      var entry = projects.find(function (p) { return p.id === id; });
+      if (!entry) return;
+      if (btn.getAttribute('data-act') === 'del') {
+        if (!window.confirm('Delete "' + entry.title + '"? (Files change only after you download.)')) return;
+        projects = projects.filter(function (p) { return p.id !== id; });
+        persistWork();
+        if (editingProjId === id) { resetProjForm(); clearTypeDraft('projects'); }
+        renderProjList();
+        return;
+      }
+      editingProjId = id;
+      $('proj-form-title').textContent = 'edit project';
+      $('proj-title').value = entry.title || '';
+      $('proj-id').value = entry.id || '';
+      $('proj-id').dataset.touched = '1';
+      $('proj-date').value = entry.date || '';
+      $('proj-status').value = entry.status || 'Active';
+      $('proj-desc').value = entry.description || '';
+      $('proj-tags').value = (entry.tags || []).join(', ');
+      $('proj-github').value = entry.github || '';
+      $('proj-demo').value = entry.demo || '';
+      $('proj-details').value = entry.details || '';
+      $('proj-cancel').hidden = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    $('proj-dl-js').addEventListener('click', function () {
+      download('projects.js', emitProjects(projects));
+      markDownloaded('projects', 'jsDone');
+      showMsg('proj-msg', 'Downloaded projects.js — overwrite data/projects.js with it.', true);
+    });
+
+    // ---------------- Draft autosave (survive refresh/close) ----------------
+    // Every keystroke is snapshotted to localStorage. If you close the tab
+    // after downloading only SOME files (e.g. the .md but not the .js),
+    // reopening the studio offers the unfinished work back, with a status
+    // line showing exactly which downloads are still missing.
+    var DRAFT_KEY = 'meowking_editor_drafts';
+    var staged = { articles: false, notes: false, projects: false };
+    var DRAFT_FIELDS = {
+      articles: ['art-title', 'art-slug', 'art-date', 'art-readtime', 'art-tags', 'art-excerpt', 'art-md'],
+      notes: ['note-content', 'note-tags', 'note-date'],
+      projects: ['proj-title', 'proj-id', 'proj-date', 'proj-status', 'proj-desc', 'proj-tags', 'proj-github', 'proj-demo', 'proj-details']
+    };
+    var DRAFT_STATUS = { articles: 'art-draft', notes: 'note-draft', projects: 'proj-draft' };
+    var DRAFT_MSG = { articles: 'art-msg', notes: 'note-msg', projects: 'proj-msg' };
+
+    function loadDrafts() {
+      try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}'); }
+      catch (e) { return {}; }
+    }
+    function getDraft(t) { return loadDrafts()[t] || null; }
+    function setDraft(t, d) {
+      var all = loadDrafts();
+      if (d) all[t] = d; else delete all[t];
+      try { localStorage.setItem(DRAFT_KEY, JSON.stringify(all)); } catch (e) { }
+    }
+    function editingIdFor(t) {
+      return t === 'articles' ? editingArtId : t === 'notes' ? editingNoteId : editingProjId;
+    }
+    function snapshotForm(t) {
+      var f = {};
+      DRAFT_FIELDS[t].forEach(function (id) {
+        var el = $(id);
+        f[id] = el ? el.value : '';
+      });
+      var prev = getDraft(t) || {};
+      return {
+        fields: f, editingId: editingIdFor(t), updatedAt: Date.now(),
+        staged: staged[t], mdDone: prev.mdDone || false, jsDone: false
+      };
+    }
+    function draftHasContent(d) {
+      if (!d || !d.fields) return false;
+      return Object.keys(d.fields).some(function (k) {
+        if (k === 'art-date' || k === 'note-date' || k === 'proj-date' || k === 'proj-status') return false;
+        var v = d.fields[k];
+        return v != null && String(v).trim() !== '';
+      });
+    }
+    function fmtTime(ts) {
+      var d = new Date(ts);
+      function p(n) { return String(n).padStart(2, '0'); }
+      return p(d.getHours()) + ':' + p(d.getMinutes());
+    }
+    function persistDraft(t) {
+      setDraft(t, snapshotForm(t));
+      updateDraftStatus(t);
+    }
+    var draftTimers = {};
+    function scheduleDraft(t) {
+      if (draftTimers[t]) clearTimeout(draftTimers[t]);
+      draftTimers[t] = setTimeout(function () { persistDraft(t); }, 400);
+    }
+    function updateDraftStatus(t) {
+      var el = $(DRAFT_STATUS[t]);
+      if (!el) return;
+      var html = '';
+      var d = getDraft(t);
+      if (d && (draftHasContent(d) || d.editingId || d.staged)) {
+        var parts = ['unsent draft · saved ' + fmtTime(d.updatedAt || Date.now())];
+        if (t === 'articles') {
+          parts.push('.md ' + (d.mdDone ? '✓' : '✗'));
+          parts.push('.js ' + (d.jsDone ? '✓' : '✗'));
+        } else {
+          parts.push('.js ' + (d.jsDone ? '✓' : '✗'));
+        }
+        if (d.staged && !d.jsDone) parts.push('staged, not downloaded yet');
+        html += esc(parts.join(' · ')) +
+          ' <button type="button" class="ed-btn-danger" data-discard="' + t + '">discard</button>';
+      }
+      if (workPending(t)) {
+        var n = (loadWork()[t] || []).length;
+        if (exported[t]) {
+          html += (html ? '<br>' : '') +
+            esc('exported — overwrite data/' + t + '.js with your download to finish.');
+        } else {
+          html += (html ? '<br>' : '') +
+            esc('📦 ' + n + ' unpublished item(s) from last session — ') +
+            '<button type="button" class="ed-btn-secondary" data-restore="' + t + '">restore</button> ' +
+            '<button type="button" class="ed-btn-danger" data-discard-work="' + t + '">discard</button>';
+        }
+      }
+      el.innerHTML = html;
+    }
+    function markDownloaded(t, which) {
+      var d = getDraft(t) || snapshotForm(t);
+      d[which] = true;
+      d.updatedAt = Date.now();
+      if (which === 'jsDone') { d.staged = false; staged[t] = false; exported[t] = true; }
+      if (d.jsDone && (t !== 'articles' || d.mdDone)) {
+        setDraft(t, null);
+      } else {
+        setDraft(t, d);
+      }
+      updateDraftStatus(t);
+    }
+    function clearTypeDraft(t) {
+      setDraft(t, null);
+      staged[t] = false;
+      updateDraftStatus(t);
+    }
+    function restoreDraft(t) {
+      var d = getDraft(t);
+      if (!d || (!draftHasContent(d) && !d.editingId)) return;
+      Object.keys(d.fields || {}).forEach(function (id) {
+        var el = $(id);
+        if (el) el.value = d.fields[id];
+      });
+      // Never let the title auto-slug clobber a restored slug.
+      var slugEl = $(t === 'articles' ? 'art-slug' : t === 'projects' ? 'proj-id' : '');
+      if (slugEl) slugEl.dataset.touched = '1';
+      if (t === 'articles' && d.editingId) {
+        editingArtId = d.editingId;
+        $('art-form-title').textContent = 'edit article';
+        $('art-cancel').hidden = false;
+      }
+      if (t === 'notes' && d.editingId) {
+        editingNoteId = d.editingId;
+        $('note-form-title').textContent = 'edit note';
+        $('note-cancel').hidden = false;
+      }
+      if (t === 'projects' && d.editingId) {
+        editingProjId = d.editingId;
+        $('proj-form-title').textContent = 'edit project';
+        $('proj-cancel').hidden = false;
+      }
+      staged[t] = Boolean(d.staged && !d.jsDone);
+      if (t === 'articles') $('art-md').dispatchEvent(new Event('input'));
+      updateDraftStatus(t);
+      showMsg(DRAFT_MSG[t], 'Resumed unsent draft from ' + fmtTime(d.updatedAt || Date.now()) + ' — finish and download to keep it.', true);
+    }
+
+    function typeForEl(el) {
+      var p = el && el.closest ? el.closest('#panel-articles,#panel-notes,#panel-projects') : null;
+      if (!p) return null;
+      return p.id === 'panel-articles' ? 'articles' : p.id === 'panel-notes' ? 'notes' : 'projects';
+    }
+    studio.addEventListener('input', function (e) {
+      var t = e.target && typeForEl(e.target);
+      if (t) scheduleDraft(t);
+    });
+    studio.addEventListener('change', function (e) {
+      var t = e.target && typeForEl(e.target);
+      if (t) scheduleDraft(t);
+    });
+    ['art-draft', 'note-draft', 'proj-draft'].forEach(function (id) {
+      var el = $(id);
+      if (el) el.addEventListener('click', function (e) {
+        var attr = function (n) { return e.target && e.target.getAttribute ? e.target.getAttribute(n) : null; };
+        var t = attr('data-discard');
+        if (t) {
+          clearTypeDraft(t);
+          showMsg(DRAFT_MSG[t], 'Draft discarded.', true);
+          return;
+        }
+        t = attr('data-restore');
+        if (t) { restoreWork(t); return; }
+        t = attr('data-discard-work');
+        if (t) {
+          discardWork(t);
+          clearTypeDraft(t);
+          showMsg(DRAFT_MSG[t], 'Unpublished work discarded.', true);
+        }
+      });
+    });
+    window.addEventListener('beforeunload', function (e) {
+      if (studio.hidden) return;
+      if (staged.articles || staged.notes || staged.projects) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+
+    // ---------------- Unpublished-work persistence ----------------
+    // Staged LISTS (not just form input) survive reload, close and crash.
+    // On return, anything differing from the on-disk data files is offered
+    // back with restore/discard — merged by id with disk winning conflicts,
+    // so restoring can never delete anything.
+    var WORK_KEY = 'meowking_editor_work';
+    var exported = { articles: false, notes: false, projects: false };
+    function currentArr(t) {
+      return t === 'articles' ? articles : t === 'notes' ? notes : projects;
+    }
+    function setArr(t, v) {
+      if (t === 'articles') articles = v;
+      else if (t === 'notes') notes = v;
+      else projects = v;
+    }
+    function loadWork() {
+      try { return JSON.parse(localStorage.getItem(WORK_KEY) || '{}'); }
+      catch (e) { return {}; }
+    }
+    function persistWork() {
+      try {
+        localStorage.setItem(WORK_KEY, JSON.stringify({
+          articles: articles, notes: notes, projects: projects, updatedAt: Date.now()
+        }));
+      } catch (e) { }
+    }
+    function workPending(t) {
+      var saved = loadWork()[t];
+      if (!saved || !saved.length) return false;
+      try {
+        return JSON.stringify(saved) !== JSON.stringify(currentArr(t));
+      } catch (e) { return false; }
+    }
+    function renderListFor(t) {
+      if (t === 'articles') renderArtList();
+      else if (t === 'notes') renderNoteList();
+      else renderProjList();
+    }
+    function restoreWork(t) {
+      var saved = loadWork()[t] || [];
+      var disk = clone(currentArr(t));
+      var diskIds = {};
+      disk.forEach(function (it) { diskIds[it.id] = true; });
+      var added = saved.filter(function (it) { return !diskIds[it.id]; }).length;
+      var merged = saved.map(function (it) {
+        var live = disk.find(function (d) { return d.id === it.id; });
+        return live || it;
+      });
+      disk.forEach(function (it) {
+        if (!merged.some(function (m) { return m.id === it.id; })) merged.push(it);
+      });
+      setArr(t, merged);
+      renderListFor(t);
+      persistWork();
+      staged[t] = true;
+      updateDraftStatus(t);
+      showMsg(DRAFT_MSG[t], 'Restored ' + added + ' unpublished item(s) from last session (on-disk entries kept).', true);
+    }
+    function discardWork(t) {
+      var all = loadWork();
+      delete all[t];
+      try { localStorage.setItem(WORK_KEY, JSON.stringify(all)); } catch (e) { }
+      staged[t] = false;
+      updateDraftStatus(t);
+    }
+
+    // ---------------- Init ----------------
+    $('art-date').value = todayLocal();
+    $('note-date').value = todayLocal();
+    $('proj-date').value = todayLocal();
+    renderArtList();
+    renderNoteList();
+    renderProjList();
+    restoreDraft('articles');
+    restoreDraft('notes');
+    restoreDraft('projects');
+    updateDraftStatus('articles');
+    updateDraftStatus('notes');
+    updateDraftStatus('projects');
+  })();
+  </script>
+</body>
+</html>
