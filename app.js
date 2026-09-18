@@ -217,8 +217,8 @@
   }
 
   // Re-rendered on every route change: on #/links the © becomes a little
-  // gif button to editor.html (local-only file, 404s harmlessly online),
-  // everywhere else the classic text line is shown.
+  // gif button to the content studio (editor.html), everywhere else the
+  // classic text line is shown.
   function updateFooter() {
     const siteData = getSiteData();
     const info = siteData.siteInfo || {};

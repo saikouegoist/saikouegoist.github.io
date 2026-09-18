@@ -1,6 +1,5 @@
-# meowking - local-only files (never deploy these)
-# editor.html is a private content-writing tool for your own computer.
-# The guard-editor workflow fails CI if it is ever committed.
+# meowking - files too boring to deploy
+# (editor.html ships normally; only your repo push can publish content)
 
 # OS junk
 .DS_Store

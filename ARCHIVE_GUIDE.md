@@ -30,7 +30,7 @@ meowking/
 
 ## 0. Visual Content Studio (Easiest)
 
-Double-click `editor.html` in this folder (local only — never commit it) and unlock it with your studio password. It gives you guided forms for **articles, notes, and projects**: auto-slugs, auto read-time, live preview using the site's real renderer, and validation (required fields, date format, duplicate IDs).
+Open `editor.html` — double-click it in this folder, or visit it on your live site — and unlock it with your studio password. It gives you guided forms for **articles, notes, and projects**: auto-slugs, auto read-time, live preview using the site's real renderer, and validation (required fields, date format, duplicate IDs). Opening it can never alter the published site; it only produces download files until you push.
 
 Flow per item: **fill the form → Save → Download** the generated file(s) → **replace** your local copy (`data/articles.js`, `data/notes.js`, `data/projects.js`, plus `articles/your-slug.md` for articles) → refresh `index.html` → push to publish. The sections below document the manual alternative and the exact file formats.
 
