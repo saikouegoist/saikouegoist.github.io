@@ -1495,7 +1495,7 @@
               <p style="color: var(--text-muted);">Loading...</p>
             </div>
             <div class="temple-bottom-row">
-              <button type="button" class="temple-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">&uarr; top</button>
+              <button type="button" class="temple-top-btn" id="temple-top-btn">&uarr; top</button>
             </div>
           </div>
         </div>
@@ -1503,6 +1503,11 @@
     `;
 
     readingModeCleanup = setupReadingProgressBar();
+
+    const templeTopBtn = container.querySelector('#temple-top-btn');
+    if (templeTopBtn) {
+      templeTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    }
 
     let rawContent = articleContentCache['temple:' + page.id] || '';
     if (typeof rawContent !== 'string') rawContent = String(rawContent);
@@ -2053,7 +2058,7 @@
             <div class="bbs-filter-info-bar">
               <span id="gb-count-indicator">Loading entries...</span>
               <span id="gb-filter-clear-span" style="display: none;">
-                Filtered view active — <a href="javascript:void(0)" id="clear-all-filters-btn" class="bbs-filter-clear-link">Reset filters</a>
+                Filtered view active — <a href="#" id="clear-all-filters-btn" class="bbs-filter-clear-link">Reset filters</a>
               </span>
             </div>
           </div>
@@ -2161,7 +2166,7 @@
           <div style="padding: 30px 20px; text-align: center; color: var(--text-muted); font-family: var(--font-mono);">
             [NO MATCHING LOG ENTRIES FOUND IN BUFFER]<br>
             <span style="font-size: 0.8rem; margin-top: 6px; display: inline-block;">
-              Try modifying your search or <a href="javascript:void(0)" id="feed-clear-filters-link" style="color: #38bdf8;">clearing active filters</a>.
+              Try modifying your search or <a href="#" id="feed-clear-filters-link" style="color: #38bdf8;">clearing active filters</a>.
             </span>
           </div>
         `;
@@ -2189,7 +2194,7 @@
           }
           const displayUrl = escapeHtml(url.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''));
           websiteChipHtml = `
-            <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="bbs-site-link" title="Visit ${escapeHtml(entry.alias)}'s website">
+            <a href="${escapeHtml(safeHref(url, '#'))}" target="_blank" rel="noopener noreferrer" class="bbs-site-link" title="Visit ${escapeHtml(entry.alias)}'s website">
               🌐 ${displayUrl} ↗
             </a>
           `;
@@ -2225,7 +2230,10 @@
     }
 
     // Reset all filter controls helper
-    function resetAllFilters() {
+    function resetAllFilters(e) {
+      // Called directly as a click handler on href="#" links, so swallow
+      // the event to avoid jumping to the top of the page.
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
       searchQuery = '';
       selectedIconFilter = 'all';
       selectedSortOrder = 'newest';
