@@ -28,6 +28,16 @@ meowking/
 
 ---
 
+## 0. Visual Content Studio (Easiest)
+
+Double-click `editor.html` in this folder (local only — never commit it) and unlock it with your studio password. It gives you guided forms for **articles, notes, and projects**: auto-slugs, auto read-time, live preview using the site's real renderer, and validation (required fields, date format, duplicate IDs).
+
+Flow per item: **fill the form → Save → Download** the generated file(s) → **replace** your local copy (`data/articles.js`, `data/notes.js`, `data/projects.js`, plus `articles/your-slug.md` for articles) → refresh `index.html` → push to publish. The sections below document the manual alternative and the exact file formats.
+
+Password recovery: there is intentionally no reset option inside `editor.html`. If you forget the studio password, open `editor.html`, press F12, go to Application → Local Storage → the entry for this file, delete the `meowking_editor_hash` key, reload, and set a new one.
+
+---
+
 ## 1. How to Add & Remove Articles
 
 You no longer have to write entire articles inside JavaScript! Each article lives in its own `.md` file.
@@ -202,6 +212,7 @@ Open `data/about.js`:
 
 | Task | File to Edit |
 | :--- | :--- |
+| **Write anything (easiest)** | Use `editor.html`, download, replace local files |
 | **Write an article** | Create `articles/your-post.md`, register in `data/articles.js` |
 | **Add a gallery image** | Drop `.png`/`.jpg`/`.jpeg`/`.gif`/`.webp` into `images/` and push (manifest auto-updates, never hand-edit `data/gallery.js`) |
 | **Add a song** | Drop `.mp3` into `assets/audio/anime/`, `assets/audio/classic/` or `assets/audio/others/` (or flat as `Anime_Song.mp3` / `Classic_Song.mp3` / `Others_Song.mp3`) and push (manifest auto-updates, never hand-edit `data/music.js`; use `Artist_-_Title.mp3` to set artist; polish names in `data/music-meta.json`) |

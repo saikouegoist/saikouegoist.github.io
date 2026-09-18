@@ -95,6 +95,14 @@ After pushing:
 
 You **never** need to touch `index.html` or `style.css` to manage your content. Everything is driven by `content.js`.
 
+### Visual Content Studio (recommended)
+
+Double-click [editor.html](editor.html) — a local-only writing tool (password-gated, works offline, makes zero network requests). It offers guided forms for **articles, notes, and projects** with live preview, slug/read-time automation, and validation, then lets you **download** the updated `data/*.js` (and `articles/*.md`) to replace your local copies.
+
+`editor.html` is git-ignored and CI-guarded so it can never be deployed — strangers can't reach it, and even if they could, a static page cannot change your published site (only pushing to your repo can).
+
+There is deliberately no password reset inside `editor.html` — anything in the file would be findable in the file. If you forget the studio password, recover on your own machine: open `editor.html`, press F12, go to Application → Local Storage → the entry for this file, delete the `meowking_editor_hash` key, reload, and set a new password.
+
 ### Direct Editing (manual)
 
 Open [content.js](content.js) in any code editor (Notepad, VS Code, etc.).

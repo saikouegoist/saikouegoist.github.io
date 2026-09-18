@@ -60,6 +60,9 @@
   // 1. Initialization
   // -----------------------------------------------------------
   document.addEventListener('DOMContentLoaded', () => {
+    // editor.html sets window.MEOWKING_NOAUTOINIT before loading this file:
+    // it only needs the markdown/security helpers below, never the live site.
+    if (window.MEOWKING_NOAUTOINIT) return;
     initTheme();
     initVisitorCounter();
     populateSiteInfo();
@@ -200,11 +203,34 @@
       lastUpdatedEl.textContent = info.lastUpdated;
     }
 
-    // Footer
+    // Footer (rendered by updateFooter, refreshed on every route change)
+    updateFooter();
+  }
+
+  // -----------------------------------------------------------
+  // Footer (with a discreet studio shortcut on the links page)
+  // -----------------------------------------------------------
+  function currentRouteKey() {
+    const h = (window.location.hash || '').replace(/^#\/?/, '').trim();
+    if (h) return h.split('/')[0];
+    return document.body.getAttribute('data-page') || 'home';
+  }
+
+  // Re-rendered on every route change: on #/links the © becomes a little
+  // gif button to editor.html (local-only file, 404s harmlessly online),
+  // everywhere else the classic text line is shown.
+  function updateFooter() {
+    const siteData = getSiteData();
+    const info = siteData.siteInfo || {};
     const footerCopy = document.getElementById('footer-copy');
     const footerTagline = document.getElementById('footer-tagline');
-    if (footerCopy) footerCopy.innerHTML = `&copy; ${info.copyrightYear || '2026'} ${escapeHtml(info.title || 'meowking')}`;
     if (footerTagline && info.footerText) footerTagline.textContent = info.footerText;
+    if (!footerCopy) return;
+    if (currentRouteKey() === 'links') {
+      footerCopy.innerHTML = `<a href="editor.html" class="footer-copy-gif-link" title="studio"><img src="assets/studio-pen.gif" class="footer-copy-gif" alt="©"></a> ${info.copyrightYear || '2026'} ${escapeHtml(info.title || 'meowking')}`;
+    } else {
+      footerCopy.innerHTML = `&copy; ${info.copyrightYear || '2026'} ${escapeHtml(info.title || 'meowking')}`;
+    }
   }
 
   // -----------------------------------------------------------
@@ -834,6 +860,7 @@
     }
 
     updateActiveNav(route.split('/')[0]);
+    updateFooter();
 
     // Invalidate any in-flight article/temple fetch from the previous page.
     routeToken++;
@@ -909,6 +936,30 @@
   // -----------------------------------------------------------
   // 6. View Renderers
   // -----------------------------------------------------------
+
+  // Shared list page size: articles, notes and projects views (and the
+  // studio) all show this many entries per page with prev/next paging.
+  const LIST_PAGE_SIZE = 49;
+
+  // Builds the prev/next pager row shared by the list views. Returns ''
+  // when everything fits on one page. Callers re-bind the buttons after
+  // injecting the HTML.
+  function pagerRowHtml(currentPage, totalPages, prevId, nextId) {
+    if (totalPages <= 1) return '';
+    return `<div class="pager-row">
+      <button type="button" class="pager-btn" id="${prevId}"${currentPage <= 1 ? ' disabled' : ''}>&larr; prev</button>
+      <span class="pager-info">Page ${currentPage} of ${totalPages}</span>
+      <button type="button" class="pager-btn" id="${nextId}"${currentPage >= totalPages ? ' disabled' : ''}>next &rarr;</button>
+    </div>`;
+  }
+
+  // "1–49 of 132" style range text for the Showing… count lines.
+  function pageRangeText(filteredLength, currentPage) {
+    if (filteredLength === 0) return '0';
+    const start = (currentPage - 1) * LIST_PAGE_SIZE + 1;
+    const end = Math.min(filteredLength, currentPage * LIST_PAGE_SIZE);
+    return `${start}–${end} of ${filteredLength}`;
+  }
 
   // HOMEPAGE VIEW
   function renderHome(container) {
@@ -1212,6 +1263,7 @@
 
     let selectedYear = 'all';
     let searchQuery = '';
+    let currentPage = 1;
 
     container.innerHTML = `
       <div class="box">
@@ -1237,6 +1289,8 @@
           <div id="articles-container">
             ${renderArticleList(articles)}
           </div>
+
+          <div id="articles-pager"></div>
         </div>
       </div>
     `;
@@ -1255,16 +1309,29 @@
         return matchYear && matchSearch;
       });
 
+      const totalPages = Math.max(1, Math.ceil(filtered.length / LIST_PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const pageItems = filtered.slice((currentPage - 1) * LIST_PAGE_SIZE, currentPage * LIST_PAGE_SIZE);
+
       const countEl = document.getElementById('articles-count');
-      if (countEl) countEl.textContent = filtered.length;
+      if (countEl) countEl.textContent = pageRangeText(filtered.length, currentPage);
       const listEl = document.getElementById('articles-container');
-      if (listEl) listEl.innerHTML = renderArticleList(filtered);
+      if (listEl) listEl.innerHTML = renderArticleList(pageItems);
+      const pagerEl = document.getElementById('articles-pager');
+      if (pagerEl) {
+        pagerEl.innerHTML = pagerRowHtml(currentPage, totalPages, 'articles-prev', 'articles-next');
+        const prevBtn = document.getElementById('articles-prev');
+        const nextBtn = document.getElementById('articles-next');
+        if (prevBtn) prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; updateArticlesView(); } });
+        if (nextBtn) nextBtn.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; updateArticlesView(); } });
+      }
     }
 
     const searchInput = document.getElementById('article-search');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         searchQuery = e.target.value;
+        currentPage = 1;
         updateArticlesView();
       });
     }
@@ -1273,9 +1340,12 @@
     if (yearSelect) {
       yearSelect.addEventListener('change', (e) => {
         selectedYear = e.target.value;
+        currentPage = 1;
         updateArticlesView();
       });
     }
+
+    updateArticlesView();
   }
 
   function renderArticleList(articles) {
@@ -1557,6 +1627,7 @@
 
     let selectedYear = 'all';
     let searchQuery = '';
+    let currentPage = 1;
 
     container.innerHTML = `
       <div class="box">
@@ -1582,6 +1653,8 @@
           <div class="notes-feed" id="notes-container">
             ${renderNoteList(notes)}
           </div>
+
+          <div id="notes-pager"></div>
         </div>
       </div>
     `;
@@ -1599,16 +1672,29 @@
         return matchYear && matchSearch;
       });
 
+      const totalPages = Math.max(1, Math.ceil(filtered.length / LIST_PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const pageItems = filtered.slice((currentPage - 1) * LIST_PAGE_SIZE, currentPage * LIST_PAGE_SIZE);
+
       const countEl = document.getElementById('notes-count');
-      if (countEl) countEl.textContent = filtered.length;
+      if (countEl) countEl.textContent = pageRangeText(filtered.length, currentPage);
       const listEl = document.getElementById('notes-container');
-      if (listEl) listEl.innerHTML = renderNoteList(filtered);
+      if (listEl) listEl.innerHTML = renderNoteList(pageItems);
+      const pagerEl = document.getElementById('notes-pager');
+      if (pagerEl) {
+        pagerEl.innerHTML = pagerRowHtml(currentPage, totalPages, 'notes-prev', 'notes-next');
+        const prevBtn = document.getElementById('notes-prev');
+        const nextBtn = document.getElementById('notes-next');
+        if (prevBtn) prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; updateNotesView(); } });
+        if (nextBtn) nextBtn.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; updateNotesView(); } });
+      }
     }
 
     const searchInput = document.getElementById('note-search');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         searchQuery = e.target.value;
+        currentPage = 1;
         updateNotesView();
       });
     }
@@ -1617,9 +1703,12 @@
     if (yearSelect) {
       yearSelect.addEventListener('change', (e) => {
         selectedYear = e.target.value;
+        currentPage = 1;
         updateNotesView();
       });
     }
+
+    updateNotesView();
   }
 
   function renderNoteList(notes) {
@@ -1656,6 +1745,7 @@
 
     let selectedYear = 'all';
     let searchQuery = '';
+    let currentPage = 1;
 
     container.innerHTML = `
       <div class="box">
@@ -1681,6 +1771,8 @@
           <div class="projects-grid" id="projects-container">
             ${renderProjectList(projects)}
           </div>
+
+          <div id="projects-pager"></div>
         </div>
       </div>
     `;
@@ -1700,16 +1792,29 @@
         return matchYear && matchSearch;
       });
 
+      const totalPages = Math.max(1, Math.ceil(filtered.length / LIST_PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const pageItems = filtered.slice((currentPage - 1) * LIST_PAGE_SIZE, currentPage * LIST_PAGE_SIZE);
+
       const countEl = document.getElementById('projects-count');
-      if (countEl) countEl.textContent = filtered.length;
+      if (countEl) countEl.textContent = pageRangeText(filtered.length, currentPage);
       const listEl = document.getElementById('projects-container');
-      if (listEl) listEl.innerHTML = renderProjectList(filtered);
+      if (listEl) listEl.innerHTML = renderProjectList(pageItems);
+      const pagerEl = document.getElementById('projects-pager');
+      if (pagerEl) {
+        pagerEl.innerHTML = pagerRowHtml(currentPage, totalPages, 'projects-prev', 'projects-next');
+        const prevBtn = document.getElementById('projects-prev');
+        const nextBtn = document.getElementById('projects-next');
+        if (prevBtn) prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; updateProjectsView(); } });
+        if (nextBtn) nextBtn.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; updateProjectsView(); } });
+      }
     }
 
     const searchInput = document.getElementById('project-search');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         searchQuery = e.target.value;
+        currentPage = 1;
         updateProjectsView();
       });
     }
@@ -1718,9 +1823,12 @@
     if (yearSelect) {
       yearSelect.addEventListener('change', (e) => {
         selectedYear = e.target.value;
+        currentPage = 1;
         updateProjectsView();
       });
     }
+
+    updateProjectsView();
   }
 
   function renderProjectList(projects) {
@@ -2717,6 +2825,9 @@
   }
 
   window.parseMarkdownMicro = parseMarkdown;
+  // Reused by editor.html (local content studio) for previews and lists.
+  window.formatInlineMarkdownMicro = formatInlineMarkdown;
+  window.escapeHtmlMicro = escapeHtml;
 
   // Inline markdown with single-escape guarantee: the input is always
   // escaped exactly once up front, so raw HTML can never survive and

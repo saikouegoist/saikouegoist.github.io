@@ -1481,6 +1481,25 @@ body.reading-mode .article-body {
   margin: 0 0 4px 0;
 }
 
+/* Discreet studio shortcut: the © becomes a little gif button (links page) */
+.footer-copy-gif-link {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.footer-copy-gif {
+  height: 15px;
+  width: auto;
+  vertical-align: -2px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.footer-copy-gif-link:hover .footer-copy-gif {
+  filter: brightness(1.15);
+}
+
 .footer-tagline {
   margin: 0 0 10px 0;
   font-style: italic;
@@ -1614,6 +1633,44 @@ body.reading-mode .article-body {
   color: var(--text-muted);
   font-size: 0.85rem;
   margin-bottom: 10px;
+}
+
+/* Shared list pager (articles, notes, projects, guestbook, studio) */
+.pager-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dotted var(--dotted-border);
+}
+
+.pager-info {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.pager-btn {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.pager-btn:hover:not(:disabled) {
+  border-color: var(--link-color);
+  color: var(--link-color);
+}
+
+.pager-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .filter-dropdown-wrapper {
