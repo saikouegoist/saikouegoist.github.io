@@ -706,7 +706,7 @@ body {
 /* Mode Switch Tabs (Subtle, balanced, neither pops out harshly) */
 .music-mode-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 4px;
 }
 

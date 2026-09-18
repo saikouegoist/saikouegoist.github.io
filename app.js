@@ -332,7 +332,7 @@
   }
 
   // -----------------------------------------------------------
-  // Retro Japanese Music Box Engine (Classic & Anime Edition)
+  // Retro Japanese Music Box Engine (Classic, Anime & Others)
   // -----------------------------------------------------------
   function initMusicBox() {
     const playerEl = document.getElementById('box-music-player');
@@ -351,6 +351,7 @@
     const modeIndicator = document.getElementById('music-mode-indicator');
     const btnClassic = document.getElementById('btn-mode-classic');
     const btnAnime = document.getElementById('btn-mode-anime');
+    const btnOthers = document.getElementById('btn-mode-others');
     const btnPlay = document.getElementById('btn-music-play');
     const btnPrev = document.getElementById('btn-music-prev');
     const btnNext = document.getElementById('btn-music-next');
@@ -364,6 +365,7 @@
     let currentMode = safeStorage.get('meowking_music_mode') || 'classic';
     if (currentMode === 'classical') currentMode = 'classic';
     if (currentMode === 'songs') currentMode = 'anime';
+    if (!['classic', 'anime', 'others'].includes(currentMode)) currentMode = 'classic';
     if (!musicData[currentMode]) currentMode = 'classic';
 
     let currentTrackIndex = 0;
@@ -395,7 +397,10 @@
 
     function getTracks() {
       const modeTracks = musicData[currentMode];
-      if (Array.isArray(modeTracks) && modeTracks.length > 0) return modeTracks;
+      // Return the mode's own list even when empty, so an empty category
+      // honestly shows "-- no tracks --" instead of borrowing classic's.
+      // Only fall back for legacy manifests missing the key entirely.
+      if (Array.isArray(modeTracks)) return modeTracks;
       return Array.isArray(musicData.classic) ? musicData.classic : [];
     }
 
@@ -565,7 +570,8 @@
 
       if (btnClassic) btnClassic.classList.toggle('active', currentMode === 'classic');
       if (btnAnime) btnAnime.classList.toggle('active', currentMode === 'anime');
-      if (modeIndicator) modeIndicator.textContent = currentMode === 'classic' ? 'CLASSIC' : 'ANIME';
+      if (btnOthers) btnOthers.classList.toggle('active', currentMode === 'others');
+      if (modeIndicator) modeIndicator.textContent = currentMode.toUpperCase();
     }
 
     function switchMode(newMode) {
@@ -580,7 +586,7 @@
       currentMode = newMode;
       safeStorage.set('meowking_music_mode', currentMode);
       currentTrackIndex = 0;
-      // Force reload: the two playlists may share a file path and the
+      // Force reload: playlists may share a file path and the
       // new first track must always start from 0, not resume mid-track.
       loadedTrackFile = null;
       try { audioPlayer.currentTime = 0; } catch (e) { }
@@ -608,6 +614,9 @@
     }
     if (btnAnime) {
       btnAnime.addEventListener('click', () => switchMode('anime'));
+    }
+    if (btnOthers) {
+      btnOthers.addEventListener('click', () => switchMode('others'));
     }
     if (btnPlay) {
       btnPlay.addEventListener('click', togglePlayback);
@@ -2617,14 +2626,23 @@
     // paragraph wrapping never swallows it (it previously rendered literally).
     text = text.replace(/^[ \t]*---[ \t]*$/gm, '__HR__');
 
-    // Headings and blockquotes are escaped BEFORE inline formatting so
-    // raw HTML (e.g. <img onerror>) can never survive in trusted content.
-    text = text.replace(/^#### (.*$)/gim, (_, m) => '<h4>' + formatInlineMarkdown(m, false) + '</h4>');
-    text = text.replace(/^### (.*$)/gim, (_, m) => '<h3>' + formatInlineMarkdown(m, false) + '</h3>');
-    text = text.replace(/^## (.*$)/gim, (_, m) => '<h2>' + formatInlineMarkdown(m, false) + '</h2>');
-    text = text.replace(/^# (.*$)/gim, (_, m) => '<h1>' + formatInlineMarkdown(m, false) + '</h1>');
+    // Headings and blockquotes are extracted into placeholders BEFORE the
+    // whole-document inline pass. The generated tags must never go through
+    // the escape step (it previously turned `### x` into literal
+    // `&lt;h3&gt;` text). Raw HTML inside them is still escaped, because
+    // each line is inline-formatted individually before being stored.
+    const headBlocks = [];
+    text = text.replace(/^#{1,4} (.*$)/gim, (full, m) => {
+      const level = full.match(/^#+/)[0].length;
+      headBlocks.push(`<h${level}>` + formatInlineMarkdown(m, false) + `</h${level}>`);
+      return `__HEAD_BLOCK_${headBlocks.length - 1}__`;
+    });
 
-    text = text.replace(/^\> (.*$)/gim, (_, m) => '<blockquote>' + formatInlineMarkdown(m, false) + '</blockquote>');
+    const quoteBlocks = [];
+    text = text.replace(/^\> (.*$)/gim, (_, m) => {
+      quoteBlocks.push('<blockquote>' + formatInlineMarkdown(m, false) + '</blockquote>');
+      return `__QUOTE_BLOCK_${quoteBlocks.length - 1}__`;
+    });
     text = formatInlineMarkdown(text, false);
 
     // Lists are extracted into placeholders BEFORE paragraph wrapping so the
@@ -2647,20 +2665,18 @@
     });
 
     const paragraphs = text.split(/\n\n+/);
+    // A generated block is identified by its placeholder prefix. A block
+    // sharing a chunk with trailing text (single newline, no blank line)
+    // keeps the block and wraps only the rest in <p>.
+    const blockPh = /^(__(?:CODE|LIST|HEAD|QUOTE)_BLOCK_\d+__|__HR__)/;
     text = paragraphs.map(p => {
       p = p.trim();
       if (!p) return '';
-      // A heading/quote sharing a chunk with following text (single
-      // newline, no blank line) must still wrap the trailing text.
-      const headMatch = p.match(/^<h[1-4]>.*<\/h[1-4]>/);
-      if (headMatch && p.length > headMatch[0].length) {
-        return headMatch[0] + `<p>${p.slice(headMatch[0].length).trim().replace(/\n/g, '<br>')}</p>`;
+      const ph = p.match(blockPh);
+      if (ph && p.length > ph[0].length) {
+        return ph[0] + `<p>${p.slice(ph[0].length).trim().replace(/\n/g, '<br>')}</p>`;
       }
-      const quoteMatch = p.match(/^<blockquote>.*<\/blockquote>/);
-      if (quoteMatch && p.length > quoteMatch[0].length) {
-        return quoteMatch[0] + `<p>${p.slice(quoteMatch[0].length).trim().replace(/\n/g, '<br>')}</p>`;
-      }
-      if (p.startsWith('<h') || p.startsWith('<ul>') || p.startsWith('<ol>') || p.startsWith('<blockquote>') || p.startsWith('__CODE_BLOCK_') || p.startsWith('__LIST_BLOCK_') || p.startsWith('__HR__')) {
+      if (p.startsWith('<ul>') || p.startsWith('<ol>') || blockPh.test(p)) {
         return p;
       }
       return `<p>${p.replace(/\n/g, '<br>')}</p>`;
@@ -2674,6 +2690,16 @@
     listBlocks.forEach((block, i) => {
       text = text.replace(`__LIST_BLOCK_${i}__`, block);
       text = text.replace(`<p>__LIST_BLOCK_${i}__</p>`, block);
+    });
+
+    headBlocks.forEach((block, i) => {
+      text = text.replace(`__HEAD_BLOCK_${i}__`, block);
+      text = text.replace(`<p>__HEAD_BLOCK_${i}__</p>`, block);
+    });
+
+    quoteBlocks.forEach((block, i) => {
+      text = text.replace(`__QUOTE_BLOCK_${i}__`, block);
+      text = text.replace(`<p>__QUOTE_BLOCK_${i}__</p>`, block);
     });
 
     text = text.replace(/<p>__HR__<\/p>/g, '<hr>');
@@ -2695,10 +2721,14 @@
     text = escapeHtml(text);
     // Inline code: content is already escaped above, insert as-is.
     text = text.replace(/`([^`]+)`/g, (_, c) => `<code>${c}</code>`);
+    // URLs may contain one level of balanced parens (e.g. Wikipedia
+    // links). A naive \(([^)]+)\) would stop at the first inner ")" and
+    // leave a stray paren behind, so match balanced parens instead.
+    const urlInParens = '\\(([^()]*(?:\\([^()]*\\)[^()]*)*)\\)';
     // Images: ![alt](src). Relative paths allowed (same-origin); dangerous
     // schemes (javascript:, data:, etc.) fall back to plain alt text.
     // alt/src are already escaped, so they are used as-is (no re-escape).
-    text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
+    text = text.replace(new RegExp('!\\[([^\\]]*)\\]' + urlInParens, 'g'), (match, alt, url) => {
       const src = url.trim();
       if (/^\s*(javascript|data|vbscript|file):/i.test(src)) return alt;
       if (!isSafeImageSrc(src)) return alt;
@@ -2711,7 +2741,7 @@
     // javascript:, data:, vbscript:, etc. from being used to smuggle
     // executable code in via user-submitted content (e.g. the guestbook).
     // Label/href are already escaped, so they are used as-is.
-    text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, url) => {
+    text = text.replace(new RegExp('\\[([^\\]]+)\\]' + urlInParens, 'g'), (match, label, url) => {
       const trimmedUrl = url.trim();
       const isSafe = /^(https?:|mailto:|#|\/)/i.test(trimmedUrl);
       const safeHrefValue = isSafe ? trimmedUrl : '#';

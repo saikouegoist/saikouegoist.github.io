@@ -204,6 +204,7 @@ Open `data/about.js`:
 | :--- | :--- |
 | **Write an article** | Create `articles/your-post.md`, register in `data/articles.js` |
 | **Add a gallery image** | Drop `.png`/`.jpg`/`.jpeg`/`.gif`/`.webp` into `images/` and push (manifest auto-updates, never hand-edit `data/gallery.js`) |
+| **Add a song** | Drop `.mp3` into `assets/audio/anime/`, `assets/audio/classic/` or `assets/audio/others/` (or flat as `Anime_Song.mp3` / `Classic_Song.mp3` / `Others_Song.mp3`) and push (manifest auto-updates, never hand-edit `data/music.js`; use `Artist_-_Title.mp3` to set artist; polish names in `data/music-meta.json`) |
 | **Delete an article** | Remove from `data/articles.js` |
 | **Add a quick thought** | Add to `data/notes.js` |
 | **Add a project** | Add to `data/projects.js` |

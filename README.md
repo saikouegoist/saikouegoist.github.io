@@ -19,15 +19,18 @@
 
 ```
 meowking/
-├── assets/                      # Images, GIFs, SVG badges, audio library
+├── assets/audio/anime|classic|others/  # Music box source (auto-scanned .mp3 by folder;
+│                                # flat Anime_*/Classic_*/Others_* prefix also works)
 ├── images/                      # Homepage gallery source (auto-scanned, any .png/.jpg/.jpeg/.gif/.webp)
 ├── articles/                    # Standalone Markdown articles (*.md)
 ├── temples/                     # Hidden Temple pages (*.md, via secret footer glyph)
-├── scripts/                     # build-gallery-manifest.py (regenerates data/gallery.js)
-├── .github/workflows/           # gallery-manifest.yml (auto-updates gallery on push)
+├── scripts/                     # build-gallery-manifest.py, build-music-manifest.py
+├── .github/workflows/           # gallery-manifest.yml, music-manifest.yml (auto-update on push)
 ├── data/                        # Manual content: config, articles, notes,
-│                                # projects, temples, about, links, music, guestbook
-│                                # + gallery.js (AUTO-GENERATED from images/, do not hand-edit)
+│                                # projects, temples, about, links, guestbook
+│                                # + gallery.js (AUTO-GENERATED from images/)
+│                                # + music.js (AUTO-GENERATED from assets/audio/)
+│                                # + music-meta.json (optional title/artist polish)
 ├── index.html                   # Main SPA shell (+ about/articles/notes/
 │                                # projects/links/guestbook static mirrors)
 ├── 404.html                     # Retro mocking not-found page

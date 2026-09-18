@@ -1,0 +1,45 @@
+# Regenerate data/music.js whenever audio files change, so the music box
+# picks up added/removed songs with no manual list edits.
+name: music-manifest
+
+on:
+  push:
+    paths:
+      - "assets/audio/**"
+      - "scripts/build-music-manifest.py"
+      - "data/music-meta.json"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: music-manifest
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - run: python scripts/build-music-manifest.py
+      - name: Commit updated manifest
+        run: |
+          if git diff --quiet -- data/music.js; then
+            echo "music manifest unchanged"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data/music.js
+            git commit -m "Auto-update music manifest from assets/audio/"
+            git pull --rebase --autostash
+            python scripts/build-music-manifest.py
+            if ! git diff --quiet -- data/music.js; then
+              git add data/music.js
+              git commit -m "Auto-update music manifest from assets/audio/"
+            fi
+            git push
+          fi
