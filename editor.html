@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>meowking content studio</title>
-  <!-- Content studio: password-gated writing tool for articles, notes and
-       projects. Safe to deploy: it makes zero network requests and can only
+  <!-- Content studio: writing tool for articles, notes and projects.
+       Safe to deploy: it makes zero network requests and can only
        generate download files — publishing always requires a repo push. -->
   <link rel="stylesheet" href="style.css">
   <style>
@@ -64,7 +64,6 @@
       background: rgba(255,255,255,0.02);
     }
     .ed-preview-label { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; }
-    .ed-gate { max-width: 420px; margin: 60px auto 0; }
     .ed-hint { font-size: 0.88rem; color: var(--text-muted); }
     .ed-hint code { font-family: var(--font-mono); font-size: 0.82em; }
     .ed-steps { margin: 0; padding-left: 20px; }
@@ -87,34 +86,11 @@
       </a>
       <div class="header-controls">
         <a href="index.html#/" class="badge-item" title="back to homepage"><img src="assets/button-meowking.gif" alt="home"></a>
-        <button id="lock-btn" class="theme-toggle-btn" aria-label="Lock studio" hidden>lock</button>
       </div>
     </header>
 
-    <!-- Password gate -->
-    <div id="gate" class="box ed-gate">
-      <div class="box-header" id="gate-title">unlock studio</div>
-      <div class="box-content">
-        <div class="ed-form">
-          <p class="ed-hint" id="gate-hint">Enter your studio password. Only a hash is stored, in this browser only.</p>
-          <div class="ed-field">
-            <label class="ed-label" for="gate-pw">password</label>
-            <input type="password" id="gate-pw" class="ed-input" autocomplete="current-password">
-          </div>
-          <div class="ed-field" id="gate-pw2-wrap" hidden>
-            <label class="ed-label" for="gate-pw2">confirm password</label>
-            <input type="password" id="gate-pw2" class="ed-input" autocomplete="new-password">
-          </div>
-          <div class="ed-btn-row">
-            <button type="button" id="gate-btn" class="ed-btn">unlock</button>
-          </div>
-          <div class="ed-msg" id="gate-msg" role="alert"></div>
-        </div>
-      </div>
-    </div>
-
     <!-- Studio -->
-    <div id="studio" hidden>
+    <div id="studio">
       <div class="box" id="load-warn" hidden>
         <div class="box-header">warning</div>
         <div class="box-content"><p class="ed-msg-error" id="load-warn-text"></p></div>
@@ -374,67 +350,6 @@
   (function () {
     'use strict';
 
-    /*SHA256-START*/
-    // Compact SHA-256 (ASCII input). Used only for the local password gate.
-    function sha256(ascii) {
-      function rr(v, a) { return (v >>> a) | (v << (32 - a)); }
-      var maxWord = Math.pow(2, 32), result = '';
-      var words = [], asciiBitLength = ascii.length * 8;
-      var hash = sha256.h = sha256.h || [], k = sha256.k = sha256.k || [];
-      var primeCounter = k.length, isComposite = {};
-      for (var candidate = 2; primeCounter < 64; candidate++) {
-        if (!isComposite[candidate]) {
-          for (var i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }
-          hash[primeCounter] = (Math.pow(candidate, 0.5) * maxWord) | 0;
-          k[primeCounter++] = (Math.pow(candidate, 1 / 3) * maxWord) | 0;
-        }
-      }
-      ascii += '\x80';
-      while (ascii.length % 64 - 56) ascii += '\x00';
-      for (var i = 0; i < ascii.length; i++) {
-        var j = ascii.charCodeAt(i);
-        if (j >> 8) return '';
-        words[i >> 2] |= j << ((3 - i) % 4) * 8;
-      }
-      words[words.length] = ((asciiBitLength / maxWord) | 0);
-      words[words.length] = (asciiBitLength);
-      for (var j = 0; j < words.length;) {
-        var w = words.slice(j, j += 16), oldHash = hash;
-        hash = hash.slice(0, 8);
-        for (var i = 0; i < 64; i++) {
-          var w15 = w[i - 15], w2 = w[i - 2];
-          var a = hash[0], e = hash[4];
-          var temp1 = hash[7]
-            + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25))
-            + ((e & hash[5]) ^ ((~e) & hash[6]))
-            + k[i]
-            + (w[i] = (i < 16) ? w[i] : (
-              w[i - 16]
-              + (rr(w15, 7) ^ rr(w15, 18) ^ (w15 >>> 3))
-              + w[i - 7]
-              + (rr(w2, 17) ^ rr(w2, 19) ^ (w2 >>> 10))
-            ) | 0);
-          var temp2 = (rr(a, 2) ^ rr(a, 13) ^ rr(a, 22))
-            + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
-          hash = [(temp1 + temp2) | 0].concat(hash);
-          hash[4] = (hash[4] + temp1) | 0;
-        }
-        for (var i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }
-      }
-      for (var i = 0; i < 8; i++) {
-        for (var j = 3; j + 1; j--) {
-          var b = (hash[i] >> (j * 8)) & 255;
-          result += ((b < 16) ? 0 : '') + b.toString(16);
-        }
-      }
-      return result;
-    }
-    function hashPw(pw) {
-      // UTF-8 safe: hash the percent-encoded form (ASCII only for sha256()).
-      return sha256(unescape(encodeURIComponent('meowking-studio::' + pw)));
-    }
-    /*SHA256-END*/
-
     var esc = window.escapeHtmlMicro || function (s) {
       return String(s == null ? '' : s)
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -450,63 +365,11 @@
       el.className = 'ed-msg ' + (ok ? 'ed-msg-ok' : 'ed-msg-error');
     }
 
-    // ---------------- Password gate ----------------
-    var HASH_KEY = 'meowking_editor_hash';
-    var gate = $('gate'), studio = $('studio'), lockBtn = $('lock-btn');
-    var gatePw = $('gate-pw'), gatePw2 = $('gate-pw2'), gatePw2Wrap = $('gate-pw2-wrap');
-    var gateBtn = $('gate-btn'), gateMsg = $('gate-msg');
-    var gateTitle = $('gate-title'), gateHint = $('gate-hint');
-    var storedHash = null;
-    try { storedHash = localStorage.getItem(HASH_KEY); } catch (e) { storedHash = null; }
-
-    function unlock() {
-      gate.hidden = true;
-      studio.hidden = false;
-      lockBtn.hidden = false;
-    }
-    function lock() {
-      studio.hidden = true;
-      lockBtn.hidden = true;
-      gate.hidden = false;
-      gatePw.value = ''; gatePw2.value = '';
-      showMsg('gate-msg', '', true);
-      setupGate();
-    }
-
-    function setupGate() {
-      try { storedHash = localStorage.getItem(HASH_KEY); } catch (e) { storedHash = null; }
-      if (!storedHash) {
-        gateTitle.textContent = 'set studio password';
-        gateHint.textContent = 'First run: choose a password. Only its hash is kept, in this browser only.';
-        gatePw2Wrap.hidden = false;
-        gateBtn.textContent = 'set password';
-      } else {
-        gateTitle.textContent = 'unlock studio';
-        gateHint.textContent = 'Enter your studio password. Only a hash is stored, in this browser only.';
-        gatePw2Wrap.hidden = true;
-        gateBtn.textContent = 'unlock';
-      }
-    }
-
-    gateBtn.addEventListener('click', function () {
-      var pw = gatePw.value || '';
-      if (!storedHash) {
-        if (pw.length < 4) { showMsg('gate-msg', 'Use at least 4 characters.', false); return; }
-        if (pw !== gatePw2.value) { showMsg('gate-msg', 'Passwords do not match.', false); return; }
-        try { localStorage.setItem(HASH_KEY, hashPw(pw)); } catch (e) {
-          showMsg('gate-msg', 'Browser storage blocked — password cannot be saved.', false); return;
-        }
-        unlock();
-        return;
-      }
-      if (hashPw(pw) === storedHash) { unlock(); }
-      else { showMsg('gate-msg', 'Wrong password.', false); }
-    });
-    gatePw.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { e.preventDefault(); gateBtn.click(); }
-    });
-    lockBtn.addEventListener('click', lock);
-    setupGate();
+    // ---------------- Studio shell ----------------
+    var studio = $('studio');
+    // One-time cleanup of the retired password-gate key (gate removed:
+    // it guarded nothing real, so no replacement was needed).
+    try { localStorage.removeItem('meowking_editor_hash'); } catch (e) { }
 
     // ---------------- State (working copies) ----------------
     function clone(v) { return JSON.parse(JSON.stringify(v == null ? [] : v)); }
@@ -1275,7 +1138,6 @@
       });
     });
     window.addEventListener('beforeunload', function (e) {
-      if (studio.hidden) return;
       if (staged.articles || staged.notes || staged.projects) {
         e.preventDefault();
         e.returnValue = '';
