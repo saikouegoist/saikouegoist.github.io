@@ -16,402 +16,216 @@ window.SITE_MUSIC = {
   classic: [
     {
         "id": "cl-01",
-        "title": "Ai Ga Tomoru",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-01-ai-ga-tomoru.mp3"
-    },
-    {
-        "id": "cl-02",
-        "title": "Hoshi No Silhouette",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-02-hoshi-no-silhouette.mp3"
-    },
-    {
-        "id": "cl-03",
-        "title": "Yoru No Silhouette",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-03-yoru-no-silhouette.mp3"
-    },
-    {
-        "id": "cl-04",
-        "title": "Kokoro No Melody",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-04-kokoro-no-melody.mp3"
-    },
-    {
-        "id": "cl-05",
-        "title": "Shinzou No Rhythm",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-05-shinzou-no-rhythm.mp3"
-    },
-    {
-        "id": "cl-06",
-        "title": "Yozora No Mystery",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-06-yozora-no-mystery.mp3"
-    },
-    {
-        "id": "cl-07",
-        "title": "Yozora No Melody",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-07-yozora-no-melody.mp3"
-    },
-    {
-        "id": "cl-08",
-        "title": "Yoru No Curtain",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-08-yoru-no-curtain.mp3"
-    },
-    {
-        "id": "cl-09",
-        "title": "Yoru No Melody",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-09-yoru-no-melody.mp3"
-    },
-    {
-        "id": "cl-10",
-        "title": "Yoake No Dance",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-10-yoake-no-dance.mp3"
-    },
-    {
-        "id": "cl-11",
-        "title": "Yume O Oikakeru",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-11-yume-o-oikakeru.mp3"
-    },
-    {
-        "id": "cl-12",
-        "title": "Yoru No Symphony",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-12-yoru-no-symphony.mp3"
-    },
-    {
-        "id": "cl-13",
-        "title": "Kokoro No Dance",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-13-kokoro-no-dance.mp3"
-    },
-    {
-        "id": "cl-14",
-        "title": "Yoake No Melody",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-14-yoake-no-melody.mp3"
-    },
-    {
-        "id": "cl-15",
-        "title": "Dancing Heart",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-15-dancing-heart.mp3"
-    },
-    {
-        "id": "cl-16",
-        "title": "Yume No Silhouette",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-16-yume-no-silhouette.mp3"
-    },
-    {
-        "id": "cl-17",
-        "title": "Yokaze No Rhythm",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-17-yokaze-no-rhythm.mp3"
-    },
-    {
-        "id": "cl-18",
-        "title": "Yoru No Mirage",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-18-yoru-no-mirage.mp3"
-    },
-    {
-        "id": "cl-19",
-        "title": "Yoru No Umi Ni Kiete",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-19-yoru-no-umi-ni-kiete.mp3"
-    },
-    {
-        "id": "cl-20",
-        "title": "Furuki Nihon No Yoru",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-20-furuki-nihon-no-yoru.mp3"
-    },
-    {
-        "id": "cl-21",
-        "title": "Night Dancer Imase",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-21-night-dancer-imase.mp3"
-    },
-    {
-        "id": "cl-22",
-        "title": "Tabun Yoasobi",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-22-tabun-yoasobi.mp3"
-    },
-    {
-        "id": "cl-23",
-        "title": "Bansanka Tuki",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-23-bansanka-tuki.mp3"
-    },
-    {
-        "id": "cl-24",
-        "title": "Tada Koe Hitotsu",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-24-tada-koe-hitotsu.mp3"
-    },
-    {
-        "id": "cl-25",
-        "title": "Stay With Me",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-25-stay-with-me.mp3"
-    },
-    {
-        "id": "cl-26",
-        "title": "Suki Dakara",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-26-suki-dakara.mp3"
-    },
-    {
-        "id": "cl-27",
-        "title": "Kokoronashi",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-27-kokoronashi.mp3"
-    },
-    {
-        "id": "cl-28",
-        "title": "Amanojaku",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-28-amanojaku.mp3"
-    },
-    {
-        "id": "cl-29",
-        "title": "Harehareya",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-29-harehareya.mp3"
-    },
-    {
-        "id": "cl-30",
-        "title": "Yume To Hazakura",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-30-yume-to-hazakura.mp3"
-    },
-    {
-        "id": "cl-31",
-        "title": "Ai Wa Mada Dekiru Koto",
-        "artist": "Unknown",
-        "file": "assets/audio/classic-31-ai-wa-mada-dekiru-koto.mp3"
-    },
-    {
-        "id": "cl-32",
         "title": "Ai ga Tomoru",
         "artist": "Rokudenashi",
         "file": "assets/audio/classic/Classic_01-ai-ga-tomoru.mp3",
         "year": "2022"
     },
     {
-        "id": "cl-33",
+        "id": "cl-02",
         "title": "Hoshi no Silhouette",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_02-hoshi-no-silhouette.mp3",
         "year": "星のシルエット"
     },
     {
-        "id": "cl-34",
+        "id": "cl-03",
         "title": "Yoru no Silhouette",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_03-yoru-no-silhouette.mp3",
         "year": "夜のシルエット"
     },
     {
-        "id": "cl-35",
+        "id": "cl-04",
         "title": "Kokoro no Melody",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_04-kokoro-no-melody.mp3",
         "year": "心のメロディー"
     },
     {
-        "id": "cl-36",
+        "id": "cl-05",
         "title": "Shinzou no Rhythm",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_05-shinzou-no-rhythm.mp3",
         "year": "心臓のリズム"
     },
     {
-        "id": "cl-37",
+        "id": "cl-06",
         "title": "Yozora no Mystery",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_06-yozora-no-mystery.mp3",
         "year": "夜空のミステリー"
     },
     {
-        "id": "cl-38",
+        "id": "cl-07",
         "title": "Yozora no Melody",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_07-yozora-no-melody.mp3",
         "year": "夜空のメロディー"
     },
     {
-        "id": "cl-39",
+        "id": "cl-08",
         "title": "Yoru no Curtain",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_08-yoru-no-curtain.mp3",
         "year": "夜のカーテン"
     },
     {
-        "id": "cl-40",
+        "id": "cl-09",
         "title": "Yoru no Melody",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_09-yoru-no-melody.mp3",
         "year": "夜のメロディー"
     },
     {
-        "id": "cl-41",
+        "id": "cl-10",
         "title": "Yoake no Dance",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_10-yoake-no-dance.mp3",
         "year": "夜明けのダンス"
     },
     {
-        "id": "cl-42",
+        "id": "cl-11",
         "title": "Yume o Oikakeru",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_11-yume-o-oikakeru.mp3",
         "year": "夢を追いかける"
     },
     {
-        "id": "cl-43",
+        "id": "cl-12",
         "title": "Yoru no Symphony",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_12-yoru-no-symphony.mp3",
         "year": "夜のシンフォニー"
     },
     {
-        "id": "cl-44",
+        "id": "cl-13",
         "title": "Kokoro no Dance",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_13-kokoro-no-dance.mp3",
         "year": "心のダンス"
     },
     {
-        "id": "cl-45",
+        "id": "cl-14",
         "title": "Yoake no Melody",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_14-yoake-no-melody.mp3",
         "year": "夜明けのメロディー"
     },
     {
-        "id": "cl-46",
+        "id": "cl-15",
         "title": "Dancing Heart",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_15-dancing-heart.mp3",
         "year": "ダンシングハート"
     },
     {
-        "id": "cl-47",
+        "id": "cl-16",
         "title": "Yume no Silhouette",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_16-yume-no-silhouette.mp3",
         "year": "夢のシルエット"
     },
     {
-        "id": "cl-48",
+        "id": "cl-17",
         "title": "Yokaze no Rhythm",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_17-yokaze-no-rhythm.mp3",
         "year": "夜風のリズム"
     },
     {
-        "id": "cl-49",
+        "id": "cl-18",
         "title": "Yoru no Mirage",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_18-yoru-no-mirage.mp3",
         "year": "夜のミラージュ"
     },
     {
-        "id": "cl-50",
+        "id": "cl-19",
         "title": "Yoru no Umi ni Kiete",
         "artist": "Japanese City Chill",
         "file": "assets/audio/classic/Classic_19-yoru-no-umi-ni-kiete.mp3",
         "year": "夜の海に消えて"
     },
     {
-        "id": "cl-51",
+        "id": "cl-20",
         "title": "Furuki Nihon no Yoru",
         "artist": "Traditional Instrumental",
         "file": "assets/audio/classic/Classic_20-furuki-nihon-no-yoru.mp3",
         "year": "古き日本の夜"
     },
     {
-        "id": "cl-52",
+        "id": "cl-21",
         "title": "NIGHT DANCER",
         "artist": "imase",
         "file": "assets/audio/classic/Classic_21-night-dancer-imase.mp3",
         "year": "2022"
     },
     {
-        "id": "cl-53",
+        "id": "cl-22",
         "title": "Tabun",
         "artist": "YOASOBI",
         "file": "assets/audio/classic/Classic_22-tabun-yoasobi.mp3",
         "year": "2020"
     },
     {
-        "id": "cl-54",
+        "id": "cl-23",
         "title": "Bansanka",
         "artist": "tuki.",
         "file": "assets/audio/classic/Classic_23-bansanka-tuki.mp3",
         "year": "2023"
     },
     {
-        "id": "cl-55",
+        "id": "cl-24",
         "title": "Tada Koe Hitotsu",
         "artist": "Rokudenashi",
         "file": "assets/audio/classic/Classic_24-tada-koe-hitotsu.mp3",
         "year": "2021"
     },
     {
-        "id": "cl-56",
+        "id": "cl-25",
         "title": "Stay With Me",
         "artist": "Miki Matsubara",
         "file": "assets/audio/classic/Classic_25-stay-with-me.mp3",
         "year": "1979"
     },
     {
-        "id": "cl-57",
+        "id": "cl-26",
         "title": "Suki Dakara.",
         "artist": "Yuika",
         "file": "assets/audio/classic/Classic_26-suki-dakara.mp3",
         "year": "2021"
     },
     {
-        "id": "cl-58",
+        "id": "cl-27",
         "title": "Kokoronashi",
         "artist": "majiko",
         "file": "assets/audio/classic/Classic_27-kokoronashi.mp3",
         "year": "2014"
     },
     {
-        "id": "cl-59",
+        "id": "cl-28",
         "title": "Amanojaku",
         "artist": "164 / GUMI",
         "file": "assets/audio/classic/Classic_28-amanojaku.mp3",
         "year": "2011"
     },
     {
-        "id": "cl-60",
+        "id": "cl-29",
         "title": "Harehareya",
         "artist": "Sou / Hanyuu Maigo",
         "file": "assets/audio/classic/Classic_29-harehareya.mp3",
         "year": "2018"
     },
     {
-        "id": "cl-61",
+        "id": "cl-30",
         "title": "Yume to Hazakura",
         "artist": "Wotamin / Aoki Gekkoh",
         "file": "assets/audio/classic/Classic_30-yume-to-hazakura.mp3",
         "year": "2011"
     },
     {
-        "id": "cl-62",
+        "id": "cl-31",
         "title": "Is There Still Anything Love Can Do",
         "artist": "RADWIMPS",
         "file": "assets/audio/classic/Classic_31-ai-wa-mada-dekiru-koto.mp3",
@@ -421,584 +235,314 @@ window.SITE_MUSIC = {
   anime: [
     {
         "id": "an-01",
-        "title": "Naruto Shippuden Op16",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-01-naruto-shippuden-op16.mp3"
-    },
-    {
-        "id": "an-02",
-        "title": "Fire Force Op1",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-02-fire-force-op1.mp3"
-    },
-    {
-        "id": "an-03",
-        "title": "Oshi No Ko Op",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-03-oshi-no-ko-op.mp3"
-    },
-    {
-        "id": "an-04",
-        "title": "Jujutsu Kaisen Op1",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-04-jujutsu-kaisen-op1.mp3"
-    },
-    {
-        "id": "an-05",
-        "title": "Black Clover Op10",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-05-black-clover-op10.mp3"
-    },
-    {
-        "id": "an-06",
-        "title": "Noragami Op2",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-06-noragami-op2.mp3"
-    },
-    {
-        "id": "an-07",
-        "title": "Chainsaw Man Ed12",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-07-chainsaw-man-ed12.mp3"
-    },
-    {
-        "id": "an-08",
-        "title": "Tokyo Revengers Op1",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-08-tokyo-revengers-op1.mp3"
-    },
-    {
-        "id": "an-09",
-        "title": "Death Note Op1",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-09-death-note-op1.mp3"
-    },
-    {
-        "id": "an-10",
-        "title": "Mashle Op2",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-10-mashle-op2.mp3"
-    },
-    {
-        "id": "an-11",
-        "title": "Re Zero Ed1",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-11-re-zero-ed1.mp3"
-    },
-    {
-        "id": "an-12",
-        "title": "Demon Slayer Op1",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-12-demon-slayer-op1.mp3"
-    },
-    {
-        "id": "an-13",
-        "title": "Your Name Sparkle",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-13-your-name-sparkle.mp3"
-    },
-    {
-        "id": "an-14",
-        "title": "Your Lie In April Op1",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-14-your-lie-in-april-op1.mp3"
-    },
-    {
-        "id": "an-15",
-        "title": "One Punch Man Op1",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-15-one-punch-man-op1.mp3"
-    },
-    {
-        "id": "an-16",
-        "title": "Spy X Family Op1",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-16-spy-x-family-op1.mp3"
-    },
-    {
-        "id": "an-17",
-        "title": "Chainsaw Man Ed8",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-17-chainsaw-man-ed8.mp3"
-    },
-    {
-        "id": "an-18",
-        "title": "Tokyo Ghoul Op1",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-18-tokyo-ghoul-op1.mp3"
-    },
-    {
-        "id": "an-19",
-        "title": "Beastars Op2",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-19-beastars-op2.mp3"
-    },
-    {
-        "id": "an-20",
-        "title": "My Hero Academia Op2",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-20-my-hero-academia-op2.mp3"
-    },
-    {
-        "id": "an-21",
-        "title": "Chainsaw Man Op",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-21-chainsaw-man-op.mp3"
-    },
-    {
-        "id": "an-22",
-        "title": "Komi Cant Communicate Op1",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-22-komi-cant-communicate-op1.mp3"
-    },
-    {
-        "id": "an-23",
-        "title": "Shield Hero Op2",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-23-shield-hero-op2.mp3"
-    },
-    {
-        "id": "an-24",
-        "title": "Jujutsu Kaisen Op4",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-24-jujutsu-kaisen-op4.mp3"
-    },
-    {
-        "id": "an-25",
-        "title": "Frieren Op1",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-25-frieren-op1.mp3"
-    },
-    {
-        "id": "an-26",
-        "title": "No Game No Life Op",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-26-no-game-no-life-op.mp3"
-    },
-    {
-        "id": "an-27",
-        "title": "Tokyo Revengers Op2",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-27-tokyo-revengers-op2.mp3"
-    },
-    {
-        "id": "an-28",
-        "title": "My Hero Academia Op11",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-28-my-hero-academia-op11.mp3"
-    },
-    {
-        "id": "an-29",
-        "title": "Jujutsu Kaisen 0 Ed",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-29-jujutsu-kaisen-0-ed.mp3"
-    },
-    {
-        "id": "an-30",
-        "title": "Ousama Ranking Op2",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-30-ousama-ranking-op2.mp3"
-    },
-    {
-        "id": "an-31",
-        "title": "Angel Beats Op",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-31-angel-beats-op.mp3"
-    },
-    {
-        "id": "an-32",
-        "title": "Jujutsu Kaisen Op3",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-32-jujutsu-kaisen-op3.mp3"
-    },
-    {
-        "id": "an-33",
-        "title": "Blue Lock Op2",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-33-blue-lock-op2.mp3"
-    },
-    {
-        "id": "an-34",
-        "title": "Fate Stay Night Ubw Op2",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-34-fate-stay-night-ubw-op2.mp3"
-    },
-    {
-        "id": "an-35",
-        "title": "Assassination Classroom Op4",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-35-assassination-classroom-op4.mp3"
-    },
-    {
-        "id": "an-36",
-        "title": "Jojos Bizarre Adventure Op3",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-36-jojos-bizarre-adventure-op3.mp3"
-    },
-    {
-        "id": "an-37",
-        "title": "Fireworks Ed",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-37-fireworks-ed.mp3"
-    },
-    {
-        "id": "an-38",
-        "title": "Renai Circulation",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-38-renai-circulation.mp3"
-    },
-    {
-        "id": "an-39",
-        "title": "Orange Your Lie In April",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-39-orange-your-lie-in-april.mp3"
-    },
-    {
-        "id": "an-40",
-        "title": "Akuma No Ko Aot",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-40-akuma-no-ko-aot.mp3"
-    },
-    {
-        "id": "an-41",
-        "title": "Suzume",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-41-suzume.mp3"
-    },
-    {
-        "id": "an-42",
-        "title": "Kawaki Wo Ameku",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-42-kawaki-wo-ameku.mp3"
-    },
-    {
-        "id": "an-43",
-        "title": "Zenzenzense",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-43-zenzenzense.mp3"
-    },
-    {
-        "id": "an-44",
-        "title": "Kamado Tanjirou No Uta",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-44-kamado-tanjirou-no-uta.mp3"
-    },
-    {
-        "id": "an-45",
-        "title": "Violet Evergarden Lemon",
-        "artist": "Unknown",
-        "file": "assets/audio/anime-45-violet-evergarden-lemon.mp3"
-    },
-    {
-        "id": "an-46",
         "title": "Silhouette",
         "artist": "KANA-BOON",
         "file": "assets/audio/anime/Anime_01-naruto-shippuden-op16.mp3",
         "anime": "Naruto Shippuden OP 16"
     },
     {
-        "id": "an-47",
+        "id": "an-02",
         "title": "Inferno",
         "artist": "Mrs. GREEN APPLE",
         "file": "assets/audio/anime/Anime_02-fire-force-op1.mp3",
         "anime": "Fire Force OP 1"
     },
     {
-        "id": "an-48",
+        "id": "an-03",
         "title": "Idol",
         "artist": "YOASOBI",
         "file": "assets/audio/anime/Anime_03-oshi-no-ko-op.mp3",
         "anime": "Oshi no Ko OP"
     },
     {
-        "id": "an-49",
+        "id": "an-04",
         "title": "Kaikai Kitan",
         "artist": "Eve",
         "file": "assets/audio/anime/Anime_04-jujutsu-kaisen-op1.mp3",
         "anime": "Jujutsu Kaisen OP 1"
     },
     {
-        "id": "an-50",
+        "id": "an-05",
         "title": "Black Catcher",
         "artist": "Vicke Blanka",
         "file": "assets/audio/anime/Anime_05-black-clover-op10.mp3",
         "anime": "Black Clover OP 10"
     },
     {
-        "id": "an-51",
+        "id": "an-06",
         "title": "Kyouran Hey Kids!!",
         "artist": "THE ORAL CIGARETTES",
         "file": "assets/audio/anime/Anime_06-noragami-op2.mp3",
         "anime": "Noragami OP 2"
     },
     {
-        "id": "an-52",
+        "id": "an-07",
         "title": "Fight Song",
         "artist": "Eve",
         "file": "assets/audio/anime/Anime_07-chainsaw-man-ed12.mp3",
         "anime": "Chainsaw Man ED 12"
     },
     {
-        "id": "an-53",
+        "id": "an-08",
         "title": "Cry Baby",
         "artist": "Official HIGE DANdism",
         "file": "assets/audio/anime/Anime_08-tokyo-revengers-op1.mp3",
         "anime": "Tokyo Revengers OP 1"
     },
     {
-        "id": "an-54",
+        "id": "an-09",
         "title": "the WORLD",
         "artist": "Nightmare",
         "file": "assets/audio/anime/Anime_09-death-note-op1.mp3",
         "anime": "Death Note OP 1"
     },
     {
-        "id": "an-55",
+        "id": "an-10",
         "title": "Bling-Bang-Bang-Born",
         "artist": "Creepy Nuts",
         "file": "assets/audio/anime/Anime_10-mashle-op2.mp3",
         "anime": "Mashle OP 2"
     },
     {
-        "id": "an-56",
+        "id": "an-11",
         "title": "STYX HELIX",
         "artist": "MYTH & ROID",
         "file": "assets/audio/anime/Anime_11-re-zero-ed1.mp3",
         "anime": "Re:Zero ED 1"
     },
     {
-        "id": "an-57",
+        "id": "an-12",
         "title": "Gurenge",
         "artist": "LiSA",
         "file": "assets/audio/anime/Anime_12-demon-slayer-op1.mp3",
         "anime": "Demon Slayer OP 1"
     },
     {
-        "id": "an-58",
+        "id": "an-13",
         "title": "Sparkle",
         "artist": "RADWIMPS",
         "file": "assets/audio/anime/Anime_13-your-name-sparkle.mp3",
         "anime": "Your Name OST"
     },
     {
-        "id": "an-59",
+        "id": "an-14",
         "title": "Hikaru Nara",
         "artist": "Goose house",
         "file": "assets/audio/anime/Anime_14-your-lie-in-april-op1.mp3",
         "anime": "Your Lie in April OP 1"
     },
     {
-        "id": "an-60",
+        "id": "an-15",
         "title": "THE HERO!!",
         "artist": "JAM Project",
         "file": "assets/audio/anime/Anime_15-one-punch-man-op1.mp3",
         "anime": "One Punch Man OP 1"
     },
     {
-        "id": "an-61",
+        "id": "an-16",
         "title": "Mixed Nuts",
         "artist": "Official HIGE DANdism",
         "file": "assets/audio/anime/Anime_16-spy-x-family-op1.mp3",
         "anime": "Spy x Family OP 1"
     },
     {
-        "id": "an-62",
+        "id": "an-17",
         "title": "First Death",
         "artist": "TK from Ling tosite sigure",
         "file": "assets/audio/anime/Anime_17-chainsaw-man-ed8.mp3",
         "anime": "Chainsaw Man ED 8"
     },
     {
-        "id": "an-63",
+        "id": "an-18",
         "title": "Unravel",
         "artist": "TK from Ling tosite sigure",
         "file": "assets/audio/anime/Anime_18-tokyo-ghoul-op1.mp3",
         "anime": "Tokyo Ghoul OP 1"
     },
     {
-        "id": "an-64",
+        "id": "an-19",
         "title": "Kaibutsu",
         "artist": "YOASOBI",
         "file": "assets/audio/anime/Anime_19-beastars-op2.mp3",
         "anime": "Beastars OP 2"
     },
     {
-        "id": "an-65",
+        "id": "an-20",
         "title": "Peace Sign",
         "artist": "Kenshi Yonezu",
         "file": "assets/audio/anime/Anime_20-my-hero-academia-op2.mp3",
         "anime": "My Hero Academia OP 2"
     },
     {
-        "id": "an-66",
+        "id": "an-21",
         "title": "KICK BACK",
         "artist": "Kenshi Yonezu",
         "file": "assets/audio/anime/Anime_21-chainsaw-man-op.mp3",
         "anime": "Chainsaw Man OP"
     },
     {
-        "id": "an-67",
+        "id": "an-22",
         "title": "Cinderella",
         "artist": "Cidergirl",
         "file": "assets/audio/anime/Anime_22-komi-cant-communicate-op1.mp3",
         "anime": "Komi Can't Communicate OP"
     },
     {
-        "id": "an-68",
+        "id": "an-23",
         "title": "FAITH",
         "artist": "MADKID",
         "file": "assets/audio/anime/Anime_23-shield-hero-op2.mp3",
         "anime": "Shield Hero OP 2"
     },
     {
-        "id": "an-69",
+        "id": "an-24",
         "title": "SPECIALZ",
         "artist": "King Gnu",
         "file": "assets/audio/anime/Anime_24-jujutsu-kaisen-op4.mp3",
         "anime": "Jujutsu Kaisen OP 4"
     },
     {
-        "id": "an-70",
+        "id": "an-25",
         "title": "Yuusha",
         "artist": "YOASOBI",
         "file": "assets/audio/anime/Anime_25-frieren-op1.mp3",
         "anime": "Frieren OP 1"
     },
     {
-        "id": "an-71",
+        "id": "an-26",
         "title": "This game",
         "artist": "Konomi Suzuki",
         "file": "assets/audio/anime/Anime_26-no-game-no-life-op.mp3",
         "anime": "No Game No Life OP"
     },
     {
-        "id": "an-72",
+        "id": "an-27",
         "title": "White Noise",
         "artist": "Official HIGE DANdism",
         "file": "assets/audio/anime/Anime_27-tokyo-revengers-op2.mp3",
         "anime": "Tokyo Revengers OP 2"
     },
     {
-        "id": "an-73",
+        "id": "an-28",
         "title": "Bokurano",
         "artist": "Eve",
         "file": "assets/audio/anime/Anime_28-my-hero-academia-op11.mp3",
         "anime": "My Hero Academia OP 11"
     },
     {
-        "id": "an-74",
+        "id": "an-29",
         "title": "Sakakidachi / Ichizu",
         "artist": "King Gnu",
         "file": "assets/audio/anime/Anime_29-jujutsu-kaisen-0-ed.mp3",
         "anime": "Jujutsu Kaisen 0 ED"
     },
     {
-        "id": "an-75",
+        "id": "an-30",
         "title": "Hadaka no Yuusha",
         "artist": "Vaundy",
         "file": "assets/audio/anime/Anime_30-ousama-ranking-op2.mp3",
         "anime": "Ousama Ranking OP 2"
     },
     {
-        "id": "an-76",
+        "id": "an-31",
         "title": "My Soul, Your Beats!",
         "artist": "Lia",
         "file": "assets/audio/anime/Anime_31-angel-beats-op.mp3",
         "anime": "Angel Beats! OP"
     },
     {
-        "id": "an-77",
+        "id": "an-32",
         "title": "Ao no Sumika",
         "artist": "Tatsuya Kitani",
         "file": "assets/audio/anime/Anime_32-jujutsu-kaisen-op3.mp3",
         "anime": "Jujutsu Kaisen OP 3"
     },
     {
-        "id": "an-78",
+        "id": "an-33",
         "title": "Judgement",
         "artist": "ASH DA HERO",
         "file": "assets/audio/anime/Anime_33-blue-lock-op2.mp3",
         "anime": "Blue Lock OP 2"
     },
     {
-        "id": "an-79",
+        "id": "an-34",
         "title": "Brave Shine",
         "artist": "Aimer",
         "file": "assets/audio/anime/Anime_34-fate-stay-night-ubw-op2.mp3",
         "anime": "Fate/stay night UBW OP 2"
     },
     {
-        "id": "an-80",
+        "id": "an-35",
         "title": "Bye Bye YESTERDAY",
         "artist": "3-nen E-gumi",
         "file": "assets/audio/anime/Anime_35-assassination-classroom-op4.mp3",
         "anime": "Assassination Classroom OP 4"
     },
     {
-        "id": "an-81",
+        "id": "an-36",
         "title": "STAND PROUD",
         "artist": "Jin Hashimoto",
         "file": "assets/audio/anime/Anime_36-jojos-bizarre-adventure-op3.mp3",
         "anime": "JoJo Stardust Crusaders OP"
     },
     {
-        "id": "an-82",
+        "id": "an-37",
         "title": "Uchiage Hanabi",
         "artist": "DAOKO x Kenshi Yonezu",
         "file": "assets/audio/anime/Anime_37-fireworks-ed.mp3",
         "anime": "Fireworks ED"
     },
     {
-        "id": "an-83",
+        "id": "an-38",
         "title": "Renai Circulation",
         "artist": "Kana Hanazawa",
         "file": "assets/audio/anime/Anime_38-renai-circulation.mp3",
         "anime": "Bakemonogatari OP"
     },
     {
-        "id": "an-84",
+        "id": "an-39",
         "title": "Orange",
         "artist": "7!! (seven oops)",
         "file": "assets/audio/anime/Anime_39-orange-your-lie-in-april.mp3",
         "anime": "Your Lie in April ED 2"
     },
     {
-        "id": "an-85",
+        "id": "an-40",
         "title": "Akuma no Ko",
         "artist": "Ai Higuchi",
         "file": "assets/audio/anime/Anime_40-akuma-no-ko-aot.mp3",
         "anime": "Attack on Titan Final ED"
     },
     {
-        "id": "an-86",
+        "id": "an-41",
         "title": "Suzume",
         "artist": "RADWIMPS feat. Toaka",
         "file": "assets/audio/anime/Anime_41-suzume.mp3",
         "anime": "Suzume no Tojimari Theme"
     },
     {
-        "id": "an-87",
+        "id": "an-42",
         "title": "Kawaki wo Ameku",
         "artist": "Minami",
         "file": "assets/audio/anime/Anime_42-kawaki-wo-ameku.mp3",
         "anime": "Domestic Girlfriend OP"
     },
     {
-        "id": "an-88",
+        "id": "an-43",
         "title": "Zenzenzense",
         "artist": "RADWIMPS",
         "file": "assets/audio/anime/Anime_43-zenzenzense.mp3",
         "anime": "Your Name OST"
     },
     {
-        "id": "an-89",
+        "id": "an-44",
         "title": "Kamado Tanjirou no Uta",
         "artist": "Go Shiina ft. Nami Nakagawa",
         "file": "assets/audio/anime/Anime_44-kamado-tanjirou-no-uta.mp3",
         "anime": "Demon Slayer EP 19"
     },
     {
-        "id": "an-90",
+        "id": "an-45",
         "title": "Lemon",
         "artist": "Kenshi Yonezu",
         "file": "assets/audio/anime/Anime_45-violet-evergarden-lemon.mp3",
