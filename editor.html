@@ -406,8 +406,9 @@
     }
     function validDate(s) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s || ''))) return false;
-      var d = new Date(String(s) + 'T12:00:00');
-      return !isNaN(d.getTime());
+      var parts = String(s).split('-').map(Number);
+      var d = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+      return d.getFullYear() === parts[0] && (d.getMonth() + 1) === parts[1] && d.getDate() === parts[2];
     }
     function readTimeFor(mdText) {
       var words = String(mdText || '').trim().split(/\s+/).filter(Boolean).length;
@@ -475,6 +476,9 @@
       ' */\n\n';
 
     function emitArticles(arr) {
+      // Published registry is metadata + file ONLY. Bodies live in
+      // articles/*.md (single source of truth). In-memory `content` is
+      // kept for the .md download in this session but never emitted.
       var body = (arr || []).map(function (a) {
         return '  {\n' +
           '    id: ' + jsStr(a.id) + ',\n' +
@@ -484,8 +488,7 @@
           '    readTime: ' + jsStr(a.readTime) + ',\n' +
           '    tags: ' + jsArr(a.tags) + ',\n' +
           '    excerpt: ' + jsStr(a.excerpt) + ',\n' +
-          '    file: ' + jsStr(a.file) + ',\n' +
-          '    content: ' + jsStr(a.content) + '\n' +
+          '    file: ' + jsStr(a.file) + '\n' +
           '  }';
       }).join(',\n');
       return EMIT_HEAD + 'window.SITE_ARTICLES = [\n' + body + '\n];\n';
@@ -635,6 +638,8 @@
         id: f.slug, title: f.title, date: f.date,
         year: f.date.slice(0, 4), readTime: f.readTime || readTimeFor(f.md),
         tags: f.tags, excerpt: f.excerpt,
+        // `file` is what gets published. `content` stays session-only for
+        // the .md download below and is stripped by emitArticles().
         file: 'articles/' + f.slug + '.md', content: f.md
       };
       if (editingArtId) {
@@ -686,7 +691,7 @@
       $('art-md').dispatchEvent(new Event('input'));
       $('art-cancel').hidden = false;
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      showMsg('art-msg', 'Loaded from the embedded copy. If you hand-edited articles/' + entry.id + '.md, paste it above — the file wins on the live site.', true);
+      showMsg('art-msg', entry.content ? 'Editing session copy. The live site reads articles/' + entry.id + '.md — download a fresh .md after saving.' : 'No session markdown for this entry (registry is .md-only now). Paste the contents of articles/' + entry.id + '.md above to edit, then download both files.', true);
     });
     $('art-dl-js').addEventListener('click', function () {
       download('articles.js', emitArticles(articles));
@@ -695,7 +700,19 @@
     });
     $('art-dl-md').addEventListener('click', function () {
       var f = artForm();
-      if (!f.slug || !f.md.trim()) { showMsg('art-msg', 'Enter a slug and markdown first.', false); return; }
+      // The form is cleared by Save, so fall back to the staged session
+      // copy (newest entry, or the one being edited) instead of erroring.
+      if (!f.slug || !f.md.trim()) {
+        var fallback = (editingArtId && articles.find(function (a) { return a.id === editingArtId; })) || articles[0];
+        if (fallback && fallback.content) {
+          download((fallback.id) + '.md', fallback.content);
+          markDownloaded('articles', 'mdDone');
+          showMsg('art-msg', 'Downloaded ' + fallback.id + '.md (from staged copy) — put it in articles/.', true);
+          return;
+        }
+        showMsg('art-msg', 'Enter a slug and markdown first.', false);
+        return;
+      }
       download(f.slug + '.md', f.md);
       markDownloaded('articles', 'mdDone');
       showMsg('art-msg', 'Downloaded ' + f.slug + '.md — put it in articles/.', true);
@@ -1170,11 +1187,22 @@
         }));
       } catch (e) { }
     }
+    // Strip session-only markdown before comparing: the published
+    // registry is metadata-only, so a content-bearing session copy must
+    // not look permanently "pending" after the .js is overwritten.
+    function comparableArr(t, arr) {
+      if (t !== 'articles') return arr;
+      return (arr || []).map(function (a) {
+        var c = {};
+        Object.keys(a || {}).forEach(function (k) { if (k !== 'content') c[k] = a[k]; });
+        return c;
+      });
+    }
     function workPending(t) {
       var saved = loadWork()[t];
       if (!saved || !saved.length) return false;
       try {
-        return JSON.stringify(saved) !== JSON.stringify(currentArr(t));
+        return JSON.stringify(comparableArr(t, saved)) !== JSON.stringify(comparableArr(t, currentArr(t)));
       } catch (e) { return false; }
     }
     function renderListFor(t) {
@@ -1190,7 +1218,14 @@
       var added = saved.filter(function (it) { return !diskIds[it.id]; }).length;
       var merged = saved.map(function (it) {
         var live = disk.find(function (d) { return d.id === it.id; });
-        return live || it;
+        if (!live) return it;
+        // Disk wins for metadata, but keep session markdown: the
+        // published registry no longer carries `content`, so blindly
+        // taking `live` would silently discard the .md being worked on.
+        if (t === 'articles' && it.content && !live.content) {
+          live.content = it.content;
+        }
+        return live;
       });
       disk.forEach(function (it) {
         if (!merged.some(function (m) { return m.id === it.id; })) merged.push(it);

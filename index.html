@@ -223,8 +223,9 @@
               <button type="button" class="music-btn" id="btn-music-next" title="Next Track">[▶]</button>
               <button type="button" class="music-btn music-btn-loop active" id="btn-music-loop" title="Toggle Loop">🔁</button>
               <div class="music-vol-wrap" title="Volume">
-                <span class="music-vol-glyph">🔈</span>
+                <button type="button" class="music-mute-btn" id="music-mute" title="Mute / unmute" aria-label="Mute or unmute">🔈</button>
                 <input type="range" id="music-volume" class="music-vol-bar" min="0" max="100" value="70" aria-label="Volume">
+                <span class="music-vol-pct" id="music-vol-pct">70%</span>
               </div>
             </div>
 

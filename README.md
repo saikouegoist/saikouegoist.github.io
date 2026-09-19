@@ -97,18 +97,18 @@ You **never** need to touch `index.html` or `style.css` to manage your content. 
 
 ### Visual Content Studio (recommended)
 
-Open [editor.html](editor.html) — your password-gated writing desk (works offline, makes zero network requests). It offers guided forms for **articles, notes, and projects** with live preview, slug/read-time automation, and validation, then lets you **download** the updated `data/*.js` (and `articles/*.md`) to replace your local copies. The studio ships with the site, but merely opening it changes nothing: it only generates download files, and publishing still requires pushing to your repo.
+Open [editor.html](editor.html) — your local writing desk (works offline, makes zero network requests). It offers guided forms for **articles, notes, and projects** with live preview, slug/read-time automation, and validation, then lets you **download** the updated `data/*.js` (and `articles/*.md`) to replace your local copies. The studio ships with the site, but merely opening it changes nothing: it only generates download files, and publishing still requires pushing to your repo.
 
 `editor.html` is git-ignored and CI-guarded so it can never be deployed — strangers can't reach it, and even if they could, a static page cannot change your published site (only pushing to your repo can).
 
-There is deliberately no password reset inside `editor.html` — anything in the file would be findable in the file. If you forget the studio password, recover on your own machine: open `editor.html`, press F12, go to Application → Local Storage → the entry for this file, delete the `meowking_editor_hash` key, reload, and set a new password.
+No login or password: the studio runs locally in your browser and never sends anything anywhere.
 
 ### Direct Editing (manual)
 
 Open [content.js](content.js) in any code editor (Notepad, VS Code, etc.).
 
-#### 1. Adding an Article
-Inside the `articles: [ ... ]` array, add a new block:
+#### 1. Adding an Article (bodies live only in .md files)
+Create `articles/my-first-article.md` with your Markdown, then register it in `data/articles.js`:
 
 ```javascript
 {
@@ -118,20 +118,7 @@ Inside the `articles: [ ... ]` array, add a new block:
   readTime: "4 min read",
   tags: ["security", "retro"],
   excerpt: "Short summary shown in preview cards.",
-  coverImage: "assets/sample.jpg",     // Optional image
-  content: `
-### Heading 1
-
-This is my post content written in Markdown!
-
-- Bullet item
-- Another item
-
-\`\`\`python
-def hello():
-    print("Code snippets are supported!")
-\`\`\`
-  `
+  file: "articles/my-first-article.md"  // single source of truth — no inline content
 },
 ```
 

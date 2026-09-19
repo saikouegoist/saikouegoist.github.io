@@ -30,11 +30,11 @@ meowking/
 
 ## 0. Visual Content Studio (Easiest)
 
-Open `editor.html` — double-click it in this folder, or visit it on your live site — and unlock it with your studio password. It gives you guided forms for **articles, notes, and projects**: auto-slugs, auto read-time, live preview using the site's real renderer, and validation (required fields, date format, duplicate IDs). Opening it can never alter the published site; it only produces download files until you push.
+Open `editor.html` — double-click it in this folder, or visit it on your live site. It gives you guided forms for **articles, notes, and projects**: auto-slugs, auto read-time, live preview using the site's real renderer, and validation (required fields, real calendar dates, duplicate IDs). Opening it can never alter the published site; it only produces download files until you push.
 
-Flow per item: **fill the form → Save → Download** the generated file(s) → **replace** your local copy (`data/articles.js`, `data/notes.js`, `data/projects.js`, plus `articles/your-slug.md` for articles) → refresh `index.html` → push to publish. The sections below document the manual alternative and the exact file formats.
+Flow per item: **fill the form → Save → Download** the generated file(s) → **replace** your local copy (`data/articles.js`, `data/notes.js`, `data/projects.js`, plus `articles/your-slug.md` for articles) → refresh `index.html` → push to publish. For articles, download the `.md` even if you saved first — the button falls back to your staged copy. The sections below document the manual alternative and the exact file formats.
 
-Password recovery: there is intentionally no reset option inside `editor.html`. If you forget the studio password, open `editor.html`, press F12, go to Application → Local Storage → the entry for this file, delete the `meowking_editor_hash` key, reload, and set a new one.
+No login or password: the studio runs locally and never sends anything anywhere. Article bodies live only in `articles/*.md`; `data/articles.js` holds metadata + file path.
 
 ---
 

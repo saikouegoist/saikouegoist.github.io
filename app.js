@@ -1,8 +1,27 @@
 /**
- * MEOWKING - Client Application & Router
+ * MEOWKING - Client Application & Router (v2: isolated + future-proof)
  * -------------------------------------------------------------
- * Powers dynamic routing, markdown parsing, theme toggling,
- * async article loading, and dropdown year filtering for GitHub Pages.
+ * Single-file, zero-dependency, classic-script safe (works on file://).
+ *
+ * Module map (all inside one IIFE, no globals leaked except the
+ * documented window.*Micro helpers for editor.html):
+ *   core      -> safeStorage, getSiteData, getYear, routeToken, cleanups
+ *   chrome    -> theme, visitor, siteInfo/footer, pet, clock, ticker, fx, skin, konami
+ *   music     -> initMusicBox (idempotent, self-contained Audio instance)
+ *   gallery   -> renderGalleryBox/initGalleryBox + route-change cleanup
+ *   lists     -> articles/notes/projects/about/links renderers + pager helpers
+ *   reader    -> articleDetail (.md-only) / templeDetail + progress bar
+ *   guestbook -> Firestore + local buffer, isolated per-route
+ *   router    -> renderRoute (error-isolated per view) + nav state
+ *   security  -> escapeHtml, safeHref, safeImageSrc, markdown parsers
+ *
+ * Future-proof rules:
+ *   1. Each init is idempotent (dataset flag) and wrapped in safeCall so
+ *      one broken widget can never kill the rest of the app.
+ *   2. Route-scoped effects (gallery timer, lightbox, progress bar) are
+ *      always torn down before the next route renders.
+ *   3. Async .md fetches are guarded by routeToken (stale writes dropped).
+ *   4. Never add top-level globals; expose only via window.Meowking.
  */
 
 (function () {
@@ -18,6 +37,11 @@
   // Cleanup callback for gallery autoplay + lightbox, torn down on
   // route change so the 3s slideshow never keeps ticking off-home.
   let galleryCleanup = null;
+
+  // Cleanup for guestbook route effects (Firestore listener + cooldown
+  // timer). Separate from readingModeCleanup so the two can never
+  // overwrite each other.
+  let guestbookCleanup = null;
 
   // Safe storage helper (prevents SecurityError crashes in private browsing or iframe contexts)
   const safeStorage = {
@@ -56,25 +80,56 @@
   // the current page when they resolve out of order.
   let routeToken = 0;
 
+  // Public, conflict-free namespace. Nothing else writes here.
+  window.Meowking = window.Meowking || {};
+  window.Meowking.version = '2.0.0';
+
+  // Run one init without letting it break the others. Returns the
+  // function's result (or undefined on failure) and logs a warning.
+  function safeCall(name, fn) {
+    try {
+      return fn();
+    } catch (err) {
+      console.warn('Meowking init skipped [' + name + ']:', err);
+      return undefined;
+    }
+  }
+
+  // Idempotency guard for global (non-route) widgets. Route widgets use
+  // explicit cleanup callbacks instead (galleryCleanup/readingModeCleanup).
+  function once(key) {
+    try {
+      if (document.body.dataset['init_' + key]) return false;
+      document.body.dataset['init_' + key] = '1';
+      return true;
+    } catch (e) {
+      return true;
+    }
+  }
+
   // -----------------------------------------------------------
-  // 1. Initialization
+  // 1. Initialization (each widget isolated; hash listener added once)
   // -----------------------------------------------------------
   document.addEventListener('DOMContentLoaded', () => {
     // editor.html sets window.MEOWKING_NOAUTOINIT before loading this file:
     // it only needs the markdown/security helpers below, never the live site.
     if (window.MEOWKING_NOAUTOINIT) return;
-    initTheme();
-    initVisitorCounter();
-    populateSiteInfo();
-    initPetCat();
-    initRetroClock();
-    initRetroTicker();
-    initMusicBox();
-    initFx();
-    initSkin();
-    initKonami();
-    window.addEventListener('hashchange', renderRoute);
-    renderRoute();
+    if (!once('boot')) { safeCall('route', () => renderRoute()); return; }
+    safeCall('theme', initTheme);
+    safeCall('visitors', initVisitorCounter);
+    safeCall('siteInfo', populateSiteInfo);
+    safeCall('pet', initPetCat);
+    safeCall('clock', initRetroClock);
+    safeCall('ticker', initRetroTicker);
+    safeCall('music', initMusicBox);
+    safeCall('fx', initFx);
+    safeCall('skin', initSkin);
+    safeCall('konami', initKonami);
+    if (!window.__meowkingHashBound) {
+      window.__meowkingHashBound = true;
+      window.addEventListener('hashchange', () => safeCall('route', renderRoute));
+    }
+    safeCall('route', renderRoute);
   });
 
   // -----------------------------------------------------------
@@ -266,6 +321,7 @@
   // Retro Background Stars + System Time Clock Widget
   // -----------------------------------------------------------
   function initRetroClock() {
+    if (!once('clock')) return;
     const timeEl = document.getElementById('retro-clock-time');
     if (!timeEl) return;
     const pad = (n) => String(n).padStart(2, '0');
@@ -311,6 +367,7 @@
   // Retro marquee ticker, driven by rAF so it scrolls even where CSS
   // animations are disabled. Pauses while hovered, like holding a marquee.
   function initRetroTicker() {
+    if (!once('ticker')) return;
     const track = document.querySelector('.retro-ticker-track');
     const bar = document.querySelector('.retro-ticker');
     if (!track || !bar || track.dataset.tickerOn) return;
@@ -361,6 +418,7 @@
   // Retro Japanese Music Box Engine (Classic, Anime & Others)
   // -----------------------------------------------------------
   function initMusicBox() {
+    if (!once('music')) return;
     const playerEl = document.getElementById('box-music-player');
     const headerMusicBtn = document.getElementById('header-music-btn');
     if (!playerEl && !headerMusicBtn) return;
@@ -382,6 +440,9 @@
     const btnPrev = document.getElementById('btn-music-prev');
     const btnNext = document.getElementById('btn-music-next');
     const volumeSlider = document.getElementById('music-volume');
+    const muteBtn = document.getElementById('music-mute');
+    const volPct = document.getElementById('music-vol-pct');
+    const legacyGlyph = document.querySelector('.music-vol-glyph');
     const btnLoop = document.getElementById('btn-music-loop');
     const dancerSprite = document.getElementById('music-dancer-sprite');
     const dancerStage = document.getElementById('music-dancer-stage');
@@ -400,6 +461,7 @@
     let volume = parseFloat(safeStorage.get('meowking_music_vol'));
     if (!isFinite(volume)) volume = 0.7;
     volume = Math.min(1, Math.max(0, volume));
+    let lastVolume = volume > 0 ? volume : 0.7;
 
     // Real Audio Player (HTML5 Audio)
     const audioPlayer = new Audio();
@@ -665,10 +727,46 @@
         let v = parseInt(e.target.value, 10) / 100;
         if (!isFinite(v)) v = 0.7;
         volume = Math.min(1, Math.max(0, v));
+        if (volume > 0) lastVolume = volume;
         safeStorage.set('meowking_music_vol', volume);
         try { audioPlayer.volume = volume; } catch (err) { }
+        updateVolumeUI();
       });
     }
+    function glyphForVolume(v) {
+      if (v <= 0) return '🔇';
+      if (v < 0.34) return '🔈';
+      if (v < 0.67) return '🔉';
+      return '🔊';
+    }
+    function updateVolumeUI() {
+      const pct = Math.round(volume * 100);
+      if (volumeSlider && document.activeElement !== volumeSlider) {
+        volumeSlider.value = pct;
+      }
+      if (volPct) volPct.textContent = pct + '%';
+      const glyph = glyphForVolume(volume);
+      if (muteBtn) {
+        muteBtn.textContent = glyph;
+        muteBtn.title = volume <= 0 ? 'Unmute' : 'Mute (volume ' + pct + '%)';
+      }
+      // Legacy static glyph support (pre-upgrade mirrors).
+      if (legacyGlyph) legacyGlyph.textContent = glyph;
+    }
+    if (muteBtn) {
+      muteBtn.addEventListener('click', () => {
+        if (volume > 0) {
+          lastVolume = volume;
+          volume = 0;
+        } else {
+          volume = lastVolume > 0 ? lastVolume : 0.7;
+        }
+        safeStorage.set('meowking_music_vol', volume);
+        try { audioPlayer.volume = volume; } catch (err) { }
+        updateVolumeUI();
+      });
+    }
+    updateVolumeUI();
     if (btnLoop) {
       btnLoop.classList.toggle('active', isLooping);
       btnLoop.title = isLooping ? 'Loop: ON (Repeat track)' : 'Loop: OFF (Auto-advance)';
@@ -694,6 +792,7 @@
   // Weather FX Engine (snow / rain / matrix over a fixed canvas)
   // -----------------------------------------------------------
   function initFx() {
+    if (!once('fx')) return;
     const btn = document.getElementById('fx-toggle');
     const MODES = ['off', 'snow', 'rain', 'matrix'];
     let mode = safeStorage.get('meowking_fx') || 'off';
@@ -820,6 +919,7 @@
   // Konami Code Easter Egg (cat rain, 5s cooldown)
   // -----------------------------------------------------------
   function initKonami() {
+    if (!once('konami')) return;
     const SEQ = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
     let pos = 0;
     let cooling = false;
@@ -859,8 +959,8 @@
       route = dataPage || 'home';
     }
 
-    updateActiveNav(route.split('/')[0]);
-    updateFooter();
+    try { updateActiveNav(route.split('/')[0]); } catch (e) { console.warn('nav update failed:', e); }
+    try { updateFooter(); } catch (e) { console.warn('footer update failed:', e); }
 
     // Invalidate any in-flight article/temple fetch from the previous page.
     routeToken++;
@@ -868,55 +968,91 @@
     // Tear down gallery autoplay + lightbox first so the slideshow
     // never survives a route change.
     if (galleryCleanup) {
-      galleryCleanup();
+      try { galleryCleanup(); } catch (e) { console.warn('gallery cleanup failed:', e); }
       galleryCleanup = null;
     }
 
     // Tear down any reading-mode UI (e.g. the scroll progress bar) left
     // over from the previous route before rendering the new one.
     if (readingModeCleanup) {
-      readingModeCleanup();
+      try { readingModeCleanup(); } catch (e) { console.warn('reading cleanup failed:', e); }
       readingModeCleanup = null;
+    }
+
+    // Tear down guestbook effects (Firestore onSnapshot + cooldown timer)
+    // so repeat visits never stack duplicate listeners/timers.
+    if (guestbookCleanup) {
+      try { guestbookCleanup(); } catch (e) { console.warn('guestbook cleanup failed:', e); }
+      guestbookCleanup = null;
     }
 
     // Distraction-free reading layout: hides the left/right sidebars and
     // footer, keeps the header/top-nav, and widens the article pane.
     const isArticleReading = route.startsWith('articles/');
     const isTempleReading = route.startsWith('temples/') || route === 'temples' || route === 'unknown';
-    document.body.classList.toggle('reading-mode', isArticleReading || isTempleReading);
+    try {
+      document.body.classList.toggle('reading-mode', isArticleReading || isTempleReading);
+    } catch (e) { /* non-critical */ }
+
+    // Each view is isolated: a broken list/template shows an error box
+    // instead of blanking the whole app or breaking the next route.
+    const showViewError = (name, err) => {
+      console.warn('view failed [' + name + ']:', err);
+      try {
+        mainContent.innerHTML = `
+          <div class="box">
+            <div class="box-header">oops — ${name} failed to load</div>
+            <div class="box-content">
+              <p>Something broke rendering this view, but the rest of the site still works.</p>
+              <p><a href="#/" class="back-btn">&larr; back home</a></p>
+            </div>
+          </div>`;
+      } catch (e2) { /* last resort: leave previous content */ }
+    };
+    const runView = (name, fn) => {
+      try {
+        const out = fn();
+        if (out && typeof out.catch === 'function') {
+          out.catch((err) => showViewError(name, err));
+        }
+      } catch (err) {
+        showViewError(name, err);
+      }
+    };
 
     if (route === 'home' || route === '') {
-      renderHome(mainContent);
+      runView('home', () => renderHome(mainContent));
     } else if (route === 'articles') {
-      renderArticles(mainContent);
+      runView('articles', () => renderArticles(mainContent));
     } else if (isArticleReading) {
       const articleId = route.replace('articles/', '');
-      renderArticleDetail(mainContent, articleId);
+      runView('article', () => renderArticleDetail(mainContent, articleId));
     } else if (route === 'temples' || route === 'unknown') {
-      const temples = getSiteData().temples || [];
-      if (temples.length > 0) {
-        renderTempleDetail(mainContent, temples[0].id);
-      } else {
-        renderTemples(mainContent);
-      }
+      runView('temples', () => {
+        const temples = getSiteData().temples || [];
+        if (temples.length > 0) {
+          return renderTempleDetail(mainContent, temples[0].id);
+        }
+        return renderTemples(mainContent);
+      });
     } else if (isTempleReading) {
       const templeId = route.replace('temples/', '').replace('unknown/', '');
-      renderTempleDetail(mainContent, templeId);
+      runView('temple', () => renderTempleDetail(mainContent, templeId));
     } else if (route === 'notes') {
-      renderNotes(mainContent);
+      runView('notes', () => renderNotes(mainContent));
     } else if (route === 'projects') {
-      renderProjects(mainContent);
+      runView('projects', () => renderProjects(mainContent));
     } else if (route === 'about') {
-      renderAbout(mainContent);
+      runView('about', () => renderAbout(mainContent));
     } else if (route === 'links') {
-      renderLinks(mainContent);
+      runView('links', () => renderLinks(mainContent));
     } else if (route === 'guestbook') {
-      renderGuestbook(mainContent);
+      runView('guestbook', () => renderGuestbook(mainContent));
     } else {
-      renderNotFound(mainContent);
+      runView('404', () => renderNotFound(mainContent));
     }
 
-    window.scrollTo(0, 0);
+    try { window.scrollTo(0, 0); } catch (e) { /* non-critical */ }
   }
 
   function updateActiveNav(activeKey) {
@@ -1425,27 +1561,60 @@
     // tear it down automatically when the visitor navigates away.
     readingModeCleanup = setupReadingProgressBar();
 
-    // Fetch markdown from file first so edits to articles/*.md take effect.
-    // Inline `article.content` is the offline (file://) / fallback copy.
-    let rawContent = articleContentCache[article.id] || '';
-    if (typeof rawContent !== 'string') rawContent = String(rawContent);
-
-    if (!rawContent && article.file) {
+    // Article bodies live ONLY in articles/*.md (single source of truth).
+    // No inline fallback: a missing file is a real error, surfaced clearly.
+    // NOTE: fetch() requires http(s) — run `python -m http.server` locally.
+    let rawContent = '';
+    const cached = articleContentCache[article.id];
+    if (typeof cached === 'string' && cached) {
+      rawContent = cached;
+    } else if (!article.file) {
+      const bodyEl = container.querySelector('#article-markdown-body');
+      if (bodyEl && myToken === routeToken) {
+        bodyEl.innerHTML = '<p style="color: var(--text-muted);">*Article misconfigured: missing "file" in data/articles.js.*</p>';
+      }
+      return;
+    } else {
       try {
         const response = await fetch(article.file);
+        if (myToken !== routeToken) return;
         if (response.ok) {
           rawContent = await response.text();
           articleContentCache[article.id] = rawContent;
+        } else if (response.status === 404) {
+          const bodyEl = container.querySelector('#article-markdown-body');
+          if (bodyEl && myToken === routeToken) {
+            bodyEl.innerHTML = `<p style="color: var(--text-muted);">*Could not load article file: ${escapeHtml(article.file)} (404 — file missing from articles/).*</p>`;
+          }
+          return;
         } else {
-          rawContent = article.content || `*Could not load external file: ${article.file} (HTTP ${response.status})*`;
+          const bodyEl = container.querySelector('#article-markdown-body');
+          if (bodyEl && myToken === routeToken) {
+            bodyEl.innerHTML = `<p style="color: var(--text-muted);">*Could not load article file: ${escapeHtml(article.file)} (HTTP ${response.status}).*</p>`;
+          }
+          return;
         }
       } catch (err) {
-        // Fallback for file:/// protocol if CORS restricts local fetch
-        rawContent = article.content || `*Note: To view external markdown files locally, run a lightweight local server (e.g. \`python -m http.server\` or \`npx serve\`). On GitHub Pages, this file will load automatically.*`;
+        if (myToken !== routeToken) return;
+        const bodyEl = container.querySelector('#article-markdown-body');
+        if (bodyEl) {
+          const isFileProto = window.location.protocol === 'file:';
+          bodyEl.innerHTML = isFileProto
+            ? '<p style="color: var(--text-muted);">*Articles load from .md files only — open via a local server (<code>python -m http.server</code>) instead of double-clicking index.html.*</p>'
+            : `<p style="color: var(--text-muted);">*Network error loading ${escapeHtml(article.file)}. Check connection and retry.*</p>`;
+        }
+        return;
       }
     }
 
-    if (!rawContent) rawContent = article.content || '';
+    if (!rawContent || !rawContent.trim()) {
+      if (myToken !== routeToken) return;
+      const bodyEl = container.querySelector('#article-markdown-body');
+      if (bodyEl) {
+        bodyEl.innerHTML = `<p style="color: var(--text-muted);">*Article file is empty: ${escapeHtml(article.file)}.*</p>`;
+      }
+      return;
+    }
 
     // Stale navigation guard: if the user already moved to another
     // article, never paint this fetch into the new page.
@@ -2691,7 +2860,7 @@
     // the cooldown countdown so it can't tick against detached DOM forever,
     // and detach the Firestore live listener so listeners never stack up
     // across repeat visits to the guestbook.
-    readingModeCleanup = () => {
+    guestbookCleanup = () => {
       if (cooldownIntervalId) {
         clearInterval(cooldownIntervalId);
         cooldownIntervalId = null;
@@ -2700,6 +2869,7 @@
         try { gbUnsubscribe(); } catch (e) { }
         gbUnsubscribe = null;
       }
+      guestbookCleanup = null;
     };
 
     // Connect to Firestore and start listening
@@ -2828,6 +2998,12 @@
   // Reused by editor.html (local content studio) for previews and lists.
   window.formatInlineMarkdownMicro = formatInlineMarkdown;
   window.escapeHtmlMicro = escapeHtml;
+  // Namespaced handles for future code (no new globals allowed).
+  window.Meowking.parseMarkdown = parseMarkdown;
+  window.Meowking.formatInlineMarkdown = formatInlineMarkdown;
+  window.Meowking.escapeHtml = escapeHtml;
+  window.Meowking.safeHref = safeHref;
+  window.Meowking.renderRoute = function () { return safeCall('route', renderRoute); };
 
   // Inline markdown with single-escape guarantee: the input is always
   // escaped exactly once up front, so raw HTML can never survive and

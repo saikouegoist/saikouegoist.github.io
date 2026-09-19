@@ -26,14 +26,19 @@ SUPPORTED_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
 
 def main():
     try:
-        candidates = list(IMAGES_DIR.iterdir())
+        # Recursive like the workflow trigger (images/**) so nested
+        # folders publish too; paths stay relative to images/.
+        candidates = [p for p in IMAGES_DIR.rglob("*") if p.is_file()]
     except FileNotFoundError:
         candidates = []
     files = sorted(
-        (p for p in candidates if p.is_file() and p.suffix.lower() in SUPPORTED_EXTS),
-        key=lambda p: p.name.lower(),
+        (p for p in candidates if p.suffix.lower() in SUPPORTED_EXTS),
+        key=lambda p: p.relative_to(IMAGES_DIR).as_posix().lower(),
     )
-    paths = ["images/" + urllib.parse.quote(p.name, safe="") for p in files]
+    paths = [
+        "images/" + "/".join(urllib.parse.quote(part, safe="") for part in p.relative_to(IMAGES_DIR).parts)
+        for p in files
+    ]
 
     lines = [
         "/**",

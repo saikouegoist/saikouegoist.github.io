@@ -108,13 +108,20 @@
     // GitHub Pages serves 404.html at the missing path, so ./ can point
     // back into the missing folder. Resolve to the repo root instead:
     // /<repo>/ for project pages, / for user/apex sites.
+    // First path segment is only a repo name if it is NOT one of this
+    // site's own top-level routes/asset folders (user-site nested paths
+    // like /articles/foo must resolve home to /, not /articles/).
     try {
+      var knownRoots = ['articles', 'notes', 'projects', 'about', 'links', 'guestbook', 'temples', 'unknown', 'assets', 'images', 'data', 'scripts'];
       var parts = location.pathname.split('/').filter(Boolean);
       var home = '/';
-      if (parts.length >= 2) home = '/' + parts[0] + '/';
-      else if (parts.length === 1 && location.pathname.slice(-1) === '/') home = location.pathname;
+      if (parts.length >= 1 && knownRoots.indexOf(parts[0].toLowerCase()) === -1) {
+        home = '/' + parts[0] + '/';
+      }
       var link = document.getElementById('home-link');
       if (link) link.setAttribute('href', home);
+      var icon = document.querySelector('link[rel="icon"]');
+      if (icon) icon.setAttribute('href', home + 'assets/cat.jpg');
     } catch (e) {}
   </script>
 </body>

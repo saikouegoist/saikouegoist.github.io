@@ -895,11 +895,14 @@ body {
   text-shadow: 0 0 6px rgba(56, 189, 248, 0.4);
 }
 
-/* Controls Row */
+/* Controls Row - wraps so the volume row can never be squeezed away
+   when [PLAY] becomes the wider [PAUSE]. */
 .music-controls-row {
   display: flex;
   align-items: center;
   gap: 3px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .music-btn {
@@ -915,6 +918,8 @@ body {
   border-radius: 1px;
   transition: all 0.1s ease;
   line-height: 1;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .music-btn:hover {
@@ -928,7 +933,10 @@ body {
 }
 
 .music-btn-play {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: #10b981;
   border-color: #059669;
   background: var(--bg-page);
@@ -956,8 +964,15 @@ body {
 .music-vol-wrap {
   display: flex;
   align-items: center;
-  gap: 2px;
-  width: 52px;
+  gap: 6px;
+  flex: 1 1 100%;
+  min-width: 0;
+  width: auto;
+  margin-top: 2px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  padding: 4px 6px;
+  border-radius: 1px;
 }
 
 .music-vol-glyph {
@@ -965,9 +980,34 @@ body {
   user-select: none;
 }
 
+.music-mute-btn {
+  background: transparent;
+  border: none;
+  padding: 0 2px;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.music-mute-btn:hover {
+  transform: scale(1.15);
+}
+
+.music-vol-pct {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  min-width: 34px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
 .music-vol-bar {
+  flex: 1;
+  min-width: 0;
   width: 100%;
-  height: 4px;
+  height: 8px;
   accent-color: #38bdf8;
   cursor: pointer;
 }
@@ -2606,14 +2646,33 @@ iframe {
     height: 21px;
   }
 
-  /* Mobile is content-first: hide desktop sidebars completely */
+  /* Mobile is content-first: hide left sidebar, stack right sidebar
+     below content — but always keep the music box reachable. */
   .main-grid {
     display: block;
   }
 
-  .column-left,
-  .column-right {
+  .column-left {
     display: none;
+  }
+
+  .column-right {
+    display: flex;
+    flex-direction: column;
+    margin-top: 12px;
+  }
+
+  /* On small screens only the music box survives from the right rail;
+     about/warning/updated stay desktop-only to keep the page focused. */
+  .column-right .box-about-snippet,
+  .column-right .box-warning,
+  .column-right .box-last-updated,
+  .column-right .box-stats {
+    display: none;
+  }
+
+  .column-right .box-music-player {
+    display: block;
   }
 
   .column-main {
