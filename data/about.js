@@ -8,7 +8,8 @@ window.SITE_ABOUT = {
   heading: "about me",
   bio: [
     "Welcome! I am **meowking**, an independent programmer, computer hobbyist, and enthusiast of the old, unpolished web.",
-    "I built this site to escape the noisy, hyper-commercialized modern web. Here, there are no tracking pixels, no telemetry cookies, no affiliate popups, and no AI-generated spam articles. Just hand-written thoughts and ideas."
+    "I built this site to escape the noisy, hyper-commercialized modern web. Here, there are no tracking pixels, no telemetry cookies, no affiliate popups, and no AI-generated spam articles. Just hand-written thoughts and ideas.",
+    "I am big fan of Berserk, Attack of Titan and Evangelion, and I enjoy reading about the history of computing, retro gaming, and the evolution of programming languages."
   ],
   interests: [
     "Operating systems (Linux, BSD, Plan 9)",
