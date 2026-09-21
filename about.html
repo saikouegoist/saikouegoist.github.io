@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 
-<body data-page="about"
+<body data-page="about">
   <div class="site-wrapper">
 
     <!-- Site Header -->
@@ -39,7 +39,7 @@
       </a>
 
       <div class="header-controls">
-          <button id="header-music-btn" class="header-music-btn" aria-label="Play or pause music">▶ play music</button>
+          <button id="header-music-btn" class="header-music-btn" aria-label="Play or pause music">▶</button>
           <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">light mode</button>
           <button id="fx-toggle" class="theme-toggle-btn" aria-label="Toggle weather effect">fx:off<img src="assets/fx-ok.svg" class="fx-ok-gif" alt="" aria-hidden="true"></button>
       </div>
@@ -252,6 +252,28 @@
     </footer>
 
   </div>
+
+  <!-- Mobile sticky music mini-player (phones only, driven by app.js) -->
+  <div id="music-minibar" class="music-minibar" hidden>
+    <button type="button" class="minibar-btn" id="minibar-play" aria-label="Play or pause music">▶</button>
+    <button type="button" class="minibar-track" id="minibar-track" aria-label="Expand music box">
+      <span class="minibar-note">♪</span>
+      <span class="minibar-title" id="minibar-title">-- no tracks --</span>
+      <span class="minibar-vu" id="minibar-vu">▱▱▱</span>
+    </button>
+    <button type="button" class="minibar-btn" id="minibar-next" aria-label="Next track">▶|</button>
+  </div>
+
+  <!-- Mobile sticky bottom tab bar (phones only, active state via app.js) -->
+  <nav class="mobile-tabbar" aria-label="Mobile Navigation">
+    <a href="index.html#/" data-route="home" class="tabbar-link"><span class="tab-ico" aria-hidden="true">⌂</span><span class="tab-lbl">home</span></a>
+    <a href="index.html#/articles" data-route="articles" class="tabbar-link"><span class="tab-ico" aria-hidden="true">▤</span><span class="tab-lbl">articles</span></a>
+    <a href="index.html#/projects" data-route="projects" class="tabbar-link"><span class="tab-ico" aria-hidden="true">⚙</span><span class="tab-lbl">projects</span></a>
+    <a href="index.html#/notes" data-route="notes" class="tabbar-link"><span class="tab-ico" aria-hidden="true">✎</span><span class="tab-lbl">notes</span></a>
+    <a href="index.html#/guestbook" data-route="guestbook" class="tabbar-link tabbar-guestbook" title="Sign My Guestbook!"><img src="assets/guestbook.gif" alt="guestbook"><span class="tab-lbl">sign</span></a>
+    <a href="index.html#/about" data-route="about" class="tabbar-link active"><span class="tab-ico" aria-hidden="true">☺</span><span class="tab-lbl">about</span></a>
+    <a href="index.html#/links" data-route="links" class="tabbar-link"><span class="tab-ico" aria-hidden="true">⇄</span><span class="tab-lbl">links</span></a>
+  </nav>
 
   <!-- Modular Data Files (Separated for effortless updates) -->
   <script src="data/config.js"></script>

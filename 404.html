@@ -89,7 +89,7 @@
   </div>
   <script>
     var mocks = [
-      "wow. lost on a site with 7 pages. impressive.",
+      "wow. lost on a site with 8 pages. impressive.",
       "this page doesn't exist. neither does your sense of direction.",
       "congrats, you found nothing. achievement unlocked.",
       "the page saw you coming and left.",
@@ -115,7 +115,10 @@
       var knownRoots = ['articles', 'notes', 'projects', 'about', 'links', 'guestbook', 'temples', 'unknown', 'assets', 'images', 'data', 'scripts'];
       var parts = location.pathname.split('/').filter(Boolean);
       var home = '/';
-      if (parts.length >= 1 && knownRoots.indexOf(parts[0].toLowerCase()) === -1) {
+      // A single top-level FILE (editor.html, style.css, ...) is not a repo
+      // name — previously /editor.html resolved home to /editor.html/.
+      if (parts.length >= 1 && knownRoots.indexOf(parts[0].toLowerCase()) === -1 &&
+          !(parts.length === 1 && parts[0].indexOf('.') !== -1)) {
         home = '/' + parts[0] + '/';
       }
       var link = document.getElementById('home-link');

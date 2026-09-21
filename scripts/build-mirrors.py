@@ -61,7 +61,7 @@ def build_one(template: str, page: str, title: str, description: str) -> str:
     html = template
 
     # 1. <body> -> <body data-page="x"> (index.html has plain <body>)
-    html = re.sub(r"<body(?P<attrs>[^>]*)>", f'<body data-page="{page}"', html, count=1)
+    html = re.sub(r"<body(?P<attrs>[^>]*)>", f'<body data-page="{page}">', html, count=1)
 
     # 2. <title>...</title>
     html = re.sub(r"<title>.*?</title>", f"<title>{title}</title>", html, count=1, flags=re.DOTALL)
@@ -81,17 +81,23 @@ def build_one(template: str, page: str, title: str, description: str) -> str:
     html = re.sub(r'href="(?!index\.html)(#/[^"]*)"', r'href="index.html\1"', html)
 
     # 5. Move `active` class from home to this page's nav links
-    #    (top nav + sidebar nav both use data-route="x").
-    #    5a. strip existing actives, preserving other classes
-    #        e.g. class="nav-guestbook-link active" -> class="nav-guestbook-link"
-    html = re.sub(r'class="nav-guestbook-link active"', 'class="nav-guestbook-link"', html)
+    #    (top nav, sidebar nav, mobile tabbar).
+    # 5a. strip ALL existing nav actives. Scoped to <a data-route> tags
+    #    ONLY — a generic class-based strip would also eat widget states
+    #    like the music mode-pill / loop button actives, which must carry
+    #    over from index.html untouched. Re-runs stay idempotent.
+    html = re.sub(r'(<a\b[^>]*?)\s+active"', r'\1"', html)
     html = re.sub(r' class="active"', "", html)
 
-    #    5b. add active to matching data-route links
+    #    5b. add active to matching data-route links (top nav, sidebar,
+    #    mobile tabbar). Merges into existing class="..." when present so
+    #    we never emit duplicate class attributes.
     def add_active(m: re.Match) -> str:
         tag = m.group(0)
         if 'data-route="guestbook"' in tag and "nav-guestbook-link" in tag:
             return tag.replace('class="nav-guestbook-link"', 'class="nav-guestbook-link active"')
+        if 'class="' in tag:
+            return re.sub(r'class="([^"]*)"', lambda c: f'class="{c.group(1)} active"', tag, count=1)
         return tag.replace('data-route=', 'class="active" data-route=', 1)
 
     html = re.sub(

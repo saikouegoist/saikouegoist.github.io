@@ -292,12 +292,36 @@ body {
   to { transform: translateY(112vh) rotate(24deg); }
 }
 
-.header-music-btn {
-  background: var(--bg-card);
+.theme-toggle-btn {
+  background: transparent;
   color: var(--text-main);
   border: 1px solid var(--border-color);
+  padding: 4px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .theme-toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Header music button (desktop; hidden on phones which use the minibar).
+   Idle borrows the music-box accent language (link-color + royal wash) so
+   it reads as part of the music system; hover matches ticker gold +
+   nav-active blue; playing matches the VU meter green. */
+.header-music-btn {
+  background: rgba(22, 36, 130, 0.25);
+  color: var(--link-color);
+  border: 1px solid rgba(75, 111, 255, 0.45);
   font-family: var(--font-mono);
   font-size: 0.8rem;
+  font-weight: 700;
   padding: 4px 10px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -317,24 +341,6 @@ body {
   color: #10b981;
   border-color: #059669;
   background: rgba(16, 185, 129, 0.12);
-}
-.theme-toggle-btn {
-  background: transparent;
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-  padding: 4px 12px;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.1s ease;
-}
-
-.theme-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-[data-theme="light"] .theme-toggle-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
 }
 
 /* --------------------------------------------------------------------------
@@ -599,12 +605,6 @@ body {
 }
 
 /* Buttons / Badges */
-.buttons-note {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  margin-bottom: 10px;
-}
-
 .badges-shelf {
   display: flex;
   flex-wrap: wrap;
@@ -875,7 +875,7 @@ body {
   max-width: 180px;
   height: auto;
   image-rendering: pixelated;
-  shape-rendering: crispEdges;
+  image-rendering: crisp-edges;
   display: block;
 }
 
@@ -973,11 +973,6 @@ body {
   border: 1px solid var(--border-color);
   padding: 4px 6px;
   border-radius: 1px;
-}
-
-.music-vol-glyph {
-  font-size: 0.7rem;
-  user-select: none;
 }
 
 .music-mute-btn {
@@ -1573,33 +1568,11 @@ body.reading-mode .article-body {
   }
 }
 
-@media (max-width: 640px) {
-  body {
-    padding: 16px 10px 30px;
-  }
-
-  .site-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .header-controls {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    align-self: flex-end;
-  }
-
-  .main-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .column-right {
-    display: flex;
-    flex-direction: column;
-  }
-}
+/* NOTE: the original phone layout block lived here but every rule in it
+   is overridden by the later mobile sections below (body padding,
+   masthead, main-grid, column-right) — it was removed to avoid editing
+   dead code by mistake. Phone styles live in the "Retro Mobile Layout"
+   and "Mobile Chrome" sections. */
 
 /* --------------------------------------------------------------------------
    Filter & Search Controls (Articles, Projects, Notes)
@@ -2566,10 +2539,6 @@ iframe {
   -webkit-overflow-scrolling: touch;
 }
 
-.article-body pre {
-  white-space: pre;
-}
-
 @media (max-width: 640px) {
   body {
     padding: 6px;
@@ -2580,10 +2549,11 @@ iframe {
     max-width: none;
   }
 
-  /* Compact old-school masthead */
+  /* NOTE: the old phone masthead (display:block header, full-width
+     controls) lived here but is overridden by the Mobile Chrome section
+     below (flex-row header, auto-width controls) — removed to avoid
+     editing dead code by mistake. */
   .site-header {
-    display: block;
-    padding: 6px 6px 10px;
     margin-bottom: 8px;
   }
 
@@ -2607,44 +2577,24 @@ iframe {
     margin-top: 2px;
   }
 
+  /* NOTE: old phone .header-controls (width:100%, margin-top:8px) lived
+     here but is overridden by Mobile Chrome (width:auto, margin-top:0).
+     Shared flex alignment for controls lives here: */
   .header-controls {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 6px;
-    margin-top: 8px;
-    width: 100%;
   }
 
-  .theme-toggle-btn {
+.theme-toggle-btn {
     padding: 4px 9px;
     font-size: 0.8rem;
   }
 
-  /* Classic text-link navigation */
-  .top-nav {
-    padding: 7px 8px;
-    margin-bottom: 9px;
-  }
-
-  .nav-list {
-    justify-content: flex-start;
-    align-items: center;
-    gap: 4px 10px;
-  }
-
-  .nav-list a {
-    font-size: 0.95rem;
-    white-space: nowrap;
-  }
-
-  .nav-list a.active {
-    padding: 0 4px;
-  }
-
-  .nav-guestbook-gif {
-    height: 21px;
-  }
+  /* NOTE: phone tuning for .top-nav/.nav-list lived here but .top-nav is
+     display:none under 640px (Mobile Chrome section replaces it with the
+     bottom tab bar) — removed to avoid editing dead code. */
 
   /* Mobile is content-first: hide left sidebar, stack right sidebar
      below content — but always keep the music box reachable. */
@@ -2663,11 +2613,17 @@ iframe {
   }
 
   /* On small screens only the music box survives from the right rail;
-     about/warning/updated stay desktop-only to keep the page focused. */
+     about/warning/updated stay desktop-only to keep the page focused.
+     (box-stats lives in the left column, which is hidden outright.) */
   .column-right .box-about-snippet,
   .column-right .box-warning,
-  .column-right .box-last-updated,
-  .column-right .box-stats {
+  .column-right .box-last-updated {
+    display: none;
+  }
+
+  /* Phones: music box is home-only (body.no-music set by app.js).
+     Desktop keeps it on every page. */
+  body.no-music .column-right .box-music-player {
     display: none;
   }
 
@@ -2780,11 +2736,15 @@ iframe {
     gap: 8px;
   }
 
-  /* Tables behave like old narrow-screen pages: scroll only the table. */
-  .setup-table {
-    display: block;
+  /* Tables keep real table layout on phones; only the wrapper scrolls
+     (display:block directly on a <table> destroys its columns). */
+  .table-scroll {
     overflow-x: auto;
-    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-scroll .setup-table {
+    min-width: 420px;
   }
 
   /* Guestbook: preserve its terminal aesthetic but make it phone friendly. */
@@ -3092,11 +3052,9 @@ iframe {
   border-color: var(--link-color);
 }
 
-@media (max-width: 640px) {
-  .gallery-frame {
-    height: 200px;
-  }
-}
+/* NOTE: the phone gallery height lives in the Mobile Chrome section
+   (fluid 56vw rule below) — the fixed 200px override that was here is
+   removed so there is exactly one source for it. */
 
 /* --------------------------------------------------------------------------
    Gallery fullscreen lightbox (click frame to open, Esc/arrows to navigate)
@@ -3180,4 +3138,320 @@ iframe {
 
 body.gallery-lb-open {
   overflow: hidden;
+}
+
+/* Sidebar music box is home-only on PHONES (toggled by app.js renderRoute).
+   Desktop keeps it on every page, as before. The mobile minibar stays
+   visible on all routes so pause is always reachable. */
+
+/* ==========================================================================
+   Mobile Chrome: sticky bottom tab bar + music mini-player (phones only)
+   Desktop unchanged. Tab bar replaces top-nav/sidebar-nav on small screens;
+   sidebars stay hidden per design (content + music only).
+   ========================================================================== */
+.mobile-tabbar,
+.music-minibar {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  /* Room for fixed chrome so footer/submit buttons are never covered.
+     Base clears the tab bar only; the taller value applies once the
+     minibar is actually visible (body.has-minibar set by app.js). */
+  body {
+    padding-bottom: 78px;
+  }
+
+  body.has-minibar {
+    padding-bottom: 146px;
+  }
+
+  /* Top nav is redundant once the tab bar exists — hide it on phones. */
+  .top-nav {
+    display: none;
+  }
+
+  /* Compact single-row masthead. */
+  .site-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 6px;
+  }
+
+  .header-brand {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .header-controls {
+    width: auto;
+    margin-top: 0;
+    flex-shrink: 0;
+  }
+
+  /* Header music button is desktop-only: phones use the mini-player. */
+  #header-music-btn {
+    display: none;
+  }
+
+  /* Bottom tab bar: raised Win95 chrome, icon + label per tab. */
+  .mobile-tabbar {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 700;
+    background: var(--bg-card);
+    border-top: 1px solid var(--bevel-light);
+    box-shadow: 0 -1px 0 var(--bevel-dark), 0 -3px 10px rgba(0, 0, 0, 0.55);
+    padding: 3px 2px calc(3px + env(safe-area-inset-bottom));
+  }
+
+  .tabbar-link {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    min-height: 58px;
+    padding: 5px 1px 4px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    border-left: 1px dotted var(--dotted-border);
+    border-top: 2px solid transparent;
+  }
+
+  .tabbar-link:first-child {
+    border-left: none;
+  }
+
+  .tab-ico {
+    font-size: 1.05rem;
+    line-height: 1.1;
+    color: var(--text-muted);
+  }
+
+  .tab-lbl {
+    font-size: 0.6rem;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+  }
+
+  .tabbar-link:active {
+    transform: translateY(1px);
+  }
+
+  .tabbar-link.active {
+    background: var(--bg-header);
+    color: #ffffff;
+    font-weight: 700;
+    border-top-color: #ffd75e;
+    box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.14);
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.7), 0 0 8px rgba(150, 170, 255, 0.45);
+  }
+
+  .tabbar-link.active .tab-ico {
+    color: #ffd75e;
+    text-shadow: 0 0 8px rgba(255, 215, 94, 0.7);
+  }
+
+  .tabbar-guestbook img {
+    height: 22px;
+    width: auto;
+    image-rendering: pixelated;
+  }
+
+  .tabbar-guestbook.active {
+    outline: 2px solid #ffd700;
+    outline-offset: -2px;
+  }
+
+  /* Music mini-player above the tab bar. */
+  .music-minibar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: fixed;
+    left: 6px;
+    right: 6px;
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    z-index: 701;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+    padding: 4px 6px;
+  }
+
+  .music-minibar[hidden] {
+    display: none;
+  }
+
+  .minibar-btn {
+    flex-shrink: 0;
+    min-width: 48px;
+    min-height: 44px;
+    background: var(--bg-page);
+    color: #10b981;
+    border: 1px solid #059669;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .music-minibar.is-playing .minibar-btn:first-child {
+    color: #fde047;
+    border-color: #d97706;
+  }
+
+  .minibar-track {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #030712;
+    border: 1px solid var(--border-color);
+    color: #fde047;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    padding: 10px 8px;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .minibar-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .minibar-note {
+    color: #f59e0b;
+    flex-shrink: 0;
+  }
+
+  .music-minibar:not(.is-playing) .minibar-note {
+    color: #64748b;
+  }
+
+  .minibar-vu {
+    color: #10b981;
+    font-size: 0.7rem;
+    letter-spacing: -1px;
+    flex-shrink: 0;
+  }
+
+  .music-minibar:not(.is-playing) .minibar-vu {
+    color: #334155;
+  }
+
+  /* Music box becomes a bottom sheet when expanded from the minibar.
+     display:block beats the home-only hiding rule (ID specificity), so
+     the sheet opens on demand on every page. */
+  #box-music-player.sheet-open {
+    display: block;
+    position: fixed;
+    left: 6px;
+    right: 6px;
+    bottom: calc(128px + env(safe-area-inset-bottom));
+    z-index: 702;
+    max-height: 62vh;
+    overflow-y: auto;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6);
+  }
+
+  body.sheet-open::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 699;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  /* Touch-sized lists, filters, forms. */
+  .filter-input,
+  .retro-select,
+  .bbs-search-input,
+  .bbs-select,
+  .bbs-terminal-input,
+  .bbs-terminal-textarea,
+  .guestbook-input,
+  .guestbook-textarea {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  .pager-btn,
+  .gallery-btn,
+  .music-btn,
+  .year-pill,
+  .btn-sign-guestbook,
+  .bbs-submit-btn,
+  .btn-retro-secondary,
+  .icon-choice-btn {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+
+  .gallery-controls {
+    gap: 8px;
+  }
+
+  .gallery-frame {
+    height: 56vw;
+    max-height: 260px;
+    touch-action: pan-y;
+  }
+
+  .gallery-lb-inner {
+    width: 100%;
+    max-width: 94vw;
+    padding: 8px;
+  }
+
+  .article-card-title,
+  .writing-title-link,
+  .project-title {
+    line-height: 1.35;
+  }
+
+  .article-card-title a,
+  .writing-title-link,
+  .project-links a,
+  .more-link,
+  .back-btn {
+    display: inline-block;
+    padding: 6px 0;
+  }
+
+  .retro-ticker {
+    font-size: 0.75rem;
+  }
+
+  .site-footer {
+    margin-bottom: 8px;
+  }
+
+  .footer-links a {
+    display: inline-block;
+    padding: 8px 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .minibar-title {
+    text-overflow: ellipsis;
+  }
 }

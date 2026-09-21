@@ -122,6 +122,7 @@
     safeCall('clock', initRetroClock);
     safeCall('ticker', initRetroTicker);
     safeCall('music', initMusicBox);
+    safeCall('mobile', initMobileChrome);
     safeCall('fx', initFx);
     safeCall('skin', initSkin);
     safeCall('konami', initKonami);
@@ -217,7 +218,12 @@
     const articlesCountEl = document.getElementById('stat-articles');
     const bugsEl = document.getElementById('stat-bugs');
     if (pagesEl && info.siteStats) pagesEl.textContent = info.siteStats.pages || '07';
-    if (bugsEl && info.siteStats) bugsEl.innerHTML = info.siteStats.bugs || '&infin;';
+    // Bugs stat supports HTML entities (default "&infin;") but must never
+    // execute markup: allow entities/text only, escape anything with tags.
+    if (bugsEl && info.siteStats) {
+      const bugsRaw = String(info.siteStats.bugs || '&infin;');
+      bugsEl.innerHTML = /[<>]/.test(bugsRaw) ? escapeHtml(bugsRaw) : bugsRaw;
+    }
     if (articlesCountEl) {
       const count = (siteData.articles && siteData.articles.length) || 0;
       articlesCountEl.textContent = String(count).padStart(2, '0');
@@ -281,10 +287,11 @@
     const footerTagline = document.getElementById('footer-tagline');
     if (footerTagline && info.footerText) footerTagline.textContent = info.footerText;
     if (!footerCopy) return;
+    const safeYear = escapeHtml(info.copyrightYear || '2026');
     if (currentRouteKey() === 'links') {
-      footerCopy.innerHTML = `<a href="editor.html" class="footer-copy-gif-link" title="studio"><img src="assets/studio-pen.gif" class="footer-copy-gif" alt="©"></a> ${info.copyrightYear || '2026'} ${escapeHtml(info.title || 'meowking')}`;
+      footerCopy.innerHTML = `<a href="editor.html" class="footer-copy-gif-link" title="studio"><img src="assets/studio-pen.gif" class="footer-copy-gif" alt="©"></a> ${safeYear} ${escapeHtml(info.title || 'meowking')}`;
     } else {
-      footerCopy.innerHTML = `&copy; ${info.copyrightYear || '2026'} ${escapeHtml(info.title || 'meowking')}`;
+      footerCopy.innerHTML = `&copy; ${safeYear} ${escapeHtml(info.title || 'meowking')}`;
     }
   }
 
@@ -512,13 +519,17 @@
 
     function updatePlayUI(playing) {
       isPlaying = playing;
+      const miniPlay = document.getElementById('minibar-play');
+      const miniBar = document.getElementById('music-minibar');
+      const miniVu = document.getElementById('minibar-vu');
       if (playing) {
         if (btnPlay) {
           btnPlay.textContent = '[⏸ PAUSE]';
           btnPlay.title = 'Pause playback';
         }
         if (headerMusicBtn) {
-          headerMusicBtn.textContent = '⏸ pause music';
+          headerMusicBtn.textContent = '⏸';
+          headerMusicBtn.setAttribute('aria-label', 'Pause music');
           headerMusicBtn.classList.add('playing');
         }
         if (playerEl) playerEl.classList.add('music-active');
@@ -532,6 +543,12 @@
           dancerStatus.textContent = DANCER_GROOVES[grooveIdx % DANCER_GROOVES.length];
           grooveIdx++;
         }
+        if (miniPlay) {
+          miniPlay.textContent = '⏸';
+          miniPlay.setAttribute('aria-label', 'Pause music');
+        }
+        if (miniBar) miniBar.classList.add('is-playing');
+        if (miniVu) miniVu.textContent = '▰▰▰';
         startVUMeter();
       } else {
         if (btnPlay) {
@@ -539,7 +556,8 @@
           btnPlay.title = 'Start playback';
         }
         if (headerMusicBtn) {
-          headerMusicBtn.textContent = '▶ play music';
+          headerMusicBtn.textContent = '▶';
+          headerMusicBtn.setAttribute('aria-label', 'Play music');
           headerMusicBtn.classList.remove('playing');
         }
         if (playerEl) playerEl.classList.remove('music-active');
@@ -552,6 +570,12 @@
         if (dancerStatus) {
           dancerStatus.textContent = '[...ohh, music stopped :3]';
         }
+        if (miniPlay) {
+          miniPlay.textContent = '▶';
+          miniPlay.setAttribute('aria-label', 'Play music');
+        }
+        if (miniBar) miniBar.classList.remove('is-playing');
+        if (miniVu) miniVu.textContent = '▱▱▱';
         stopVUMeter();
       }
     }
@@ -630,11 +654,21 @@
     function updateTrackDisplay() {
       const tracks = getTracks();
       const track = tracks[currentTrackIndex] || tracks[0];
+      const miniBar = document.getElementById('music-minibar');
+      const miniTitle = document.getElementById('minibar-title');
+      const syncMini = (text) => {
+        if (miniTitle) miniTitle.textContent = text;
+        if (miniBar) {
+          miniBar.hidden = false;
+          try { document.body.classList.add('has-minibar'); } catch (e) { /* non-critical */ }
+        }
+      };
       if (!track) {
         if (titleEl) titleEl.textContent = '-- no tracks --';
         if (artistEl) artistEl.textContent = '';
         if (extraEl) extraEl.textContent = '';
         if (counterEl) counterEl.textContent = '00/00';
+        syncMini('-- no tracks --');
         return;
       }
 
@@ -660,6 +694,7 @@
       if (btnAnime) btnAnime.classList.toggle('active', currentMode === 'anime');
       if (btnOthers) btnOthers.classList.toggle('active', currentMode === 'others');
       if (modeIndicator) modeIndicator.textContent = currentMode.toUpperCase();
+      syncMini(`${track.title || 'Untitled'} — ${track.artist || ''}`.trim());
     }
 
     function switchMode(newMode) {
@@ -721,6 +756,18 @@
     if (btnNext) {
       btnNext.addEventListener('click', () => selectTrack(currentTrackIndex + 1));
     }
+    const miniPlayBtn = document.getElementById('minibar-play');
+    const miniNextBtn = document.getElementById('minibar-next');
+    if (miniPlayBtn) miniPlayBtn.addEventListener('click', (e) => { e.stopPropagation(); togglePlayback(); });
+    // Unlike the box next/prev (which only resume if already playing),
+    // the mini-next auto-starts when paused. Capture wasPlaying first so
+    // selectTrack's own resume path and ours never double-fire play().
+    if (miniNextBtn) miniNextBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const wasPlaying = isPlaying;
+      selectTrack(currentTrackIndex + 1);
+      if (!wasPlaying) startPlayback();
+    });
     if (volumeSlider) {
       volumeSlider.value = Math.round(volume * 100);
       volumeSlider.addEventListener('input', (e) => {
@@ -781,6 +828,9 @@
 
     // Initial render
     updateTrackDisplay();
+    // Set when the engine is live: renderRoute uses it to avoid revealing
+    // a dead minibar when init bailed early (no music data / no player).
+    window.Meowking.musicReady = true;
   }
 
 
@@ -899,6 +949,7 @@
   // Winamp Skin Toggle for the music box (CSS does the painting)
   // -----------------------------------------------------------
   function initSkin() {
+    if (!once('skin')) return;
     const btn = document.getElementById('skin-btn');
     const box = document.getElementById('box-music-player');
     let skin = safeStorage.get('meowking_skin') || 'default';
@@ -961,6 +1012,28 @@
 
     try { updateActiveNav(route.split('/')[0]); } catch (e) { console.warn('nav update failed:', e); }
     try { updateFooter(); } catch (e) { console.warn('footer update failed:', e); }
+
+    // Music box UI lives on the home page only, but the AUDIO is global:
+    // it keeps playing across routes and stops only on manual pause or
+    // tab close (the mobile minibar + desktop header button stay visible
+    // everywhere so pause is always reachable).
+    const isHome = route === 'home' || route === '';
+    try {
+      document.body.classList.toggle('no-music', !isHome);
+      // The mini-player is global chrome: keep it revealed on EVERY route
+      // (not just home) whenever the music engine initialized, so pause is
+      // always one tap away no matter which page is open.
+      const miniBar = document.getElementById('music-minibar');
+      if (miniBar && window.Meowking && window.Meowking.musicReady) {
+        miniBar.hidden = false;
+        try { document.body.classList.add('has-minibar'); } catch (e) { /* non-critical */ }
+      }
+      // Dismiss the sheet on ANY navigation (including off-home -> home)
+      // so it never covers the next page's content.
+      if (window.Meowking && typeof window.Meowking.closeMusicSheet === 'function') {
+        window.Meowking.closeMusicSheet();
+      }
+    } catch (e) { /* non-critical */ }
 
     // Invalidate any in-flight article/temple fetch from the previous page.
     routeToken++;
@@ -1058,8 +1131,9 @@
   function updateActiveNav(activeKey) {
     const topLinks = document.querySelectorAll('#top-nav-list a');
     const sidebarLinks = document.querySelectorAll('#sidebar-nav-list a');
+    const tabLinks = document.querySelectorAll('.mobile-tabbar a');
 
-    [...topLinks, ...sidebarLinks].forEach(a => {
+    [...topLinks, ...sidebarLinks, ...tabLinks].forEach(a => {
       const routeAttr = a.getAttribute('data-route');
       if (routeAttr === activeKey) {
         a.classList.add('active');
@@ -1067,6 +1141,46 @@
         a.classList.remove('active');
       }
     });
+  }
+
+  // -----------------------------------------------------------
+  // Mobile chrome: bottom sheet for the music box + minibar expand.
+  // Range inputs inside the sheet must still work on touch, so only
+  // taps directly on the backdrop (not inside the sheet) dismiss it.
+  // -----------------------------------------------------------
+  function initMobileChrome() {
+    if (!once('mobile')) return;
+    const box = document.getElementById('box-music-player');
+    const minibar = document.getElementById('music-minibar');
+    const trackBtn = document.getElementById('minibar-track');
+    if (!box || !minibar || !trackBtn) return;
+
+    const isPhone = () => {
+      try {
+        return window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+      } catch (e) { return false; }
+    };
+    const closeSheet = () => {
+      box.classList.remove('sheet-open');
+      document.body.classList.remove('sheet-open');
+    };
+    trackBtn.addEventListener('click', () => {
+      if (!isPhone()) return;
+      // Works on every route: the sheet is the on-demand full player on
+      // phones (the sidebar box itself stays home-only for layout).
+      const open = box.classList.toggle('sheet-open');
+      document.body.classList.toggle('sheet-open', open);
+    });
+    document.addEventListener('click', (e) => {
+      if (!isPhone() || !box.classList.contains('sheet-open')) return;
+      if (box.contains(e.target) || minibar.contains(e.target)) return;
+      closeSheet();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeSheet();
+    });
+    // Exposed so renderRoute can dismiss the sheet on navigation.
+    window.Meowking.closeMusicSheet = closeSheet;
   }
 
   // -----------------------------------------------------------
@@ -1365,10 +1479,31 @@
       btnFit.textContent = whole ? '[fit: whole]' : '[fit: cover]';
     });
     if (frame) {
-      frame.addEventListener('click', openLightbox);
+      // A swipe that travels also synthesizes a click — suppress it briefly
+      // so swiping to the next image doesn't pop the lightbox open.
+      let suppressClickUntil = 0;
+      frame.addEventListener('click', (e) => {
+        if (Date.now() < suppressClickUntil) { e.stopPropagation(); e.preventDefault(); return; }
+        openLightbox();
+      });
       frame.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLightbox(); }
       });
+      // Thumb swipe: horizontal drag navigates, tap still opens lightbox.
+      let touchX = null;
+      frame.addEventListener('touchstart', (e) => {
+        if (e.touches && e.touches.length === 1) touchX = e.touches[0].clientX;
+      }, { passive: true });
+      frame.addEventListener('touchend', (e) => {
+        if (touchX === null) return;
+        const endX = e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : touchX;
+        const dx = endX - touchX;
+        touchX = null;
+        if (Math.abs(dx) < 40) return;
+        suppressClickUntil = Date.now() + 500;
+        if (dx < 0) show(index + 1);
+        else show(index - 1);
+      }, { passive: true });
     }
 
     // Autoplay + lightbox must die on route change (renderRoute runs this).
@@ -1560,6 +1695,14 @@
     // Set up the reading progress bar for this article; renderRoute() will
     // tear it down automatically when the visitor navigates away.
     readingModeCleanup = setupReadingProgressBar();
+    // Error states below show a message instead of an article — drop the
+    // bar too so it doesn't linger over the error until next navigation.
+    const dropBar = () => {
+      if (readingModeCleanup) {
+        try { readingModeCleanup(); } catch (e) { /* non-critical */ }
+        readingModeCleanup = null;
+      }
+    };
 
     // Article bodies live ONLY in articles/*.md (single source of truth).
     // No inline fallback: a missing file is a real error, surfaced clearly.
@@ -1569,6 +1712,7 @@
     if (typeof cached === 'string' && cached) {
       rawContent = cached;
     } else if (!article.file) {
+      dropBar();
       const bodyEl = container.querySelector('#article-markdown-body');
       if (bodyEl && myToken === routeToken) {
         bodyEl.innerHTML = '<p style="color: var(--text-muted);">*Article misconfigured: missing "file" in data/articles.js.*</p>';
@@ -1582,12 +1726,14 @@
           rawContent = await response.text();
           articleContentCache[article.id] = rawContent;
         } else if (response.status === 404) {
+          dropBar();
           const bodyEl = container.querySelector('#article-markdown-body');
           if (bodyEl && myToken === routeToken) {
             bodyEl.innerHTML = `<p style="color: var(--text-muted);">*Could not load article file: ${escapeHtml(article.file)} (404 — file missing from articles/).*</p>`;
           }
           return;
         } else {
+          dropBar();
           const bodyEl = container.querySelector('#article-markdown-body');
           if (bodyEl && myToken === routeToken) {
             bodyEl.innerHTML = `<p style="color: var(--text-muted);">*Could not load article file: ${escapeHtml(article.file)} (HTTP ${response.status}).*</p>`;
@@ -1596,6 +1742,7 @@
         }
       } catch (err) {
         if (myToken !== routeToken) return;
+        dropBar();
         const bodyEl = container.querySelector('#article-markdown-body');
         if (bodyEl) {
           const isFileProto = window.location.protocol === 'file:';
@@ -1609,6 +1756,7 @@
 
     if (!rawContent || !rawContent.trim()) {
       if (myToken !== routeToken) return;
+      dropBar();
       const bodyEl = container.querySelector('#article-markdown-body');
       if (bodyEl) {
         bodyEl.innerHTML = `<p style="color: var(--text-muted);">*Article file is empty: ${escapeHtml(article.file)}.*</p>`;
@@ -1754,6 +1902,7 @@
     if (!rawContent && page.file) {
       try {
         const response = await fetch(page.file);
+        if (myToken !== routeToken) return;
         if (response.ok) {
           rawContent = await response.text();
           articleContentCache['temple:' + page.id] = rawContent;
@@ -2044,6 +2193,7 @@
           </ul>
 
           <h3 style="font-family: var(--font-ui); margin: 20px 0 8px 0; border-bottom: 1px solid var(--dotted-border); padding-bottom: 4px;">current setup</h3>
+          <div class="table-scroll">
           <table class="setup-table">
             <tbody>
               ${(about.setup || []).map(item => `
@@ -2054,6 +2204,7 @@
               `).join('')}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     `;
@@ -2356,7 +2507,9 @@
       if (filter === 'all' || !timestampStr) return true;
       try {
         const entryDate = new Date(timestampStr.replace(' ', 'T'));
-        if (isNaN(entryDate.getTime())) return true;
+        // Unparseable (possibly forged) timestamps bypass nothing: they are
+        // hidden under active date filters instead of failing open.
+        if (isNaN(entryDate.getTime())) return false;
         const now = new Date();
         const diffMs = now - entryDate;
         const diffDays = diffMs / (1000 * 60 * 60 * 24);
@@ -2364,7 +2517,7 @@
         if (filter === '30days') return diffDays <= 30;
         if (filter === 'thisYear') return entryDate.getFullYear() === now.getFullYear();
       } catch (e) {
-        return true;
+        return false;
       }
       return true;
     }
@@ -2427,10 +2580,28 @@
         return true;
       });
 
-      // Sort entries
+      // Sort entries by server time when available (createdAt is
+      // server-bounded by firestore.rules; the client timestamp string is
+      // attacker-controlled and only a fallback). This stops forged far-
+      // future timestamps from pinning entries to the top.
+      const entryTimeMs = (e) => {
+        try {
+          const c = e && e.createdAt;
+          if (c && typeof c.toDate === 'function') {
+            const t = c.toDate().getTime();
+            if (isFinite(t)) return t;
+          }
+          if (c instanceof Date) {
+            const t = c.getTime();
+            if (isFinite(t)) return t;
+          }
+          if (typeof c === 'number' && isFinite(c)) return c;
+        } catch (err) { /* fall through to timestamp string */ }
+        return new Date(String((e && e.timestamp) || '').replace(' ', 'T')).getTime() || 0;
+      };
       filtered.sort((a, b) => {
-        const timeA = new Date(String(a.timestamp || '').replace(' ', 'T')).getTime() || 0;
-        const timeB = new Date(String(b.timestamp || '').replace(' ', 'T')).getTime() || 0;
+        const timeA = entryTimeMs(a);
+        const timeB = entryTimeMs(b);
         return selectedSortOrder === 'oldest' ? timeA - timeB : timeB - timeA;
       });
 
@@ -2717,9 +2888,15 @@
 
     // Form Submission Handler (Transmits to Firebase Firestore)
     const form = document.getElementById('guestbook-form');
+    // In-flight guard: the button is disabled during transmit (stops double
+    // click), but an Enter submit still fires while disabled — this flag
+    // stops the handler from running twice for one transmission.
+    let gbSubmitInFlight = false;
     if (form) {
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        if (gbSubmitInFlight) return;
 
         const aliasInput = document.getElementById('gb-alias');
         const websiteInput = document.getElementById('gb-website');
@@ -2761,9 +2938,29 @@
           return;
         }
 
+        // Enforce the same limits as firestore.rules client-side (maxlength
+        // attributes are trivially bypassed via devtools/paste). Website is
+        // measured AFTER the https:// normalization below (rules measure
+        // the stored value), so the length check lives there.
+        if (alias.length > 40) {
+          showAlert("Alias is too long — 40 characters max.", "error");
+          aliasInput && aliasInput.focus();
+          return;
+        }
+        if (message.length > 500) {
+          showAlert("Message is too long — 500 characters max.", "error");
+          msgInput && msgInput.focus();
+          return;
+        }
+
         // Clean website
         if (website && !/^https?:\/\//i.test(website) && !website.startsWith('#')) {
           website = 'https://' + website;
+        }
+        if (website && website.length > 120) {
+          showAlert("Website URL is too long — 120 characters max.", "error");
+          websiteInput && websiteInput.focus();
+          return;
         }
 
         // Format clean timestamp
@@ -2785,8 +2982,16 @@
           submitBtn.disabled = true;
           submitBtn.innerHTML = `<span>[ TRANSMITTING... ]</span>`;
         }
+        gbSubmitInFlight = true;
 
-        const db = getDb();
+        // getDb() reads firebase.apps — a half-loaded firebase global would
+        // throw OUTSIDE the try below and brick the form (flag stays true).
+        let db = null;
+        try {
+          db = getDb();
+        } catch (err) {
+          console.warn("Firebase accessor failed, using local buffer:", err);
+        }
         let cloudSuccess = false;
 
         if (db) {
@@ -2803,9 +3008,24 @@
             newEntry.id = docRef.id;
             cloudSuccess = true;
           } catch (err) {
+            const code = err && err.code;
+            // Rules rejections (oversize/forged fields) are NOT offline —
+            // show the error and stop WITHOUT buffering locally, so
+            // server-rejected content never renders as if accepted.
+            if (code === 'permission-denied' || code === 'invalid-argument' || code === 'failed-precondition') {
+              console.warn("Guestbook entry rejected by Firestore rules:", err);
+              showAlert("Entry rejected by the guestbook rules. Check lengths and try again.", "error");
+              gbSubmitInFlight = false;
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = GB_SUBMIT_BTN_DEFAULT_HTML;
+              }
+              return;
+            }
             console.warn("Could not save to Firestore directly (offline or rules restricted), saving to local buffer:", err);
           }
         }
+        gbSubmitInFlight = false;
 
         // Always save to local backup as well
         if (!newEntry.id) {
@@ -2899,7 +3119,7 @@
     let text = md.replace(/\r\n/g, '\n').trim();
 
     const codeBlocks = [];
-    text = text.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    text = text.replace(/```([a-zA-Z0-9_-]*)[ \t]*\n?([\s\S]*?)```/g, (_, lang, code) => {
       const index = codeBlocks.length;
       const cleanCode = escapeHtml(code.trim());
       const safeLang = String(lang || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 20);
@@ -2918,24 +3138,29 @@
     // `&lt;h3&gt;` text). Raw HTML inside them is still escaped, because
     // each line is inline-formatted individually before being stored.
     const headBlocks = [];
-    text = text.replace(/^#{1,4} (.*$)/gim, (full, m) => {
-      const level = full.match(/^#+/)[0].length;
+    text = text.replace(/^#{1,6} (.*$)/gim, (full, m) => {
+      const level = Math.min(6, full.match(/^#+/)[0].length);
       headBlocks.push(`<h${level}>` + formatInlineMarkdown(m, false) + `</h${level}>`);
       return `__HEAD_BLOCK_${headBlocks.length - 1}__`;
     });
 
+    // Consecutive "> " lines group into ONE blockquote (joined with <br>),
+    // instead of N separate boxes. ">" with no trailing space also parses.
     const quoteBlocks = [];
-    text = text.replace(/^\> (.*$)/gim, (_, m) => {
-      quoteBlocks.push('<blockquote>' + formatInlineMarkdown(m, false) + '</blockquote>');
+    text = text.replace(/^(?:\>[ \t]?.*(?:\n|$))+/gim, (m) => {
+      const lines = m.split('\n')
+        .map((l) => l.replace(/^\>[ \t]?/, '').trim())
+        .filter((l) => l.length > 0);
+      if (!lines.length) return m;
+      quoteBlocks.push('<blockquote>' + lines.map((l) => formatInlineMarkdown(l, false)).join('<br>') + '</blockquote>');
       return `__QUOTE_BLOCK_${quoteBlocks.length - 1}__`;
     });
-    text = formatInlineMarkdown(text, false);
 
-    // Lists are extracted into placeholders BEFORE paragraph wrapping so the
-    // <ul>/<ol> containers can never nest inside each other (the old code
-    // re-wrapped <li>s that were already inside a <ul>).
-    // Supports -, *, + bullets and ordered lists. Items are inline-formatted
-    // (escaped) individually so HTML inside list items cannot execute.
+    // Lists are extracted into placeholders BEFORE the whole-document inline
+    // pass (like heads/quotes above). Items are inline-formatted individually,
+    // so running the doc-level pass first would double-escape the generated
+    // <strong>/<a>/<code> tags into visible tag soup.
+    // Supports -, *, + bullets and ordered lists.
     const listBlocks = [];
     text = text.replace(/^[ \t]*[-*+][ \t]+.*(?:\n[ \t]*[-*+][ \t]+.*)*/gm, (m) => {
       const items = m.split('\n')
@@ -2949,6 +3174,7 @@
       listBlocks.push('<ol>' + items + '</ol>');
       return `__LIST_BLOCK_${listBlocks.length - 1}__`;
     });
+    text = formatInlineMarkdown(text, false);
 
     const paragraphs = text.split(/\n\n+/);
     // A generated block is identified by its placeholder prefix. A block
@@ -3025,7 +3251,7 @@
     // alt/src are already escaped, so they are used as-is (no re-escape).
     text = text.replace(new RegExp('!\\[([^\\]]*)\\]' + urlInParens, 'g'), (match, alt, url) => {
       const src = url.trim();
-      if (/^\s*(javascript|data|vbscript|file):/i.test(src)) return alt;
+      if (/^\s*(javascript|data|vbscript|file):/i.test(stripCtrlForSchemeCheck(src))) return alt;
       if (!isSafeImageSrc(src)) return alt;
       return `<img src="${src}" alt="${alt}" loading="lazy">`;
     });
@@ -3038,8 +3264,17 @@
     // Label/href are already escaped, so they are used as-is.
     text = text.replace(new RegExp('\\[([^\\]]+)\\]' + urlInParens, 'g'), (match, label, url) => {
       const trimmedUrl = url.trim();
-      const isSafe = /^(https?:|mailto:|#|\/)/i.test(trimmedUrl);
-      const safeHrefValue = isSafe ? trimmedUrl : '#';
+      // Same policy as safeHref(): dangerous schemes blocked, everything
+      // else (https?/mailto:/#// plus relative paths like assets/x.gif)
+      // allowed. Previously relative links silently died as href="#".
+      // Scheme test uses the control-char-stripped copy (see safeHref).
+      let safeHrefValue = '#';
+      const checkUrl = stripCtrlForSchemeCheck(trimmedUrl);
+      if (!/^\s*(javascript|data|vbscript|file):/i.test(checkUrl)) {
+        if (/^(https?:|mailto:|#|\/)/i.test(checkUrl) || !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(checkUrl)) {
+          safeHrefValue = trimmedUrl;
+        }
+      }
       return `<a href="${safeHrefValue}" target="_blank" rel="noopener">${label}</a>`;
     });
     return text;
@@ -3058,16 +3293,24 @@
   // URL sanitizers: block javascript:/data:/vbscript:/file: everywhere
   // (projects, links, badges, markdown). Relative paths and
   // https?/mailto:/#// are allowed.
+  // Scheme tests run on a control-char-stripped copy: the WHATWG URL parser
+  // strips tabs/newlines, so `jav\tascript:` must not slip past the block.
+  // The ORIGINAL value is returned when allowed (filenames may contain
+  // spaces), since a scheme-less value is harmless either way.
+  function stripCtrlForSchemeCheck(s) {
+    return String(s == null ? '' : s).replace(/[\x00-\x1f\x7f]/g, '');
+  }
   function safeHref(url, fallback) {
     const fb = fallback || '#';
     if (typeof url !== 'string') return fb;
     const t = url.trim();
     if (!t) return fb;
-    if (/^\s*(javascript|data|vbscript|file):/i.test(t)) return fb;
-    if (/^(https?:|mailto:|#|\/)/i.test(t)) return t;
+    const tc = stripCtrlForSchemeCheck(t);
+    if (/^\s*(javascript|data|vbscript|file):/i.test(tc)) return fb;
+    if (/^(https?:|mailto:|#|\/)/i.test(tc)) return t;
     // Relative paths like assets/x.gif or index.html#/about have no
     // scheme — allow them, block everything else with a scheme (blob:, etc).
-    if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(t)) return t;
+    if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(tc)) return t;
     return fb;
   }
 
@@ -3075,9 +3318,10 @@
     if (typeof src !== 'string') return false;
     const t = src.trim();
     if (!t) return false;
-    if (/^\s*(javascript|data|vbscript|file):/i.test(t)) return false;
-    if (/^(https?:|#|\/)/i.test(t)) return true;
-    if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(t)) return true;
+    const tc = stripCtrlForSchemeCheck(t);
+    if (/^\s*(javascript|data|vbscript|file):/i.test(tc)) return false;
+    if (/^(https?:|#|\/)/i.test(tc)) return true;
+    if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(tc)) return true;
     return false;
   }
 

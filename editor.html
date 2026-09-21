@@ -541,6 +541,9 @@
 
     // ---------------- Articles ----------------
     var editingArtId = null;
+    // Last article saved this session (save clears the form, so the .md
+    // download needs its own reference to find the right entry).
+    var lastSavedArtId = null;
     var artPage = 1;
     var artFQ = '', artFY = 'all';
     function artForm() {
@@ -606,6 +609,9 @@
       editingArtId = null;
       $('art-form-title').textContent = 'new article';
       ['art-title', 'art-slug', 'art-tags', 'art-excerpt', 'art-md'].forEach(function (id) { $(id).value = ''; });
+      // Re-arm title auto-slug for the next NEW article (a previous save or
+      // edit otherwise leaves touched=1 and silently disables it).
+      delete $('art-slug').dataset.touched;
       $('art-date').value = todayLocal();
       $('art-readtime').value = '';
       $('art-preview').innerHTML = '<p class="ed-hint">Start writing to preview…</p>';
@@ -648,6 +654,7 @@
       } else {
         articles.unshift(entry);
       }
+      lastSavedArtId = entry.id;
       staged.articles = true;
       artPage = 1;
       persistWork();
@@ -701,9 +708,13 @@
     $('art-dl-md').addEventListener('click', function () {
       var f = artForm();
       // The form is cleared by Save, so fall back to the staged session
-      // copy (newest entry, or the one being edited) instead of erroring.
+      // copy (the entry being edited, else the last saved one, else the
+      // first entry carrying session markdown) instead of erroring — and
+      // never blindly articles[0], which may be an unrelated article.
       if (!f.slug || !f.md.trim()) {
-        var fallback = (editingArtId && articles.find(function (a) { return a.id === editingArtId; })) || articles[0];
+        var fallback = (editingArtId && articles.find(function (a) { return a.id === editingArtId; })) ||
+          (lastSavedArtId && articles.find(function (a) { return a.id === lastSavedArtId; })) ||
+          articles.find(function (a) { return a.content; });
         if (fallback && fallback.content) {
           download((fallback.id) + '.md', fallback.content);
           markDownloaded('articles', 'mdDone');
@@ -887,6 +898,8 @@
       editingProjId = null;
       $('proj-form-title').textContent = 'new project';
       ['proj-title', 'proj-id', 'proj-desc', 'proj-tags', 'proj-github', 'proj-demo', 'proj-details'].forEach(function (id) { $(id).value = ''; });
+      // Re-arm title auto-id (same touched-flag trap as the article slug).
+      delete $('proj-id').dataset.touched;
       $('proj-date').value = todayLocal();
       $('proj-status').value = 'Active';
       $('proj-cancel').hidden = true;
@@ -1017,7 +1030,7 @@
       var prev = getDraft(t) || {};
       return {
         fields: f, editingId: editingIdFor(t), updatedAt: Date.now(),
-        staged: staged[t], mdDone: prev.mdDone || false, jsDone: false
+        staged: staged[t], mdDone: prev.mdDone || false, jsDone: prev.jsDone || false
       };
     }
     function draftHasContent(d) {
@@ -1077,7 +1090,14 @@
       var d = getDraft(t) || snapshotForm(t);
       d[which] = true;
       d.updatedAt = Date.now();
-      if (which === 'jsDone') { d.staged = false; staged[t] = false; exported[t] = true; }
+      // Downloading the .js alone does NOT clear "staged" for articles when
+      // the .md is still missing — otherwise the pending-.md reminder and
+      // the unload warning both go silent while work is still unpublished.
+      if (which === 'jsDone') {
+        d.staged = (t === 'articles' && !d.mdDone) ? true : false;
+        staged[t] = d.staged;
+        exported[t] = true;
+      }
       if (d.jsDone && (t !== 'articles' || d.mdDone)) {
         setDraft(t, null);
       } else {
@@ -1115,8 +1135,15 @@
         $('proj-form-title').textContent = 'edit project';
         $('proj-cancel').hidden = false;
       }
-      staged[t] = Boolean(d.staged && !d.jsDone);
-      if (t === 'articles') $('art-md').dispatchEvent(new Event('input'));
+      staged[t] = Boolean(d.staged);
+      if (t === 'articles') {
+        $('art-md').dispatchEvent(new Event('input'));
+        // The input handler above recomputes read-time from the markdown,
+        // which would clobber a hand-edited value — restore what was saved.
+        if (d.fields && d.fields['art-readtime'] != null) {
+          $('art-readtime').value = d.fields['art-readtime'];
+        }
+      }
       updateDraftStatus(t);
       showMsg(DRAFT_MSG[t], 'Resumed unsent draft from ' + fmtTime(d.updatedAt || Date.now()) + ' — finish and download to keep it.', true);
     }
@@ -1141,6 +1168,12 @@
         var t = attr('data-discard');
         if (t) {
           clearTypeDraft(t);
+          // Also clear the form and leave edit mode — otherwise the text
+          // stays (still editing) and the next keystroke silently starts a
+          // brand-new draft, unlike "cancel edit".
+          if (t === 'articles') resetArtForm();
+          else if (t === 'notes') resetNoteForm();
+          else resetProjForm();
           showMsg(DRAFT_MSG[t], 'Draft discarded.', true);
           return;
         }
@@ -1155,6 +1188,11 @@
       });
     });
     window.addEventListener('beforeunload', function (e) {
+      // Flush the 400 ms debounce first so keystrokes typed just before
+      // closing are persisted (and restorable) instead of silently lost.
+      Object.keys(draftTimers).forEach(function (t) {
+        if (draftTimers[t]) { clearTimeout(draftTimers[t]); persistDraft(t); }
+      });
       if (staged.articles || staged.notes || staged.projects) {
         e.preventDefault();
         e.returnValue = '';
