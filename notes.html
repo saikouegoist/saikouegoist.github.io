@@ -1,18 +1,32 @@
 <!DOCTYPE html>
+<!-- AUTO-GENERATED from index.html by scripts/build-mirrors.py -- do not edit by hand. Page: notes -->
 <html lang="en" data-theme="dark">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>notes - meowking</title>
   <meta name="description" content="Quick thoughts, short observations, and terminal snippets by meowking.">
   <meta name="author" content="meowking">
+
+  <!-- OpenGraph / Social Metadata -->
+  <meta property="og:title" content="meowking - my little corner of the internet">
+  <meta property="og:description"
+    content="A personal homepage, notebook, archive and dumping ground for things I find interesting.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/cat.jpg">
+
+  <!-- Favicon -->
   <link rel="icon" type="image/jpeg" href="assets/cat.jpg">
+
+  <!-- Core Stylesheet -->
   <link rel="stylesheet" href="style.css">
 </head>
-<body data-page="notes">
+
+<body data-page="notes"
   <div class="site-wrapper">
-    
-    <!-- Header -->
+
+    <!-- Site Header -->
     <header class="site-header">
       <a href="index.html#/" class="header-brand" id="brand-link">
         <div class="avatar-box">
@@ -24,10 +38,10 @@
         </div>
       </a>
 
-            <div class="header-controls">
+      <div class="header-controls">
           <button id="header-music-btn" class="header-music-btn" aria-label="Play or pause music">▶ play music</button>
           <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">light mode</button>
-        <button id="fx-toggle" class="theme-toggle-btn" aria-label="Toggle weather effect">fx:off<img src="assets/fx-ok.svg" class="fx-ok-gif" alt="" aria-hidden="true"></button>
+          <button id="fx-toggle" class="theme-toggle-btn" aria-label="Toggle weather effect">fx:off<img src="assets/fx-ok.svg" class="fx-ok-gif" alt="" aria-hidden="true"></button>
       </div>
     </header>
 
@@ -37,8 +51,10 @@
         <li><a href="index.html#/" data-route="home">home</a></li>
         <li><a href="index.html#/articles" data-route="articles">articles</a></li>
         <li><a href="index.html#/projects" data-route="projects">projects</a></li>
-        <li><a href="index.html#/notes" data-route="notes" class="active">notes</a></li>
-        <li class="nav-item-guestbook"><a href="index.html#/guestbook" data-route="guestbook" class="nav-guestbook-link" title="Sign My Guestbook!"><img src="assets/guestbook.gif" alt="guestbook" class="nav-guestbook-gif"></a></li>
+        <li><a href="index.html#/notes" class="active" data-route="notes">notes</a></li>
+        <li class="nav-item-guestbook"><a href="index.html#/guestbook" data-route="guestbook" class="nav-guestbook-link"
+            title="Sign My Guestbook!"><img src="assets/guestbook.gif" alt="guestbook" class="nav-guestbook-gif"></a>
+        </li>
         <li><a href="index.html#/about" data-route="about">about</a></li>
         <li><a href="index.html#/links" data-route="links">links</a></li>
       </ul>
@@ -49,9 +65,10 @@
 
     <!-- Main 3-Column Grid -->
     <main class="main-grid">
-      
-      <!-- Left Column -->
+
+      <!-- Left Column: Navigation, Stats, Buttons -->
       <aside class="column-left" aria-label="Left Sidebar">
+        <!-- Navigation Card -->
         <div class="box box-navigation">
           <div class="box-header">navigation</div>
           <div class="box-content">
@@ -59,7 +76,7 @@
               <li><a href="index.html#/" data-route="home">home</a></li>
               <li><a href="index.html#/articles" data-route="articles">articles</a></li>
               <li><a href="index.html#/projects" data-route="projects">projects</a></li>
-              <li><a href="index.html#/notes" data-route="notes" class="active">notes</a></li>
+              <li><a href="index.html#/notes" class="active" data-route="notes">notes</a></li>
               <li><a href="index.html#/guestbook" data-route="guestbook">guestbook</a></li>
               <li><a href="index.html#/about" data-route="about">about me</a></li>
               <li><a href="index.html#/links" data-route="links">cool links</a></li>
@@ -72,18 +89,32 @@
           <img src="assets/pixel-cat-divider.gif" alt="animated pixel cat" class="sidebar-pixel-divider">
         </div>
 
+        <!-- Site Stats Card -->
         <div class="box box-stats">
           <div class="box-header">site stats</div>
           <div class="box-content">
             <ul class="stats-list" id="site-stats-list">
-              <li class="stat-item"><span class="stat-key">pages:</span><span class="stat-value" id="stat-pages">08</span></li>
-              <li class="stat-item"><span class="stat-key">articles:</span><span class="stat-value" id="stat-articles">01</span></li>
-              <li class="stat-item"><span class="stat-key">visitors:</span><span class="stat-value" id="stat-visitors">001337</span></li>
-              <li class="stat-item"><span class="stat-key">bugs:</span><span class="stat-value" id="stat-bugs">&infin;</span></li>
+              <li class="stat-item">
+                <span class="stat-key">pages:</span>
+                <span class="stat-value" id="stat-pages">08</span>
+              </li>
+              <li class="stat-item">
+                <span class="stat-key">articles:</span>
+                <span class="stat-value" id="stat-articles">01</span>
+              </li>
+              <li class="stat-item">
+                <span class="stat-key">visitors:</span>
+                <span class="stat-value" id="stat-visitors">001337</span>
+              </li>
+              <li class="stat-item">
+                <span class="stat-key">bugs:</span>
+                <span class="stat-value" id="stat-bugs">&infin;</span>
+              </li>
             </ul>
           </div>
         </div>
 
+        <!-- Buttons Card -->
         <!-- System Time Widget -->
         <div class="box box-system-time">
           <div class="box-header">system time</div>
@@ -104,30 +135,37 @@
         </div>
       </aside>
 
-      <!-- Center Column: Notes Stream -->
+      <!-- Center Column: Dynamic Content Region -->
       <section class="column-main" id="main-content" aria-live="polite">
-        <!-- Rendered by app.js from content.js -->
+        <!-- Injected dynamically by app.js based on URL hash -->
       </section>
 
-      <!-- Right Column -->
+      <!-- Right Column: About me snippet, Warning, Last updated -->
       <aside class="column-right" id="sidebar-right" aria-label="Right Sidebar">
+        <!-- About Me Card -->
         <div class="box box-about-snippet">
           <div class="box-header" id="about-snippet-title">about me</div>
           <div class="box-content">
-            <p id="about-snippet-greeting"><strong>I'm </strong><img src="assets/meowking-name.gif" alt="meowking" class="about-meowking-gif"></p>
-            <p id="about-snippet-bio">Interested in computers, cybersecurity, technology, the Internet and the weird things people do with them.</p>
-            <p><a href="index.html#/about" class="more-link" id="about-snippet-link">more about me →</a></p>
+            <p id="about-snippet-greeting"><strong>I'm </strong><img src="assets/meowking-name.gif" alt="meowking"
+                class="about-meowking-gif"></p>
+            <p id="about-snippet-bio">Interested in computers, cybersecurity, technology, the Internet and the weird
+              things people do with them.</p>
+            <p><a href="index.html#/about" class="more-link" id="about-snippet-link">more about me &rarr;</a></p>
           </div>
         </div>
 
+        <!-- Warning Card -->
         <div class="box box-warning">
           <div class="box-header" id="warning-header">warning</div>
           <div class="box-content">
-            <div class="warning-inner" id="warning-text">I have no idea what I'm doing.</div>
+            <div class="warning-inner" id="warning-text">
+              I have no idea what I'm doing.
+            </div>
           </div>
         </div>
 
-                                <div class="box box-last-updated">
+        <!-- Last Updated Card -->
+        <div class="box box-last-updated">
           <div class="box-header">last updated</div>
           <div class="box-content">
             <div class="last-updated-text" id="stat-last-updated">10 / 06 / 2004</div>
@@ -172,7 +210,7 @@
               </div>
             </div>
 
-                        <!-- 90s Animated Music Companion Stage -->
+            <!-- 90s Animated Music Companion Stage -->
             <div class="music-dancer-stage" id="music-dancer-stage" title="Click to toggle music! =^.^=">
               <img src="assets/dancer-stopped.gif" alt="90s music companion" class="music-dancer-sprite" id="music-dancer-sprite">
               <div class="music-dancer-status" id="music-dancer-status">[...ohh, music stopped :3]</div>
@@ -197,11 +235,11 @@
 
     </main>
 
-    <!-- Footer -->
+    <!-- Site Footer -->
     <footer class="site-footer">
-      <p class="footer-copy" id="footer-copy">© 2026 meowking</p>
+      <p class="footer-copy" id="footer-copy">&copy; 2026 meowking</p>
       <p class="footer-tagline" id="footer-tagline">best viewed without expectations</p>
-            <div class="footer-links">
+      <div class="footer-links">
         <a href="index.html#/">home</a> |
         <a href="index.html#/articles">articles</a> |
         <a href="index.html#/projects">projects</a> |
@@ -215,6 +253,7 @@
 
   </div>
 
+  <!-- Modular Data Files (Separated for effortless updates) -->
   <script src="data/config.js"></script>
   <script src="data/articles.js"></script>
   <script src="data/notes.js"></script>
@@ -223,6 +262,7 @@
   <script src="data/guestbook.js"></script>
   <script src="data/about.js"></script>
   <script src="data/links.js"></script>
+  <!-- Content aggregator bridge -->
   <script src="data/music.js"></script>
   <script src="data/gallery.js"></script>
   <script src="content.js"></script>
@@ -230,6 +270,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="data/firebase-config.js"></script>
+  <!-- Core Application -->
   <script src="app.js"></script>
 </body>
+
 </html>

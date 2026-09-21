@@ -1,0 +1,44 @@
+# Regenerate static mirror pages whenever index.html changes, so the
+# SEO/file:// mirrors stay in sync with zero manual copy-paste.
+name: mirrors
+
+on:
+  push:
+    paths:
+      - "index.html"
+      - "scripts/build-mirrors.py"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: mirrors
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - run: python scripts/build-mirrors.py
+      - name: Commit updated mirrors
+        run: |
+          if git diff --quiet -- about.html articles.html notes.html projects.html links.html guestbook.html; then
+            echo "mirrors unchanged"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add about.html articles.html notes.html projects.html links.html guestbook.html
+            git commit -m "Auto-update static mirrors from index.html"
+            git pull --rebase --autostash
+            python scripts/build-mirrors.py
+            if ! git diff --quiet -- about.html articles.html notes.html projects.html links.html guestbook.html; then
+              git add about.html articles.html notes.html projects.html links.html guestbook.html
+              git commit -m "Auto-update static mirrors from index.html"
+            fi
+            git push
+          fi
