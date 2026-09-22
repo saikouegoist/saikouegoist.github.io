@@ -552,9 +552,39 @@ window.SITE_MUSIC = {
   others: [
     {
         "id": "ot-01",
-        "title": "slowed (Bare Minimum)",
-        "artist": "Базовый минимум",
-        "file": "assets/audio/others/%D0%91%D0%B0%D0%B7%D0%BE%D0%B2%D1%8B%D0%B9%20%D0%BC%D0%B8%D0%BD%D0%B8%D0%BC%D1%83%D0%BC%20-%20slowed%20%28Bare%20Minimum%29.mp3"
+        "title": "Базовый минимум",
+        "artist": "Unknown",
+        "file": "assets/audio/others/%D0%91%D0%B0%D0%B7%D0%BE%D0%B2%D1%8B%D0%B9%20%D0%BC%D0%B8%D0%BD%D0%B8%D0%BC%D1%83%D0%BC%20.mp3"
+    },
+    {
+        "id": "ot-02",
+        "title": "В последний раз",
+        "artist": "Весёлые Ребята",
+        "file": "assets/audio/others/%D0%92%D0%B5%D1%81%D1%91%D0%BB%D1%8B%D0%B5%20%D0%A0%D0%B5%D0%B1%D1%8F%D1%82%D0%B0%20-%20%D0%92%20%D0%BF%D0%BE%D1%81%D0%BB%D0%B5%D0%B4%D0%BD%D0%B8%D0%B9%20%D1%80%D0%B0%D0%B7.mp3"
+    },
+    {
+        "id": "ot-03",
+        "title": "【Koi wa Ameagari no",
+        "artist": "Unknown",
+        "file": "assets/audio/others/%E3%80%90Koi%20wa%20Ameagari%20no.mp3"
+    },
+    {
+        "id": "ot-04",
+        "title": "ヒッチコック",
+        "artist": "ヨルシカ",
+        "file": "assets/audio/others/%E3%83%A8%E3%83%AB%E3%82%B7%E3%82%AB%20-%20%E3%83%92%E3%83%83%E3%83%81%E3%82%B3%E3%83%83%E3%82%AF.mp3"
+    },
+    {
+        "id": "ot-05",
+        "title": "Katyusha",
+        "artist": "Unknown",
+        "file": "assets/audio/others/Katyusha.mp3"
+    },
+    {
+        "id": "ot-06",
+        "title": "Rubikdice",
+        "artist": "PEGADORA",
+        "file": "assets/audio/others/PEGADORA%20-%20Rubikdice.mp3"
     }
 ]
 };
