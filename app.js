@@ -355,20 +355,9 @@
     return '';
   }
 
-  // Shoutbox: latest guestbook signing, cloud cache first, then local
-  // buffer, then the seed entry. Alias/message are escaped by the caller.
-  function getShoutboxBit() {
-    try {
-      const cloud = JSON.parse(safeStorage.get('meowking_guestbook_cloud_cache') || 'null');
-      const local = JSON.parse(safeStorage.get('meowking_guestbook_entries') || 'null');
-      const seed = (window.SITE_GUESTBOOK || [])[0];
-      const pick = (Array.isArray(cloud) && cloud[0]) ||
-        (Array.isArray(local) && local[0]) || seed;
-      if (pick && pick.alias) {
-        return `★ 📢 LATEST SIGNING: ${escapeHtml(String(pick.alias))} ★&nbsp;&nbsp;&nbsp;`;
-      }
-    } catch (e) { }
-    return '';
+  // Divine mantra segment matching Lord Vishnu shrine
+  function getMantraBit() {
+    return '★ ॐ नमो भगवते वासुदेवाय ★&nbsp;&nbsp;&nbsp;';
   }
 
   // Retro marquee ticker, driven by rAF so it scrolls even where CSS
@@ -380,13 +369,12 @@
     if (!track || !bar || track.dataset.tickerOn) return;
     track.dataset.tickerOn = '1';
 
-    // Inject shoutbox + seasonal bits into BOTH spans equally so the
-    // half-width seamless loop keeps working. Refreshed every minute so
-    // new signings scroll by without a reload.
+    // Inject seasonal bits into BOTH spans equally so the
+    // half-width seamless loop keeps working.
     const spans = track.querySelectorAll('span');
     const baseHtml = spans.length > 0 ? spans[0].innerHTML : '';
     function refreshTickerExtras() {
-      const extra = getSeasonalBit() + getShoutboxBit();
+      const extra = getSeasonalBit();
       spans.forEach(sp => { sp.innerHTML = baseHtml + extra; });
     }
     refreshTickerExtras();
