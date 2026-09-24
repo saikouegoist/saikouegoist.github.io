@@ -121,6 +121,7 @@ body {
   border: none;
   box-shadow: none;
   user-select: none;
+  cursor: default;
 }
 
 .swastika-gif-img {
@@ -128,6 +129,8 @@ body {
   height: 100%;
   object-fit: contain;
   display: block;
+  cursor: default;
+  pointer-events: auto;
 }
 
 .header-brand {

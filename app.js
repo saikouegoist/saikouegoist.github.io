@@ -110,6 +110,15 @@
   // -----------------------------------------------------------
   // 1. Initialization (each widget isolated; hash listener added once)
   // -----------------------------------------------------------
+  // Prevent clicking swastika badge from triggering parent brand link navigation
+  document.addEventListener('click', (e) => {
+    if (e.target && e.target.closest && e.target.closest('.header-swastika-badge')) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    }
+  }, true);
+
   document.addEventListener('DOMContentLoaded', () => {
     // editor.html sets window.MEOWKING_NOAUTOINIT before loading this file:
     // it only needs the markdown/security helpers below, never the live site.
@@ -273,9 +282,13 @@
   // Footer (with a discreet studio shortcut on the links page)
   // -----------------------------------------------------------
   function currentRouteKey() {
-    const h = (window.location.hash || '').replace(/^#\/?/, '').trim();
-    if (h) return h.split('/')[0];
-    return document.body.getAttribute('data-page') || 'home';
+    const rawHash = window.location.hash || '';
+    if (!rawHash) {
+      return document.body.getAttribute('data-page') || 'home';
+    }
+    const h = rawHash.replace(/^#\/?/, '').trim();
+    if (!h) return 'home';
+    return h.split('/')[0];
   }
 
   // Re-rendered on every route change: on #/links the © becomes a little
@@ -995,9 +1008,11 @@
     if (!mainContent) return;
 
     let route = rawHash.replace(/^#\/?/, '').trim();
-    if (!route) {
+    if (!rawHash) {
       const dataPage = document.body.getAttribute('data-page');
       route = dataPage || 'home';
+    } else if (!route) {
+      route = 'home';
     }
 
     try { updateActiveNav(route.split('/')[0]); } catch (e) { console.warn('nav update failed:', e); }
@@ -2627,13 +2642,19 @@
         let websiteChipHtml = '';
         if (entry.website) {
           let url = String(entry.website).trim();
-          if (!/^https?:\/\//i.test(url) && !url.startsWith('#')) {
+          const isInternal = url.startsWith('#') || url.startsWith('/');
+          if (!/^https?:\/\//i.test(url) && !isInternal) {
             url = 'https://' + url;
           }
-          const displayUrl = escapeHtml(url.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''));
+          let displayUrl = url.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, '');
+          if (isInternal) {
+            displayUrl = displayUrl === '#' || displayUrl === '' ? 'home' : displayUrl.replace(/^#\/?/, '');
+          }
+          const targetAttr = isInternal ? '' : ' target="_blank" rel="noopener noreferrer"';
+          const arrow = isInternal ? '' : ' ↗';
           websiteChipHtml = `
-            <a href="${escapeHtml(safeHref(url, '#'))}" target="_blank" rel="noopener noreferrer" class="bbs-site-link" title="Visit ${escapeHtml(entry.alias)}'s website">
-              🌐 ${displayUrl} ↗
+            <a href="${escapeHtml(safeHref(url, '#'))}"${targetAttr} class="bbs-site-link" title="Visit ${escapeHtml(entry.alias)}'s website">
+              🌐 ${escapeHtml(displayUrl)}${arrow}
             </a>
           `;
         }
