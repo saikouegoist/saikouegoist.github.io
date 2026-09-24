@@ -175,6 +175,7 @@
     const toggleBtn = document.getElementById('theme-toggle');
     if (toggleBtn) {
       toggleBtn.textContent = theme === 'dark' ? 'light mode' : 'dark mode';
+      toggleBtn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
     }
   }
 
@@ -355,10 +356,6 @@
     return '';
   }
 
-  // Divine mantra segment matching Lord Vishnu shrine
-  function getMantraBit() {
-    return '★ ॐ नमो भगवते वासुदेवाय ★&nbsp;&nbsp;&nbsp;';
-  }
 
   // Retro marquee ticker, driven by rAF so it scrolls even where CSS
   // animations are disabled. Pauses while hovered, like holding a marquee.
@@ -518,6 +515,7 @@
         if (headerMusicBtn) {
           headerMusicBtn.textContent = '⏸';
           headerMusicBtn.setAttribute('aria-label', 'Pause music');
+          headerMusicBtn.title = 'Pause music';
           headerMusicBtn.classList.add('playing');
         }
         if (playerEl) playerEl.classList.add('music-active');
@@ -546,6 +544,7 @@
         if (headerMusicBtn) {
           headerMusicBtn.textContent = '▶';
           headerMusicBtn.setAttribute('aria-label', 'Play music');
+          headerMusicBtn.title = 'Play music';
           headerMusicBtn.classList.remove('playing');
         }
         if (playerEl) playerEl.classList.remove('music-active');
@@ -912,7 +911,10 @@
 
     const OK_BADGE = '<img src="assets/fx-ok.svg" class="fx-ok-gif" alt="" aria-hidden="true">';
     function apply() {
-      if (btn) btn.innerHTML = 'fx:' + mode + OK_BADGE;
+      if (btn) {
+        btn.innerHTML = 'fx:' + mode + OK_BADGE;
+        btn.title = 'Weather FX: ' + mode + ' (click to cycle)';
+      }
       safeStorage.set('meowking_fx', mode);
       parts = [];
       if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
