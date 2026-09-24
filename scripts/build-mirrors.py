@@ -61,7 +61,14 @@ def build_one(template: str, page: str, title: str, description: str) -> str:
     html = template
 
     # 1. <body> -> <body data-page="x"> (index.html has plain <body>)
-    html = re.sub(r"<body(?P<attrs>[^>]*)>", f'<body data-page="{page}">', html, count=1)
+    # Preserve any existing attributes (e.g. class="...") on future edits.
+    def _body_repl(m: re.Match) -> str:
+        attrs = m.group("attrs") or ""
+        # drop any pre-existing data-page to stay idempotent
+        attrs = re.sub(r'\sdata-page="[^"]*"', "", attrs)
+        return f"<body{attrs} data-page=\"{page}\">"
+
+    html = re.sub(r"<body(?P<attrs>[^>]*)>", _body_repl, html, count=1)
 
     # 2. <title>...</title>
     html = re.sub(r"<title>.*?</title>", f"<title>{title}</title>", html, count=1, flags=re.DOTALL)

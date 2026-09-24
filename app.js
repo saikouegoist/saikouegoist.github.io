@@ -69,9 +69,13 @@
   }
 
   // Helper to extract year from date string (YYYY-MM-DD or year field)
+  // Validates YYYY to avoid garbage buckets like "10 /" from "10 / 06 / 2004".
   function getYear(item) {
-    if (item.year) return String(item.year);
-    if (item.date) return String(item.date).slice(0, 4);
+    if (item.year && /^\d{3,4}$/.test(String(item.year).trim())) return String(item.year).trim();
+    if (item.date) {
+      const m = String(item.date).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m) return m[1];
+    }
     return String(new Date().getFullYear());
   }
 
@@ -585,7 +589,11 @@
       const tracks = getTracks();
       if (isLooping) {
         try { audioPlayer.currentTime = 0; } catch (e) { }
-        audioPlayer.play().catch(() => { updatePlayUI(false); });
+        // Older browsers return undefined (not a promise) from play().
+        try {
+          const r = audioPlayer.play();
+          if (r && typeof r.catch === 'function') r.catch(() => { updatePlayUI(false); });
+        } catch (e) { updatePlayUI(false); }
       } else if (currentTrackIndex < tracks.length - 1) {
         // Auto-advance, but stop at the end of the playlist (no wrap).
         selectTrack(currentTrackIndex + 1);
@@ -831,6 +839,10 @@
     // Set when the engine is live: renderRoute uses it to avoid revealing
     // a dead minibar when init bailed early (no music data / no player).
     window.Meowking.musicReady = true;
+    // Expose the live audio element so the FX engine can tap an
+    // AnalyserNode for music-reactive particles (fireflies). The engine
+    // falls back to a static visual if this is ever missing.
+    try { window.Meowking.getAudio = () => audioPlayer; } catch (e) { }
   }
 
 
@@ -839,12 +851,13 @@
 
 
   // -----------------------------------------------------------
-  // Weather FX Engine (snow / rain / matrix over a fixed canvas)
+  // Weather FX Engine (snow / rain / matrix / petals / fireflies /
+  // stars / embers / bokeh / aurora / bubbles over a fixed canvas)
   // -----------------------------------------------------------
   function initFx() {
     if (!once('fx')) return;
     const btn = document.getElementById('fx-toggle');
-    const MODES = ['off', 'snow', 'rain', 'matrix'];
+    const MODES = ['off', 'snow', 'rain', 'matrix', 'petals', 'fireflies', 'stars', 'embers', 'bokeh', 'aurora', 'bubbles'];
     let mode = safeStorage.get('meowking_fx') || 'off';
     if (!MODES.includes(mode)) mode = 'off';
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -870,22 +883,120 @@
 
     const SNOW_CHARS = ['❄', '·', '*', '❅'];
     const MATRIX_CHARS = 'アイウエオカキクケコサシスセソ0123456789'.split('');
+    const PETAL_COLORS = ['rgba(255,182,193,0.85)', 'rgba(255,199,213,0.85)', 'rgba(247,170,196,0.85)', 'rgba(255,214,226,0.85)'];
     let parts = [];
+    let auroraBands = [];
     let rafId = null;
+
+    // ---- optional music dabbler (fireflies pulse with the music) ----
+    // Lazily built on the first fireflies activation inside the click
+    // gesture, so autoplay policy never blocks it. If the music element
+    // is missing or wiring fails, fireflies just run a static idle glow.
+    let audioReactor = null;
+    let audioReactorBlocked = false;
+    let audioLevel = 0.3;
+
+    function ensureAudioReactor() {
+      if (audioReactor) {
+        try { if (audioReactor.actx.state === 'suspended') audioReactor.actx.resume(); } catch (e) { }
+        return true;
+      }
+      if (audioReactorBlocked) return false;
+      try {
+        const getAudio = window.Meowking && window.Meowking.getAudio;
+        if (typeof getAudio !== 'function') return false;
+        const el = getAudio();
+        if (!el) return false;
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return false;
+        const actx = new Ctx();
+        const analyser = actx.createAnalyser();
+        analyser.fftSize = 256;
+        const src = actx.createMediaElementSource(el);
+        src.connect(analyser);
+        analyser.connect(actx.destination);
+        if (actx.state === 'suspended') {
+          try { actx.resume(); } catch (e) { }
+        }
+        audioReactor = { actx: actx, analyser: analyser, freq: new Uint8Array(analyser.frequencyBinCount) };
+      } catch (err) {
+        console.warn('FX audio reactor unavailable:', err);
+        audioReactorBlocked = true;
+        audioReactor = null;
+      }
+      return !!audioReactor;
+    }
+
+    function updateAudioLevel() {
+      if (!audioReactor) return 0.3;
+      let raw = audioLevel;
+      try {
+        audioReactor.analyser.getByteFrequencyData(audioReactor.freq);
+        let sum = 0;
+        for (let i = 0; i < audioReactor.freq.length; i++) sum += audioReactor.freq[i];
+        raw = (sum / audioReactor.freq.length / 255) * 2.2;
+        if (raw > 1) raw = 1;
+      } catch (e) { }
+      // fast attack, slow release -> organic pulses instead of jitter
+      if (raw > audioLevel) audioLevel += (raw - audioLevel) * 0.25;
+      else audioLevel += (raw - audioLevel) * 0.05;
+      return audioLevel;
+    }
 
     function newPart(anywhere) {
       const W = canvas.width, H = canvas.height;
+      const t = Math.random() * Math.PI * 2;
       if (mode === 'rain') {
         return { x: Math.random() * (W + 100), y: anywhere ? Math.random() * H : -20, len: 10 + Math.random() * 14, sp: 9 + Math.random() * 7 };
       }
       if (mode === 'matrix') {
         return { x: Math.floor(Math.random() * (W / 16)) * 16, y: anywhere ? Math.random() * H : -20, sp: 2 + Math.random() * 4, ch: MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)] };
       }
+      if (mode === 'petals') {
+        return { x: Math.random() * W, y: anywhere ? Math.random() * H : -15, s: 5 + Math.random() * 7, sp: 0.6 + Math.random() * 0.9, sway: 0.5 + Math.random() * 0.9, phase: t, rot: Math.random() * Math.PI, spin: (Math.random() - 0.5) * 0.03, c: PETAL_COLORS[Math.floor(Math.random() * PETAL_COLORS.length)] };
+      }
+      if (mode === 'fireflies') {
+        return { x: Math.random() * W, y: anywhere ? Math.random() * H : Math.random() * H, sp: 0.2 + Math.random() * 0.5, phase: t, r: 1.2 + Math.random() * 1.6, warm: Math.random() < 0.7 };
+      }
+      if (mode === 'stars') {
+        return { x: Math.random() * W, y: anywhere ? Math.random() * H : Math.random() * H, r: 0.5 + Math.random() * 1.3, phase: t, tw: 0.5 + Math.random() * 1.5, dsp: 0.015 + Math.random() * 0.05 };
+      }
+      if (mode === 'embers') {
+        return { x: Math.random() * W, y: anywhere ? Math.random() * H : H + 20, sp: 0.4 + Math.random() * 0.8, drift: 0.2 + Math.random() * 0.7, phase: t, life: 1 };
+      }
+      if (mode === 'bokeh') {
+        return { x: Math.random() * W, y: anywhere ? Math.random() * H : Math.random() * H, r: 16 + Math.random() * 36, phase: t, dx: (Math.random() - 0.5) * 0.25, dy: 0.02 + Math.random() * 0.1, cool: Math.random() < 0.5, a: 0.05 + Math.random() * 0.07 };
+      }
+      if (mode === 'bubbles') {
+        return { x: Math.random() * W, y: anywhere ? Math.random() * H : H + 10, r: 2 + Math.random() * 5, sp: 0.4 + Math.random() * 0.7, wob: t, wobAmp: 0.3 + Math.random() * 0.7, a: 0.25 + Math.random() * 0.25 };
+      }
       return { x: Math.random() * W, y: anywhere ? Math.random() * H : -10, r: 1 + Math.random() * 2.4, sp: 0.4 + Math.random() * 1.1, drift: Math.random() * 1.2, ch: SNOW_CHARS[Math.floor(Math.random() * SNOW_CHARS.length)] };
+    }
+
+    function makeAuroraBands() {
+      const H = canvas.height;
+      auroraBands = [];
+      const hues = [
+        [180, 140, 255, 220],
+        [120, 255, 190, 90],
+        [95, 210, 255, 150]
+      ];
+      for (let i = 0; i < 3; i++) {
+        auroraBands.push({
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.02 + Math.random() * 0.03,
+          hue: hues[i],
+          baseY: H * (0.06 + i * 0.09 + Math.random() * 0.04),
+          amp: H * (0.04 + Math.random() * 0.06),
+          tall: H * (0.10 + Math.random() * 0.16),
+          alpha: 0.05 + Math.random() * 0.07
+        });
+      }
     }
 
     function frame() {
       const W = canvas.width, H = canvas.height;
+      const t = performance.now() / 1000;
       ctx.clearRect(0, 0, W, H);
       if (mode === 'rain') {
         ctx.strokeStyle = 'rgba(140,180,255,0.55)';
@@ -901,28 +1012,145 @@
       } else if (mode === 'matrix') {
         ctx.font = '14px monospace';
         parts.forEach(p => {
-          for (let t = 0; t < 7; t++) {
-            ctx.fillStyle = t === 0 ? 'rgba(180,255,180,0.9)' : `rgba(0,180,0,${0.55 - t * 0.07})`;
-            ctx.fillText(p.ch, p.x, p.y - t * 15);
+          for (let i = 0; i < 7; i++) {
+            ctx.fillStyle = i === 0 ? 'rgba(180,255,180,0.9)' : `rgba(0,180,0,${0.55 - i * 0.07})`;
+            ctx.fillText(p.ch, p.x, p.y - i * 15);
           }
           p.y += p.sp;
           if (Math.random() < 0.02) p.ch = MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)];
           if (p.y - 105 > H) { p.y = -20; p.x = Math.floor(Math.random() * (W / 16)) * 16; }
         });
-      } else {
+      } else if (mode === 'snow') {
         ctx.fillStyle = 'rgba(255,255,255,0.85)';
         ctx.font = '12px monospace';
-        const t = performance.now() / 1000;
         parts.forEach(p => {
           ctx.fillText(p.ch, p.x + Math.sin(t + p.y * 0.02) * p.drift * 12, p.y);
           p.y += p.sp;
           if (p.y > H + 12) { p.y = -12; p.x = Math.random() * W; }
+        });
+      } else if (mode === 'petals') {
+        parts.forEach(p => {
+          ctx.save();
+          ctx.translate(p.x + Math.sin(t * 0.8 + p.phase) * p.sway * 8, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.c;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, p.s * 0.55, p.s * 0.28, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          p.y += p.sp; p.rot += p.spin;
+          if (p.y > H + 15) { p.y = -15; p.x = Math.random() * W; }
+        });
+      } else if (mode === 'fireflies') {
+        const L = updateAudioLevel();
+        ctx.globalCompositeOperation = 'lighter';
+        parts.forEach(p => {
+          const glow = p.r * (1.2 + L * 2.2);
+          const pulse = 0.6 + 0.4 * Math.sin(t * 2 + p.phase);
+          const col = p.warm ? `rgba(255,200,90,${0.5 * L + 0.16})` : `rgba(150,255,170,${0.5 * L + 0.16})`;
+          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glow * (2 + pulse));
+          g.addColorStop(0, col);
+          g.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, glow * (2 + pulse), 0, Math.PI * 2);
+          ctx.fill();
+          p.y += p.sp * (1 + L * 1.5);
+          p.x += Math.sin(t * 0.6 + p.phase) * 0.3;
+          if (p.y > H + 10) { p.y = -10; p.x = Math.random() * W; }
+        });
+        ctx.globalCompositeOperation = 'source-over';
+      } else if (mode === 'stars') {
+        ctx.globalCompositeOperation = 'lighter';
+        parts.forEach(p => {
+          const tw = 0.25 + 0.75 * Math.abs(Math.sin(t * p.tw + p.phase));
+          ctx.fillStyle = `rgba(255,245,220,${0.15 + 0.7 * tw})`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r * (0.7 + tw * 0.6), 0, Math.PI * 2);
+          ctx.fill();
+          p.x += p.dsp; p.y += p.dsp * 0.3;
+          if (p.x > W + 5) p.x = -5;
+          if (p.y > H + 5) p.y = -5;
+        });
+        ctx.globalCompositeOperation = 'source-over';
+      } else if (mode === 'embers') {
+        ctx.globalCompositeOperation = 'lighter';
+        parts.forEach(p => {
+          p.life -= 0.004 + Math.random() * 0.006;
+          const al = Math.max(0, p.life);
+          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 8);
+          g.addColorStop(0, `rgba(255,${130 + Math.round(60 * al)},60,${0.7 * al})`);
+          g.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+          ctx.fill();
+          p.y -= p.sp * (1 + al);
+          p.x += Math.sin(t * 1.2 + p.phase) * p.drift;
+          if (p.life <= 0 || p.y < -12) { Object.assign(p, newPart(true)); }
+        });
+        ctx.globalCompositeOperation = 'source-over';
+      } else if (mode === 'bokeh') {
+        ctx.globalCompositeOperation = 'lighter';
+        parts.forEach(p => {
+          const breathe = 0.85 + 0.15 * Math.sin(t * 0.5 + p.phase);
+          const rgb = p.cool ? '190,215,255' : '255,190,150';
+          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * breathe);
+          g.addColorStop(0, `rgba(${rgb},${p.a})`);
+          g.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r * breathe, 0, Math.PI * 2);
+          ctx.fill();
+          p.x += p.dx; p.y += p.dy;
+          if (p.y > H + p.r) { p.y = -p.r; p.x = Math.random() * W; }
+          if (p.x > W + p.r) p.x = -p.r;
+          if (p.x < -p.r) p.x = W + p.r;
+        });
+        ctx.globalCompositeOperation = 'source-over';
+      } else if (mode === 'aurora') {
+        ctx.globalCompositeOperation = 'lighter';
+        auroraBands.forEach(b => {
+          const cols = b.hue;
+          const segs = 20;
+          const stepX = W / segs;
+          for (let i = 0; i <= segs; i++) {
+            const x = i * stepX;
+            const y = b.baseY + Math.sin(t * b.speed + b.phase + i * 0.35) * b.amp;
+            const ease = Math.abs(Math.sin(i * 0.18 + t * b.speed * 0.7));
+            const alpha = b.alpha * (0.4 + 0.6 * ease);
+            const rad = b.tall * (0.5 + ease * 0.5);
+            const g = ctx.createRadialGradient(x, y, 0, x, y, rad);
+            g.addColorStop(0, `rgba(${cols[0]},${cols[1]},${cols[2]},${alpha})`);
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(x, y, rad, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+        ctx.globalCompositeOperation = 'source-over';
+      } else if (mode === 'bubbles') {
+        parts.forEach(p => {
+          ctx.strokeStyle = `rgba(190,225,255,${p.a})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = `rgba(255,255,255,${p.a * 0.8})`;
+          ctx.beginPath();
+          ctx.arc(p.x - p.r * 0.35, p.y - p.r * 0.35, p.r * 0.18, 0, Math.PI * 2);
+          ctx.fill();
+          p.y -= p.sp;
+          p.x += Math.sin(t * 1.1 + p.wob) * p.wobAmp;
+          if (p.y < -p.r - 8) { p.y = H + p.r + 8; p.x = Math.random() * W; }
         });
       }
       rafId = requestAnimationFrame(frame);
     }
 
     const OK_BADGE = '<img src="assets/fx-ok.svg" class="fx-ok-gif" alt="" aria-hidden="true">';
+    const PART_COUNTS = { snow: 130, rain: 130, matrix: 70, petals: 40, fireflies: 45, stars: 90, embers: 45, bokeh: 22, aurora: 0, bubbles: 35 };
     function apply() {
       if (btn) {
         btn.innerHTML = 'fx:' + mode + OK_BADGE;
@@ -935,8 +1163,13 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         return;
       }
-      const n = mode === 'matrix' ? 70 : 130;
-      for (let i = 0; i < n; i++) parts.push(newPart(true));
+      if (mode === 'fireflies') ensureAudioReactor();
+      if (mode === 'aurora') {
+        makeAuroraBands();
+      } else {
+        const n = PART_COUNTS[mode] || 130;
+        for (let i = 0; i < n; i++) parts.push(newPart(true));
+      }
       rafId = requestAnimationFrame(frame);
     }
 
@@ -1066,8 +1299,9 @@
 
     // Distraction-free reading layout: hides the left/right sidebars and
     // footer, keeps the header/top-nav, and widens the article pane.
+    // Temples (list + detail) always use reading-mode like article readers.
     const isArticleReading = route.startsWith('articles/');
-    const isTempleReading = route.startsWith('temples/') || route === 'temples' || route === 'unknown';
+    const isTempleReading = route.startsWith('temples/') || route === 'temples' || route === 'unknown' || route.startsWith('unknown/');
     try {
       document.body.classList.toggle('reading-mode', isArticleReading || isTempleReading);
     } catch (e) { /* non-critical */ }
@@ -1650,7 +1884,10 @@
   // ARTICLE DETAIL / READER VIEW (Async Markdown File Loading)
   // -----------------------------------------------------------
   async function renderArticleDetail(container, articleId) {
-    const myToken = ++routeToken;
+    // renderRoute() already bumped routeToken for this navigation, so just
+    // capture it — do NOT increment again (double-bump skips values and
+    // makes stale-guard reasoning confusing).
+    const myToken = routeToken;
     const siteData = getSiteData();
     const article = (siteData.articles || []).find(a => a.id === articleId);
 
@@ -1854,7 +2091,8 @@
   }
 
   async function renderTempleDetail(container, templeId) {
-    const myToken = ++routeToken;
+    // Same as articles: routeToken was already bumped by renderRoute().
+    const myToken = routeToken;
     const siteData = getSiteData();
     const temples = siteData.temples || [];
     const idx = temples.findIndex(t => t.id === templeId);
@@ -1895,6 +2133,13 @@
     `;
 
     readingModeCleanup = setupReadingProgressBar();
+    // Mirror article detail: don't leave the progress bar over an empty body.
+    const dropTempleBar = () => {
+      if (readingModeCleanup) {
+        try { readingModeCleanup(); } catch (e) { /* non-critical */ }
+        readingModeCleanup = null;
+      }
+    };
 
     const templeTopBtn = container.querySelector('#temple-top-btn');
     if (templeTopBtn) {
@@ -1920,6 +2165,8 @@
     }
 
     if (!rawContent) rawContent = page.content || '';
+
+    if (!rawContent.trim()) dropTempleBar();
 
     if (myToken !== routeToken) return;
     rawContent = rawContent.trimStart();
@@ -2280,13 +2527,16 @@
       }
     }
 
-    // Get Firestore database instance safely
+    // Get Firestore database instance safely (ad-blocker stubs may define
+    // firebase without firebase.apps — guard both or guestbook view dies).
     function getDb() {
       if (window.FIREBASE_DB) return window.FIREBASE_DB;
-      if (typeof firebase !== 'undefined' && firebase.firestore && firebase.apps.length > 0) {
-        window.FIREBASE_DB = firebase.firestore();
-        return window.FIREBASE_DB;
-      }
+      try {
+        if (typeof firebase !== 'undefined' && firebase.firestore && firebase.apps && firebase.apps.length > 0) {
+          window.FIREBASE_DB = firebase.firestore();
+          return window.FIREBASE_DB;
+        }
+      } catch (e) { /* treat as offline */ }
       return null;
     }
 
@@ -2518,6 +2768,8 @@
         const now = new Date();
         const diffMs = now - entryDate;
         const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        // Forged far-future timestamps yield negative diffs — must not pass.
+        if (diffDays < 0) return false;
         if (filter === '7days') return diffDays <= 7;
         if (filter === '30days') return diffDays <= 30;
         if (filter === 'thisYear') return entryDate.getFullYear() === now.getFullYear();
@@ -2531,11 +2783,17 @@
     function getAllCombinedEntries() {
       const locals = getLocalEntries() || [];
       // If we have live Firestore entries, use them as primary, but keep
-      // offline-saved entries that never reached the cloud. Matched by
-      // content so already-synced posts don't show up twice.
+      // offline-saved entries that never reached the cloud. Match by doc id
+      // first (exact), then by content so already-synced posts don't double.
+      // Content key includes id when present so two users posting identical
+      // text in the same second don't collapse into one entry.
       if (firestoreEntries && firestoreEntries.length > 0) {
-        const cloudKeys = new Set(firestoreEntries.map(e => `${e.alias}||${e.message}||${e.timestamp}`));
-        const pending = locals.filter(e => !cloudKeys.has(`${e.alias}||${e.message}||${e.timestamp}`));
+        const cloudIds = new Set(firestoreEntries.map(e => e.id).filter(Boolean));
+        const cloudKeys = new Set(firestoreEntries.map(e => `${e.id || ''}||${e.alias}||${e.message}||${e.timestamp}`));
+        const pending = locals.filter(e => {
+          if (e.id && cloudIds.has(e.id)) return false;
+          return !cloudKeys.has(`${e.id || ''}||${e.alias}||${e.message}||${e.timestamp}`);
+        });
         return [...pending, ...firestoreEntries];
       }
 
@@ -2630,13 +2888,13 @@
         return;
       }
 
-      const totalCount = all.length;
+      const totalCount = filtered.length;
       feedEl.innerHTML = filtered.map((entry, index) => {
         const entryNum = String(selectedSortOrder === 'newest' ? totalCount - index : index + 1).padStart(2, '0');
         const nickColorClass = getNickColorClass(entry.alias);
 
-        // Format clean timestamp
-        const tsDisplay = entry.timestamp ? String(entry.timestamp).slice(0, 16) : '2026-09-15 12:00';
+        // Format clean timestamp (no fake fallback date — missing stays blank)
+        const tsDisplay = entry.timestamp ? String(entry.timestamp).slice(0, 16) : '';
 
         // Clean website link if present
         let websiteChipHtml = '';
@@ -2676,7 +2934,7 @@
           <div class="bbs-log-entry" id="entry-${escapeHtml(String(entry.id))}">
             <div class="bbs-log-meta-line">
               <span class="bbs-num">#${entryNum}</span>
-              <span class="bbs-ts">[${escapeHtml(tsDisplay)}]</span>
+              ${tsDisplay ? `<span class="bbs-ts">[${escapeHtml(tsDisplay)}]</span>` : ''}
               <span class="bbs-icon-tag">${escapeHtml(safeIcon)}</span>
               <span class="bbs-nick ${nickColorClass}">&lt;${escapeHtml(entry.alias)}&gt;</span>
               ${websiteChipHtml}
@@ -2732,7 +2990,12 @@
 
     // Setup Firebase Real-time Firestore Listener
     function setupFirestoreListener() {
-      const db = getDb();
+      let db = null;
+      try {
+        db = getDb();
+      } catch (e) {
+        db = null;
+      }
       if (!db) {
         console.warn("Firestore not available yet. Using local entries.");
         updateConnectionStatus(false, 'LOCAL STORAGE MODE');
@@ -2770,7 +3033,7 @@
               alias: d.alias || 'anonymous',
               icon: d.icon || '🐱',
               website: d.website || null,
-              timestamp: tsStr || '2026-09-15 12:00:00',
+              timestamp: tsStr || '',
               message: d.message || '',
               adminReply: d.adminReply || null,
               createdAt: d.createdAt
@@ -3130,18 +3393,22 @@
     let text = md.replace(/\r\n/g, '\n').trim();
 
     const codeBlocks = [];
+    // Placeholders use NUL-wrapped tokens (\x00...) which cannot appear in
+    // author-typed markdown — plain __CODE_BLOCK_0__ text no longer collides.
+    const PH = (kind, i) => `\x00MEOWKING_${kind}_${i}\x00`;
+    const PH_HR = '\x00MEOWKING_HR\x00';
     text = text.replace(/```([a-zA-Z0-9_-]*)[ \t]*\n?([\s\S]*?)```/g, (_, lang, code) => {
       const index = codeBlocks.length;
       const cleanCode = escapeHtml(code.trim());
       const safeLang = String(lang || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 20);
       const langAttr = safeLang ? ` class="language-${safeLang}"` : '';
       codeBlocks.push(`<pre><code${langAttr}>${cleanCode}</code></pre>`);
-      return `__CODE_BLOCK_${index}__`;
+      return PH('CODE', index);
     });
 
     // A standalone --- line is a horizontal rule. It gets a placeholder so
     // paragraph wrapping never swallows it (it previously rendered literally).
-    text = text.replace(/^[ \t]*---[ \t]*$/gm, '__HR__');
+    text = text.replace(/^[ \t]*---[ \t]*$/gm, PH_HR);
 
     // Headings and blockquotes are extracted into placeholders BEFORE the
     // whole-document inline pass. The generated tags must never go through
@@ -3152,7 +3419,7 @@
     text = text.replace(/^#{1,6} (.*$)/gim, (full, m) => {
       const level = Math.min(6, full.match(/^#+/)[0].length);
       headBlocks.push(`<h${level}>` + formatInlineMarkdown(m, false) + `</h${level}>`);
-      return `__HEAD_BLOCK_${headBlocks.length - 1}__`;
+      return PH('HEAD', headBlocks.length - 1);
     });
 
     // Consecutive "> " lines group into ONE blockquote (joined with <br>),
@@ -3164,7 +3431,7 @@
         .filter((l) => l.length > 0);
       if (!lines.length) return m;
       quoteBlocks.push('<blockquote>' + lines.map((l) => formatInlineMarkdown(l, false)).join('<br>') + '</blockquote>');
-      return `__QUOTE_BLOCK_${quoteBlocks.length - 1}__`;
+      return PH('QUOTE', quoteBlocks.length - 1);
     });
 
     // Lists are extracted into placeholders BEFORE the whole-document inline
@@ -3177,13 +3444,13 @@
       const items = m.split('\n')
         .map((l) => '<li>' + formatInlineMarkdown(l.replace(/^[ \t]*[-*+][ \t]+/, '').trim(), false) + '</li>').join('');
       listBlocks.push('<ul>' + items + '</ul>');
-      return `__LIST_BLOCK_${listBlocks.length - 1}__`;
+      return PH('LIST', listBlocks.length - 1);
     });
     text = text.replace(/^[ \t]*\d+\.[ \t]+.*(?:\n[ \t]*\d+\.[ \t]+.*)*/gm, (m) => {
       const items = m.split('\n')
         .map((l) => '<li>' + formatInlineMarkdown(l.replace(/^[ \t]*\d+\.[ \t]+/, '').trim(), false) + '</li>').join('');
       listBlocks.push('<ol>' + items + '</ol>');
-      return `__LIST_BLOCK_${listBlocks.length - 1}__`;
+      return PH('LIST', listBlocks.length - 1);
     });
     text = formatInlineMarkdown(text, false);
 
@@ -3191,7 +3458,7 @@
     // A generated block is identified by its placeholder prefix. A block
     // sharing a chunk with trailing text (single newline, no blank line)
     // keeps the block and wraps only the rest in <p>.
-    const blockPh = /^(__(?:CODE|LIST|HEAD|QUOTE)_BLOCK_\d+__|__HR__)/;
+    const blockPh = /^\x00MEOWKING_(?:CODE|LIST|HEAD|QUOTE)_\d+\x00|^\x00MEOWKING_HR\x00/;
     text = paragraphs.map(p => {
       p = p.trim();
       if (!p) return '';
@@ -3206,27 +3473,22 @@
     }).join('\n');
 
     codeBlocks.forEach((block, i) => {
-      text = text.replace(`__CODE_BLOCK_${i}__`, block);
-      text = text.replace(`<p>__CODE_BLOCK_${i}__</p>`, block);
+      text = text.split(PH('CODE', i)).join(block);
     });
 
     listBlocks.forEach((block, i) => {
-      text = text.replace(`__LIST_BLOCK_${i}__`, block);
-      text = text.replace(`<p>__LIST_BLOCK_${i}__</p>`, block);
+      text = text.split(PH('LIST', i)).join(block);
     });
 
     headBlocks.forEach((block, i) => {
-      text = text.replace(`__HEAD_BLOCK_${i}__`, block);
-      text = text.replace(`<p>__HEAD_BLOCK_${i}__</p>`, block);
+      text = text.split(PH('HEAD', i)).join(block);
     });
 
     quoteBlocks.forEach((block, i) => {
-      text = text.replace(`__QUOTE_BLOCK_${i}__`, block);
-      text = text.replace(`<p>__QUOTE_BLOCK_${i}__</p>`, block);
+      text = text.split(PH('QUOTE', i)).join(block);
     });
 
-    text = text.replace(/<p>__HR__<\/p>/g, '<hr>');
-    text = text.replace(/__HR__/g, '<hr>');
+    text = text.split(PH_HR).join('<hr>');
 
     return text;
   }
@@ -3286,7 +3548,11 @@
           safeHrefValue = trimmedUrl;
         }
       }
-      return `<a href="${safeHrefValue}" target="_blank" rel="noopener">${label}</a>`;
+      // External links open in a new tab; internal hash/relative links stay
+      // in the same tab so SPA navigation isn't broken by a new window.
+      const isExternal = /^(https?:|mailto:|\/\/)/i.test(stripCtrlForSchemeCheck(safeHrefValue));
+      const extra = isExternal ? ' target="_blank" rel="noopener"' : '';
+      return `<a href="${safeHrefValue}"${extra}>${label}</a>`;
     });
     return text;
   }

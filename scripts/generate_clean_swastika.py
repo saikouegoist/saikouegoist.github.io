@@ -1,4 +1,3 @@
-import os
 import math
 from PIL import Image, ImageDraw
 
@@ -188,9 +187,3 @@ if __name__ == "__main__":
     frames[0].save("assets/swastika.png")
     # Save animated GIF
     save_transparent_gif(frames, "assets/swastika.gif")
-    
-    # Also save to artifact directory
-    art_dir = r"C:\Users\abhis\.gemini\antigravity-ide\brain\0163dbbd-0afe-4e0f-b112-0c124e4aa945"
-    if os.path.exists(art_dir):
-        frames[0].save(os.path.join(art_dir, "swastika.png"))
-        save_transparent_gif(frames, os.path.join(art_dir, "swastika.gif"))

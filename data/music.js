@@ -25,134 +25,115 @@ window.SITE_MUSIC = {
         "id": "cl-02",
         "title": "Hoshi no Silhouette",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_02-hoshi-no-silhouette.mp3",
-        "year": "星のシルエット"
+        "file": "assets/audio/classic/Classic_02-hoshi-no-silhouette.mp3"
     },
     {
         "id": "cl-03",
         "title": "Yoru no Silhouette",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_03-yoru-no-silhouette.mp3",
-        "year": "夜のシルエット"
+        "file": "assets/audio/classic/Classic_03-yoru-no-silhouette.mp3"
     },
     {
         "id": "cl-04",
         "title": "Kokoro no Melody",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_04-kokoro-no-melody.mp3",
-        "year": "心のメロディー"
+        "file": "assets/audio/classic/Classic_04-kokoro-no-melody.mp3"
     },
     {
         "id": "cl-05",
         "title": "Shinzou no Rhythm",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_05-shinzou-no-rhythm.mp3",
-        "year": "心臓のリズム"
+        "file": "assets/audio/classic/Classic_05-shinzou-no-rhythm.mp3"
     },
     {
         "id": "cl-06",
         "title": "Yozora no Mystery",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_06-yozora-no-mystery.mp3",
-        "year": "夜空のミステリー"
+        "file": "assets/audio/classic/Classic_06-yozora-no-mystery.mp3"
     },
     {
         "id": "cl-07",
         "title": "Yozora no Melody",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_07-yozora-no-melody.mp3",
-        "year": "夜空のメロディー"
+        "file": "assets/audio/classic/Classic_07-yozora-no-melody.mp3"
     },
     {
         "id": "cl-08",
         "title": "Yoru no Curtain",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_08-yoru-no-curtain.mp3",
-        "year": "夜のカーテン"
+        "file": "assets/audio/classic/Classic_08-yoru-no-curtain.mp3"
     },
     {
         "id": "cl-09",
         "title": "Yoru no Melody",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_09-yoru-no-melody.mp3",
-        "year": "夜のメロディー"
+        "file": "assets/audio/classic/Classic_09-yoru-no-melody.mp3"
     },
     {
         "id": "cl-10",
         "title": "Yoake no Dance",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_10-yoake-no-dance.mp3",
-        "year": "夜明けのダンス"
+        "file": "assets/audio/classic/Classic_10-yoake-no-dance.mp3"
     },
     {
         "id": "cl-11",
         "title": "Yume o Oikakeru",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_11-yume-o-oikakeru.mp3",
-        "year": "夢を追いかける"
+        "file": "assets/audio/classic/Classic_11-yume-o-oikakeru.mp3"
     },
     {
         "id": "cl-12",
         "title": "Yoru no Symphony",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_12-yoru-no-symphony.mp3",
-        "year": "夜のシンフォニー"
+        "file": "assets/audio/classic/Classic_12-yoru-no-symphony.mp3"
     },
     {
         "id": "cl-13",
         "title": "Kokoro no Dance",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_13-kokoro-no-dance.mp3",
-        "year": "心のダンス"
+        "file": "assets/audio/classic/Classic_13-kokoro-no-dance.mp3"
     },
     {
         "id": "cl-14",
         "title": "Yoake no Melody",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_14-yoake-no-melody.mp3",
-        "year": "夜明けのメロディー"
+        "file": "assets/audio/classic/Classic_14-yoake-no-melody.mp3"
     },
     {
         "id": "cl-15",
         "title": "Dancing Heart",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_15-dancing-heart.mp3",
-        "year": "ダンシングハート"
+        "file": "assets/audio/classic/Classic_15-dancing-heart.mp3"
     },
     {
         "id": "cl-16",
         "title": "Yume no Silhouette",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_16-yume-no-silhouette.mp3",
-        "year": "夢のシルエット"
+        "file": "assets/audio/classic/Classic_16-yume-no-silhouette.mp3"
     },
     {
         "id": "cl-17",
         "title": "Yokaze no Rhythm",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_17-yokaze-no-rhythm.mp3",
-        "year": "夜風のリズム"
+        "file": "assets/audio/classic/Classic_17-yokaze-no-rhythm.mp3"
     },
     {
         "id": "cl-18",
         "title": "Yoru no Mirage",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_18-yoru-no-mirage.mp3",
-        "year": "夜のミラージュ"
+        "file": "assets/audio/classic/Classic_18-yoru-no-mirage.mp3"
     },
     {
         "id": "cl-19",
         "title": "Yoru no Umi ni Kiete",
         "artist": "Japanese City Chill",
-        "file": "assets/audio/classic/Classic_19-yoru-no-umi-ni-kiete.mp3",
-        "year": "夜の海に消えて"
+        "file": "assets/audio/classic/Classic_19-yoru-no-umi-ni-kiete.mp3"
     },
     {
         "id": "cl-20",
         "title": "Furuki Nihon no Yoru",
         "artist": "Traditional Instrumental",
-        "file": "assets/audio/classic/Classic_20-furuki-nihon-no-yoru.mp3",
-        "year": "古き日本の夜"
+        "file": "assets/audio/classic/Classic_20-furuki-nihon-no-yoru.mp3"
     },
     {
         "id": "cl-21",

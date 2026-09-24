@@ -112,7 +112,7 @@
     // site's own top-level routes/asset folders (user-site nested paths
     // like /articles/foo must resolve home to /, not /articles/).
     try {
-      var knownRoots = ['articles', 'notes', 'projects', 'about', 'links', 'guestbook', 'temples', 'unknown', 'assets', 'images', 'data', 'scripts'];
+      var knownRoots = ['articles', 'notes', 'projects', 'about', 'links', 'guestbook', 'temples', 'assets', 'images', 'data', 'scripts'];
       var parts = location.pathname.split('/').filter(Boolean);
       var home = '/';
       // A single top-level FILE (editor.html, style.css, ...) is not a repo

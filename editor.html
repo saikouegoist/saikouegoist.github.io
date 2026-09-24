@@ -75,7 +75,7 @@
   <div class="site-wrapper ed-wrap">
 
     <header class="site-header">
-      <a href="#/" class="header-brand" id="brand-link">
+      <a href="index.html#/" class="header-brand" id="brand-link">
         <div class="avatar-box">
           <img src="assets/cat.jpg" alt="meowking cat avatar" class="avatar-img">
         </div>
@@ -415,7 +415,8 @@
       return Math.max(1, Math.ceil(words / 200)) + ' min read';
     }
     function download(filename, text) {
-      var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      var mime = /\.js$/i.test(filename) ? 'text/javascript;charset=utf-8' : 'text/plain;charset=utf-8';
+      var blob = new Blob([text], { type: mime });
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = filename;
@@ -429,9 +430,13 @@
 
     // Year helper mirroring the site's getYear(): explicit year wins,
     // otherwise derived from the date, otherwise the current year.
+    // Validated YYYY only — avoids garbage buckets like "10 /".
     function edYear(it) {
-      if (it.year) return String(it.year);
-      if (it.date) return String(it.date).slice(0, 4);
+      if (it.year && /^\d{3,4}$/.test(String(it.year).trim())) return String(it.year).trim();
+      if (it.date) {
+        var m = String(it.date).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (m) return m[1];
+      }
       return String(new Date().getFullYear());
     }
 
