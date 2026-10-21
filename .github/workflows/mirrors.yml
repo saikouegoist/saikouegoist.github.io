@@ -27,17 +27,17 @@ jobs:
       - run: python scripts/build-mirrors.py
       - name: Commit updated mirrors
         run: |
-          if git diff --quiet -- about.html articles.html notes.html projects.html links.html guestbook.html; then
+          if git diff --quiet -- about.html articles.html projects.html links.html guestbook.html; then
             echo "mirrors unchanged"
           else
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add about.html articles.html notes.html projects.html links.html guestbook.html
+            git add about.html articles.html projects.html links.html guestbook.html
             git commit -m "Auto-update static mirrors from index.html"
             git pull --rebase --autostash
             python scripts/build-mirrors.py
-            if ! git diff --quiet -- about.html articles.html notes.html projects.html links.html guestbook.html; then
-              git add about.html articles.html notes.html projects.html links.html guestbook.html
+            if ! git diff --quiet -- about.html articles.html projects.html links.html guestbook.html; then
+              git add about.html articles.html projects.html links.html guestbook.html
               git commit -m "Auto-update static mirrors from index.html"
             fi
             git push

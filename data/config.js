@@ -19,7 +19,6 @@ window.SITE_CONFIG = {
     { id: "home", label: "home", href: "#/" },
     { id: "articles", label: "articles", href: "#/articles" },
     { id: "projects", label: "projects", href: "#/projects" },
-    { id: "notes", label: "notes", href: "#/notes" },
     { id: "guestbook", label: "guestbook", href: "#/guestbook" },
     { id: "about", label: "about", href: "#/about" },
     { id: "links", label: "links", href: "#/links" }

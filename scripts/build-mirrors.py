@@ -1,7 +1,7 @@
 """Build static mirror pages from index.html.
 
 Single source of truth: `index.html`.
-Generates: about.html, articles.html, notes.html, projects.html,
+Generates: about.html, articles.html, projects.html,
            links.html, guestbook.html
 
 Why mirrors exist: the app is a hash-router SPA (`#/about`, ...).
@@ -33,11 +33,6 @@ PAGES = {
         "articles.html",
         "articles - meowking",
         "Long-form essays, security notes, and technical articles by meowking.",
-    ),
-    "notes": (
-        "notes.html",
-        "notes - meowking",
-        "Quick thoughts, short observations, and terminal snippets by meowking.",
     ),
     "projects": (
         "projects.html",

@@ -9,7 +9,7 @@
  *   chrome    -> theme, visitor, siteInfo/footer, pet, clock, ticker, fx, skin, konami
  *   music     -> initMusicBox (idempotent, self-contained Audio instance)
  *   gallery   -> renderGalleryBox/initGalleryBox + route-change cleanup
- *   lists     -> articles/notes/projects/about/links renderers + pager helpers
+ *   lists     -> articles/projects/about/links renderers + pager helpers
  *   reader    -> articleDetail (.md-only) / templeDetail + progress bar
  *   guestbook -> Firestore + local buffer, isolated per-route
  *   router    -> renderRoute (error-isolated per view) + nav state
@@ -43,6 +43,9 @@
   // overwrite each other.
   let guestbookCleanup = null;
 
+  // Cleanup for tweet image lightbox on route change
+  let tweetLightboxCleanup = null;
+
   // Safe storage helper (prevents SecurityError crashes in private browsing or iframe contexts)
   const safeStorage = {
     get(key) {
@@ -57,14 +60,14 @@
     return {
       siteInfo: window.SITE_CONFIG || (window.SITE_CONTENT && window.SITE_CONTENT.siteInfo) || {},
       articles: window.SITE_ARTICLES || (window.SITE_CONTENT && window.SITE_CONTENT.articles) || [],
-      notes: window.SITE_NOTES || (window.SITE_CONTENT && window.SITE_CONTENT.notes) || [],
       projects: window.SITE_PROJECTS || (window.SITE_CONTENT && window.SITE_CONTENT.projects) || [],
       temples: window.SITE_TEMPLES || (window.SITE_CONTENT && window.SITE_CONTENT.temples) || [],
       about: window.SITE_ABOUT || (window.SITE_CONTENT && window.SITE_CONTENT.about) || {},
       coolLinks: window.SITE_LINKS || (window.SITE_CONTENT && window.SITE_CONTENT.coolLinks) || [],
       guestbook: window.SITE_GUESTBOOK || (window.SITE_CONTENT && window.SITE_CONTENT.guestbook) || [],
       gallery: window.SITE_GALLERY || (window.SITE_CONTENT && window.SITE_CONTENT.gallery) || [],
-      music: window.SITE_MUSIC || (window.SITE_CONTENT && window.SITE_CONTENT.music) || null
+      music: window.SITE_MUSIC || (window.SITE_CONTENT && window.SITE_CONTENT.music) || null,
+      tweets: window.SITE_TWEETS || (window.SITE_CONTENT && window.SITE_CONTENT.tweets) || []
     };
   }
 
@@ -1297,13 +1300,21 @@
       guestbookCleanup = null;
     }
 
+    // Tear down any open tweet lightbox
+    if (tweetLightboxCleanup) {
+      try { tweetLightboxCleanup(); } catch (e) { console.warn('tweet lightbox cleanup failed:', e); }
+      tweetLightboxCleanup = null;
+    }
+
     // Distraction-free reading layout: hides the left/right sidebars and
     // footer, keeps the header/top-nav, and widens the article pane.
     // Temples (list + detail) always use reading-mode like article readers.
     const isArticleReading = route.startsWith('articles/');
     const isTempleReading = route.startsWith('temples/') || route === 'temples' || route === 'unknown' || route.startsWith('unknown/');
+    const isTweetsViewing = route === 'tweets' || route.startsWith('tweets/');
     try {
       document.body.classList.toggle('reading-mode', isArticleReading || isTempleReading);
+      document.body.classList.toggle('tweets-viewing-mode', isTweetsViewing);
     } catch (e) { /* non-critical */ }
 
     // Each view is isolated: a broken list/template shows an error box
@@ -1350,8 +1361,8 @@
     } else if (isTempleReading) {
       const templeId = route.replace('temples/', '').replace('unknown/', '');
       runView('temple', () => renderTempleDetail(mainContent, templeId));
-    } else if (route === 'notes') {
-      runView('notes', () => renderNotes(mainContent));
+    } else if (route === 'tweets') {
+      runView('tweets', () => renderTweets(mainContent));
     } else if (route === 'projects') {
       runView('projects', () => renderProjects(mainContent));
     } else if (route === 'about') {
@@ -1426,9 +1437,14 @@
   // 6. View Renderers
   // -----------------------------------------------------------
 
-  // Shared list page size: articles, notes and projects views (and the
+  // Shared list page size: articles and projects views (and the
   // studio) all show this many entries per page with prev/next paging.
   const LIST_PAGE_SIZE = 49;
+
+  // Tweets get their own, larger page size (a 3-column wall reads better
+  // with more per page). Kept separate so articles/projects are
+  // unaffected.
+  const TWEETS_PAGE_SIZE = 50;
 
   // Builds the prev/next pager row shared by the list views. Returns ''
   // when everything fits on one page. Callers re-bind the buttons after
@@ -1443,10 +1459,11 @@
   }
 
   // "1–49 of 132" style range text for the Showing… count lines.
-  function pageRangeText(filteredLength, currentPage) {
+  function pageRangeText(filteredLength, currentPage, pageSize) {
+    const size = pageSize || LIST_PAGE_SIZE;
     if (filteredLength === 0) return '0';
-    const start = (currentPage - 1) * LIST_PAGE_SIZE + 1;
-    const end = Math.min(filteredLength, currentPage * LIST_PAGE_SIZE);
+    const start = (currentPage - 1) * size + 1;
+    const end = Math.min(filteredLength, currentPage * size);
     return `${start}–${end} of ${filteredLength}`;
   }
 
@@ -2181,121 +2198,397 @@
   }
 
   // -----------------------------------------------------------
-  // NOTES VIEW (With Search + Year Dropdown)
+  // TWEETS / MICROBLOG VIEW (Search + Year Dropdown, 10 Images Grid, & Lightbox)
   // -----------------------------------------------------------
-  function renderNotes(container) {
-    const siteData = getSiteData();
-    const notes = siteData.notes || [];
+  function safeTweetImageSrc(src) {
+    if (typeof src !== 'string') return 'assets/cat.jpg';
+    const t = src.trim();
+    if (!t) return 'assets/cat.jpg';
+    if (/^data:image\/(png|jpeg|jpg|webp|gif|svg\+xml);base64,/i.test(t)) return t;
+    if (/^blob:/i.test(t)) return t;
+    const tc = stripCtrlForSchemeCheck(t);
+    if (/^\s*(javascript|vbscript|file):/i.test(tc)) return 'assets/cat.jpg';
+    if (/^(https?:|#|\/)/i.test(tc)) return t;
+    if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(tc)) return t;
+    return 'assets/cat.jpg';
+  }
 
-    // Calculate years ONLY if notes exist for that year
+  function getLocalTweets() {
+    try {
+      const raw = safeStorage.get('meowking_local_tweets');
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveLocalTweets(tweets) {
+    try {
+      safeStorage.set('meowking_local_tweets', JSON.stringify(tweets));
+    } catch (e) {
+      console.warn('Could not save local tweets:', e);
+    }
+  }
+
+  function renderTweets(container) {
+    const siteData = getSiteData();
+    const seedTweets = siteData.tweets || [];
+    let localTweets = getLocalTweets();
+
+    function getAllTweets() {
+      const localIds = new Set(localTweets.map(t => t.id));
+      const seedIds = new Set(seedTweets.map(t => t.id));
+      // Mark a tweet as "local" only when it does NOT also exist in the
+      // published seed file. The studio mirrors the whole list into
+      // localStorage for live preview, so id-matched entries are just seed
+      // previews; only genuinely browser-only posts get delete + badge.
+      const markedLocal = localTweets.map(t => ({ ...t, isLocal: !seedIds.has(t.id) }));
+      return [...markedLocal, ...seedTweets.filter(t => !localIds.has(t.id))];
+    }
+
+    let allTweets = getAllTweets();
+
+    // Calculate years ONLY if tweets exist for that year (like articles)
     const yearCounts = {};
-    notes.forEach(n => {
-      const yr = getYear(n);
+    allTweets.forEach(t => {
+      const yr = getYear(t);
       yearCounts[yr] = (yearCounts[yr] || 0) + 1;
     });
-    const yearsWithNotes = Object.keys(yearCounts).sort().reverse();
+    const yearsWithTweets = Object.keys(yearCounts).sort().reverse();
 
     let selectedYear = 'all';
     let searchQuery = '';
     let currentPage = 1;
 
+    const siteInfo = siteData.siteInfo || {};
+    const siteTitle = siteInfo.title || 'meowking';
+
     container.innerHTML = `
       <div class="box">
-        <div class="box-header">notes & thoughts</div>
+        <div class="box-header">
+          <span>tweets &amp; microblog</span>
+          <a href="editor.html#tweets" class="back-btn" style="float: right; margin-top: -2px; font-size: 0.8rem;" title="Open Content Studio to tweet">✎ new tweet</a>
+        </div>
         <div class="box-content">
+          <p class="tweets-header-desc">
+            Personal timeline &amp; microblog feed. Short thoughts, quick observations, and photo dumps.
+          </p>
 
-          <!-- <p class="buttons-note">Quick thoughts, short observations, terminal snippets from <code>data/notes.js</code>.</p> -->
-          
+          <!-- Feed Controls: Search + Year Dropdown -->
           <div class="filter-controls-row">
-            <input type="text" id="note-search" class="filter-input" placeholder="Search notes by keyword or #tag...">
-            
+            <input type="text" id="tweet-search" class="filter-input" placeholder="Search tweets by text or #tag...">
             <div class="filter-dropdown-wrapper">
-              <label for="note-year-select" class="filter-label">Year:</label>
-              <select id="note-year-select" class="retro-select">
-                <option value="all">All Years (${notes.length})</option>
-                ${yearsWithNotes.map(yr => `<option value="${yr}">${yr} (${yearCounts[yr]})</option>`).join('')}
+              <label for="tweet-year-select" class="filter-label">Year:</label>
+              <select id="tweet-year-select" class="retro-select">
+                <option value="all">All Years (${allTweets.length})</option>
+                ${yearsWithTweets.map(yr => `<option value="${yr}">${yr} (${yearCounts[yr]})</option>`).join('')}
               </select>
             </div>
           </div>
 
-          <p class="filter-count-line">Showing <span id="notes-count">${notes.length}</span> result(s)</p>
+          <p class="filter-count-line">Showing <span id="tweets-count">${allTweets.length}</span> tweet(s)</p>
 
-          <div class="notes-feed" id="notes-container">
-            ${renderNoteList(notes)}
+          <!-- Timeline Feed -->
+          <div class="tweets-feed" id="tweets-container">
+            ${renderTweetList(allTweets, siteInfo)}
           </div>
 
-          <div id="notes-pager"></div>
+          <div id="tweets-pager"></div>
         </div>
       </div>
     `;
 
-    function updateNotesView() {
-      const filtered = notes.filter(n => {
-        const itemYear = getYear(n);
+    // Feed filtering and pagination
+    function updateTweetsView() {
+      const filtered = allTweets.filter(t => {
+        const itemYear = getYear(t);
         const matchYear = selectedYear === 'all' || itemYear === selectedYear;
-
         const q = searchQuery.toLowerCase().trim();
         const matchSearch = !q ||
-          String(n.content || '').toLowerCase().includes(q) ||
-          (n.tags || []).some(t => String(t || '').toLowerCase().includes(q));
-
+          String(t.content || '').toLowerCase().includes(q) ||
+          (t.tags || []).some(tag => String(tag || '').toLowerCase().includes(q));
         return matchYear && matchSearch;
       });
 
-      const totalPages = Math.max(1, Math.ceil(filtered.length / LIST_PAGE_SIZE));
+      const totalPages = Math.max(1, Math.ceil(filtered.length / TWEETS_PAGE_SIZE));
       if (currentPage > totalPages) currentPage = totalPages;
-      const pageItems = filtered.slice((currentPage - 1) * LIST_PAGE_SIZE, currentPage * LIST_PAGE_SIZE);
+      const pageItems = filtered.slice((currentPage - 1) * TWEETS_PAGE_SIZE, currentPage * TWEETS_PAGE_SIZE);
 
-      const countEl = document.getElementById('notes-count');
-      if (countEl) countEl.textContent = pageRangeText(filtered.length, currentPage);
-      const listEl = document.getElementById('notes-container');
-      if (listEl) listEl.innerHTML = renderNoteList(pageItems);
-      const pagerEl = document.getElementById('notes-pager');
+      const countEl = document.getElementById('tweets-count');
+      if (countEl) countEl.textContent = pageRangeText(filtered.length, currentPage, TWEETS_PAGE_SIZE);
+
+      const feedEl = document.getElementById('tweets-container');
+      if (feedEl) {
+        feedEl.innerHTML = renderTweetList(pageItems, siteInfo);
+        wireTweetCardEvents(feedEl);
+      }
+
+      const pagerEl = document.getElementById('tweets-pager');
       if (pagerEl) {
-        pagerEl.innerHTML = pagerRowHtml(currentPage, totalPages, 'notes-prev', 'notes-next');
-        const prevBtn = document.getElementById('notes-prev');
-        const nextBtn = document.getElementById('notes-next');
-        if (prevBtn) prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; updateNotesView(); } });
-        if (nextBtn) nextBtn.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; updateNotesView(); } });
+        pagerEl.innerHTML = pagerRowHtml(currentPage, totalPages, 'tweets-prev', 'tweets-next');
+        const prevBtn = document.getElementById('tweets-prev');
+        const nextBtn = document.getElementById('tweets-next');
+        if (prevBtn) prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; updateTweetsView(); } });
+        if (nextBtn) nextBtn.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; updateTweetsView(); } });
       }
     }
 
-    const searchInput = document.getElementById('note-search');
+    // Search input
+    const searchInput = document.getElementById('tweet-search');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         searchQuery = e.target.value;
         currentPage = 1;
-        updateNotesView();
+        updateTweetsView();
       });
     }
 
-    const yearSelect = document.getElementById('note-year-select');
+    // Year dropdown
+    const yearSelect = document.getElementById('tweet-year-select');
     if (yearSelect) {
       yearSelect.addEventListener('change', (e) => {
         selectedYear = e.target.value;
         currentPage = 1;
-        updateNotesView();
+        updateTweetsView();
       });
     }
 
-    updateNotesView();
+    // Wire up events on the cards (media lightbox, likes, delete, copy link)
+    function wireTweetCardEvents(feedEl) {
+      // Lightbox click on tweet images
+      feedEl.querySelectorAll('.tweet-media-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const tweetId = item.getAttribute('data-tweet-id');
+          const imgIdx = parseInt(item.getAttribute('data-img-index'), 10) || 0;
+          const tweet = allTweets.find(t => String(t.id) === String(tweetId));
+          if (tweet && tweet.images && tweet.images.length > 0) {
+            openTweetLightbox(tweet.images, imgIdx);
+          }
+        });
+      });
+
+      // Like buttons
+      feedEl.querySelectorAll('.tweet-btn-like').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const tweetId = btn.getAttribute('data-tweet-id');
+          const likeKey = 'meowking_tweet_like_' + tweetId;
+          const isLiked = safeStorage.get(likeKey) === '1';
+          const nextLiked = !isLiked;
+          safeStorage.set(likeKey, nextLiked ? '1' : '0');
+
+          btn.classList.toggle('liked', nextLiked);
+          const countSpan = btn.querySelector('.like-count');
+          const curCount = parseInt(btn.getAttribute('data-base-count'), 10) || 0;
+          const updated = curCount + (nextLiked ? 1 : 0);
+          if (countSpan) countSpan.textContent = updated > 0 ? updated : '';
+        });
+      });
+
+      // Local tweet delete button
+      feedEl.querySelectorAll('.tweet-btn-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const tweetId = btn.getAttribute('data-tweet-id');
+          if (confirm('Delete this local tweet?')) {
+            localTweets = localTweets.filter(t => String(t.id) !== String(tweetId));
+            saveLocalTweets(localTweets);
+            allTweets = getAllTweets();
+            updateTweetsView();
+          }
+        });
+      });
+    }
+
+    updateTweetsView();
   }
 
-  function renderNoteList(notes) {
-    if (notes.length === 0) {
-      return `<p style="color: var(--text-muted); padding: 14px 0;">No notes match your filter or search.</p>`;
-    }
-    return notes.map(note => `
-      <div class="note-item">
-        <div class="note-meta">
-          <span>📅 ${escapeHtml(note.date || '')}</span>
-          <div class="tag-list">
-            ${(note.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join('')}
-          </div>
-        </div>
-        <div class="note-content">${formatInlineMarkdown(note.content)}</div>
+  function renderTweetMediaHtml(images, tweetId) {
+    if (!images || !Array.isArray(images) || images.length === 0) return '';
+    const safeImgs = images.slice(0, 10);
+    const count = safeImgs.length;
+
+    let gridClass = 'grid-1';
+    if (count === 2) gridClass = 'grid-2';
+    else if (count === 3) gridClass = 'grid-3';
+    else if (count === 4) gridClass = 'grid-4';
+    else if (count === 5) gridClass = 'grid-5';
+    else if (count === 6) gridClass = 'grid-6';
+    else if (count === 7) gridClass = 'grid-7';
+    else if (count === 8) gridClass = 'grid-8';
+    else if (count === 9) gridClass = 'grid-9';
+    else if (count >= 10) gridClass = 'grid-10';
+
+    const items = safeImgs.map((src, idx) => `
+      <div class="tweet-media-item" data-tweet-id="${escapeHtml(tweetId)}" data-img-index="${idx}">
+        <img src="${escapeHtml(safeTweetImageSrc(src))}" alt="Tweet photo ${idx + 1}" loading="lazy">
+        ${count > 4 && idx === count - 1 ? `<span class="tweet-media-count-badge">📸 ${count} photos</span>` : ''}
       </div>
     `).join('');
+
+    return `
+      <div class="tweet-media-wrap">
+        <div class="tweet-media-grid ${gridClass}">
+          ${items}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTweetList(tweets, siteInfo) {
+    if (!tweets || tweets.length === 0) {
+      return `<p style="color: var(--text-muted); padding: 18px 0; text-align: center;">No tweets found matching your filter or search.</p>`;
+    }
+
+    const avatarSrc = (siteInfo && siteInfo.avatar) || 'assets/cat.jpg';
+    const siteTitle = (siteInfo && siteInfo.title) || 'meowking';
+
+    return tweets.map(tweet => {
+      const isLiked = safeStorage.get('meowking_tweet_like_' + tweet.id) === '1';
+      const baseLikes = tweet.likes || 0;
+      const displayLikes = baseLikes + (isLiked ? 1 : 0);
+
+      return `
+        <article class="tweet-card" id="tweet-${escapeHtml(tweet.id)}">
+          <header class="tweet-card-header">
+            <div class="tweet-author-wrap">
+              <img src="${escapeHtml(avatarSrc)}" alt="avatar" class="tweet-avatar">
+              <div class="tweet-meta-info">
+                <div class="tweet-author-line">
+                  <span class="tweet-author-name">${escapeHtml(siteTitle)}</span>
+                  <span class="tweet-author-handle">@${escapeHtml(siteTitle)}</span>
+                  ${tweet.isLocal ? `<span class="tweet-badge-local" title="Saved locally in browser">local</span>` : ''}
+                </div>
+                <time class="tweet-date">${escapeHtml(tweet.date || '')}</time>
+              </div>
+            </div>
+
+            ${tweet.isLocal ? `
+              <button type="button" class="tweet-del-btn tweet-btn-delete" data-tweet-id="${escapeHtml(tweet.id)}" title="Delete tweet">[x delete]</button>
+            ` : ''}
+          </header>
+
+          <div class="tweet-content">
+            ${formatInlineMarkdown(tweet.content || '')}
+          </div>
+
+          ${renderTweetMediaHtml(tweet.images, tweet.id)}
+
+          <footer class="tweet-footer">
+            <div class="tweet-actions-left">
+              <button type="button" class="tweet-action-btn tweet-btn-like ${isLiked ? 'liked' : ''}" data-tweet-id="${escapeHtml(tweet.id)}" data-base-count="${baseLikes}" title="Like this tweet">
+                <span class="heart-icon">❤️</span>
+                <span class="like-count">${displayLikes > 0 ? displayLikes : ''}</span>
+              </button>
+            </div>
+
+            <div class="tag-list">
+              ${(tweet.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join('')}
+            </div>
+          </footer>
+        </article>
+      `;
+    }).join('');
+  }
+
+  // Full-screen Tweet Lightbox (Singleton)
+  function openTweetLightbox(images, startIndex) {
+    if (!images || images.length === 0) return;
+    let activeIdx = startIndex >= 0 && startIndex < images.length ? startIndex : 0;
+    const total = images.length;
+
+    let lb = document.getElementById('tweet-lightbox');
+    if (!lb) {
+      lb = document.createElement('div');
+      lb.id = 'tweet-lightbox';
+      lb.className = 'tweet-lightbox';
+      lb.innerHTML = `
+        <div class="tweet-lb-backdrop" data-close></div>
+        <div class="tweet-lb-box" role="dialog" aria-modal="true" aria-label="Tweet image viewer">
+          <div class="tweet-lb-header">
+            <span id="tweet-lb-counter">Photo 1 of 1</span>
+            <button type="button" class="tweet-lb-close" data-close>[× close (Esc)]</button>
+          </div>
+          <div class="tweet-lb-img-wrap">
+            <button type="button" class="tweet-lb-nav tweet-lb-prev" id="tweet-lb-prev" title="Previous (Left arrow)">&larr;</button>
+            <img id="tweet-lb-image" class="tweet-lb-img" src="" alt="Tweet photo full view">
+            <button type="button" class="tweet-lb-nav tweet-lb-next" id="tweet-lb-next" title="Next (Right arrow)">&rarr;</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(lb);
+    }
+
+    lb.style.display = 'flex';
+    document.body.classList.add('tweet-lb-open');
+
+    function sync() {
+      const imgEl = document.getElementById('tweet-lb-image');
+      const counterEl = document.getElementById('tweet-lb-counter');
+      const prevBtn = document.getElementById('tweet-lb-prev');
+      const nextBtn = document.getElementById('tweet-lb-next');
+
+      if (imgEl) imgEl.src = safeTweetImageSrc(images[activeIdx]);
+      if (counterEl) counterEl.textContent = `Photo ${activeIdx + 1} of ${total}`;
+
+      if (prevBtn) prevBtn.style.display = total > 1 ? 'flex' : 'none';
+      if (nextBtn) nextBtn.style.display = total > 1 ? 'flex' : 'none';
+    }
+
+    function onKey(e) {
+      if (e.key === 'Escape') {
+        close();
+      } else if (e.key === 'ArrowLeft' && total > 1) {
+        e.preventDefault();
+        activeIdx = (activeIdx - 1 + total) % total;
+        sync();
+      } else if (e.key === 'ArrowRight' && total > 1) {
+        e.preventDefault();
+        activeIdx = (activeIdx + 1) % total;
+        sync();
+      }
+    }
+
+    function close() {
+      lb.style.display = 'none';
+      document.body.classList.remove('tweet-lb-open');
+      if (lb._keyHandler) {
+        document.removeEventListener('keydown', lb._keyHandler);
+        lb._keyHandler = null;
+      }
+      tweetLightboxCleanup = null;
+    }
+
+    tweetLightboxCleanup = close;
+
+    lb.querySelectorAll('[data-close]').forEach(el => {
+      el.onclick = close;
+    });
+
+    const prevBtn = document.getElementById('tweet-lb-prev');
+    const nextBtn = document.getElementById('tweet-lb-next');
+    if (prevBtn) {
+      prevBtn.onclick = (e) => {
+        e.stopPropagation();
+        activeIdx = (activeIdx - 1 + total) % total;
+        sync();
+      };
+    }
+    if (nextBtn) {
+      nextBtn.onclick = (e) => {
+        e.stopPropagation();
+        activeIdx = (activeIdx + 1) % total;
+        sync();
+      };
+    }
+
+    // Guard against stacking duplicate keydown listeners when the viewer is
+    // re-opened on the same element (singleton reuse).
+    if (lb._keyHandler) document.removeEventListener('keydown', lb._keyHandler);
+    lb._keyHandler = onKey;
+    document.addEventListener('keydown', onKey);
+    sync();
   }
 
   // -----------------------------------------------------------

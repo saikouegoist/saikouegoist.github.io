@@ -1,6 +1,6 @@
-﻿# MEOWKING - Content & Archive Guide
+# MEOWKING - Content & Archive Guide
 
-A complete guide to managing your articles, notes, projects, links, and about information across the separated data architecture.
+A complete guide to managing your articles, projects, links, and about information across the separated data architecture.
 
 ---
 
@@ -17,7 +17,6 @@ meowking/
 │   └── retro-web-aesthetics.md
 ├── data/                    <-- Metadata & site collections
 │   ├── articles.js          <-- Article registry (links to articles/*.md)
-│   ├── notes.js             <-- Quick thoughts & terminal snippets
 │   ├── projects.js          <-- Portfolio projects & tech tags
 │   ├── links.js             <-- Curated web directory & shrines
 │   ├── about.js             <-- Biography, interests & hardware setup
@@ -30,9 +29,9 @@ meowking/
 
 ## 0. Visual Content Studio (Easiest)
 
-Open `editor.html` — double-click it in this folder, or visit it on your live site. It gives you guided forms for **articles, notes, and projects**: auto-slugs, auto read-time, live preview using the site's real renderer, and validation (required fields, real calendar dates, duplicate IDs). Opening it can never alter the published site; it only produces download files until you push.
+Open `editor.html` — double-click it in this folder, or visit it on your live site. It gives you guided forms for **articles, projects, and tweets**: auto-slugs, auto read-time, live preview using the site's real renderer, and validation (required fields, real calendar dates, duplicate IDs). Opening it can never alter the published site; it only produces download files until you push.
 
-Flow per item: **fill the form → Save → Download** the generated file(s) → **replace** your local copy (`data/articles.js`, `data/notes.js`, `data/projects.js`, plus `articles/your-slug.md` for articles) → refresh `index.html` → push to publish. For articles, download the `.md` even if you saved first — the button falls back to your staged copy. The sections below document the manual alternative and the exact file formats.
+Flow per item: **fill the form → Save → Download** the generated file(s) → **replace** your local copy (`data/articles.js`, `data/projects.js`, plus `articles/your-slug.md` for articles) → refresh `index.html` → push to publish. For articles, download the `.md` even if you saved first — the button falls back to your staged copy. The sections below document the manual alternative and the exact file formats.
 
 No login or password: the studio runs locally and never sends anything anywhere. Article bodies live only in `articles/*.md`; `data/articles.js` holds metadata + file path.
 
@@ -89,25 +88,33 @@ Simply delete the entry from `data/articles.js` (and optionally delete its file 
 
 
 
-## 2. How to Add & Remove Notes
+## 2.5. How to Add Tweets & Microblog Posts (With Images)
 
-Notes are short observations, tips, quotes, or terminal one-liners shown on `#/notes`.
+Tweets are shown on `#/tweets` with Twitter-style microblog cards, interactive likes, search & tag filtering, and a responsive grid supporting **up to 10 images** per tweet.
 
-### How to Add a Note
-Open `data/notes.js` and paste this block at the top of `window.SITE_NOTES`:
+### Option A: From the Browser UI (Easiest)
+1. Go to `#/tweets` on your site.
+2. Type in the composer box, click **📷 Attach Images** (select up to 10 photos), and click **🐱 Post Tweet**.
+3. It posts instantly and saves to your browser!
+4. Click the **ℹ️ How to save permanently** accordion and click **📋 Copy Code** to paste it into `data/tweets.js` whenever you want it permanent in your Git repository.
+
+### Option B: Directly in `data/tweets.js`
+1. Save your image files in `tweets/images/` (e.g. `tweets/images/photo1.jpg`).
+2. Open `data/tweets.js` and paste at the top of `window.SITE_TWEETS`:
 
 ```javascript
   {
-    id: "note-006",
-    date: "2026-09-15",                    // Format: YYYY-MM-DD
-    year: "2026",                          // Optional: Auto-detected from date
-    tags: ["linux", "cli"],
-    content: "Tip: Use `grep -rn 'search_term' .` to find text recursively in current folder."
+    id: "tweet-004",
+    date: "2026-10-21",
+    content: "Check out my new setup and photos! Supports **bold**, *italic*, \`code\`, and [links](https://...).",
+    images: [
+      "tweets/images/photo1.jpg",
+      "tweets/images/photo2.jpg",
+      "tweets/images/photo3.jpg"
+    ],
+    tags: ["tech", "photos"]
   },
 ```
-
-### How to Remove a Note
-Simply delete or comment out the block from `data/notes.js`.
 
 ---
 
@@ -217,7 +224,6 @@ Open `data/about.js`:
 | **Add a gallery image** | Drop `.png`/`.jpg`/`.jpeg`/`.gif`/`.webp` into `images/` and push (manifest auto-updates, never hand-edit `data/gallery.js`) |
 | **Add a song** | Drop `.mp3` into `assets/audio/anime/`, `assets/audio/classic/` or `assets/audio/others/` (or flat as `Anime_Song.mp3` / `Classic_Song.mp3` / `Others_Song.mp3`) and push (manifest auto-updates, never hand-edit `data/music.js`; use `Artist_-_Title.mp3` to set artist; polish names in `data/music-meta.json`) |
 | **Delete an article** | Remove from `data/articles.js` |
-| **Add a quick thought** | Add to `data/notes.js` |
 | **Add a project** | Add to `data/projects.js` |
 | **Add a bookmark / link** | Add to `data/links.js` |
 | **Edit bio & computer setup** | Edit `data/about.js` |
