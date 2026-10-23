@@ -6,6 +6,13 @@
 
 window.SITE_TWEETS = [
   {
+    id: "tweet-1792778656642",
+    date: "2026-10-23",
+    content: "DownFall chapter 2",
+    images: ["tweets/images/Screenshot 2026-10-21 222133.png", "tweets/images/Screenshot 2026-10-21 222154.png", "tweets/images/Screenshot 2026-10-21 222205.png", "tweets/images/Screenshot 2026-10-21 222223.png"],
+    tags: ["manga", "mangaka", "Seinen"]
+  },
+  {
     id: "tweet-1792609809584",
     date: "2026-10-22",
     content: "DownFall chapter 1",
