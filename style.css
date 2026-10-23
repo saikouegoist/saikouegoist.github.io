@@ -546,6 +546,34 @@ body {
   letter-spacing: -0.2px;
 }
 
+.box-header a:not(.temple-head-btn),
+.box-header-action,
+.box-header .back-btn {
+  color: #ffffff !important;
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: normal;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  margin-bottom: 0;
+  transition: all 0.15s ease;
+}
+
+.box-header a:not(.temple-head-btn):hover,
+.box-header-action:hover,
+.box-header .back-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+}
+
 .box-content {
   padding: 12px 14px;
   font-size: 1rem;
@@ -3521,17 +3549,17 @@ body.gallery-lb-open {
 }
 
 /* ==========================================================================
-   TWEETS / MICROBLOG FEED & COMPOSER
+   NOTES / MICROBLOG FEED & COMPOSER
    ========================================================================== */
-.tweets-header-desc {
+.notes-header-desc {
   color: var(--text-muted);
   font-size: 0.9rem;
   margin-bottom: 14px;
   line-height: 1.45;
 }
 
-/* --- Tweet Composer Box --- */
-.tweet-composer {
+/* --- Note Composer Box --- */
+.note-composer {
   background: var(--bg-card);
   border: 1px dashed var(--border-color);
   border-radius: 4px;
@@ -3540,18 +3568,18 @@ body.gallery-lb-open {
   transition: border-color 0.2s ease;
 }
 
-.tweet-composer:focus-within {
+.note-composer:focus-within {
   border-color: var(--link-color);
 }
 
-.tweet-composer-head {
+.note-composer-head {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
 }
 
-.tweet-avatar-sm {
+.note-avatar-sm {
   width: 32px;
   height: 32px;
   border-radius: 4px;
@@ -3560,21 +3588,21 @@ body.gallery-lb-open {
   background: var(--bg-header);
 }
 
-.tweet-composer-user {
+.note-composer-user {
   font-family: var(--font-ui);
   font-size: 0.88rem;
   font-weight: bold;
   color: var(--text-main);
 }
 
-.tweet-composer-handle {
+.note-composer-handle {
   font-weight: normal;
   color: var(--text-muted);
   margin-left: 4px;
   font-size: 0.8rem;
 }
 
-.tweet-textarea {
+.note-textarea {
   width: 100%;
   min-height: 75px;
   max-height: 240px;
@@ -3591,13 +3619,13 @@ body.gallery-lb-open {
   transition: border-color 0.15s ease;
 }
 
-.tweet-textarea:focus {
+.note-textarea:focus {
   outline: none;
   border-color: var(--link-color);
 }
 
 /* Image Attachment Previews in Composer */
-.tweet-compose-previews {
+.note-compose-previews {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -3608,7 +3636,7 @@ body.gallery-lb-open {
   border: 1px solid var(--border-color);
 }
 
-.tweet-compose-thumb {
+.note-compose-thumb {
   position: relative;
   width: 68px;
   height: 68px;
@@ -3618,14 +3646,14 @@ body.gallery-lb-open {
   background: #000;
 }
 
-.tweet-compose-thumb img {
+.note-compose-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.tweet-compose-remove-img {
+.note-compose-remove-img {
   position: absolute;
   top: 2px;
   right: 2px;
@@ -3645,11 +3673,11 @@ body.gallery-lb-open {
   transition: background 0.15s ease;
 }
 
-.tweet-compose-remove-img:hover {
+.note-compose-remove-img:hover {
   background: #c53030;
 }
 
-.tweet-composer-tools {
+.note-composer-tools {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -3660,14 +3688,14 @@ body.gallery-lb-open {
   border-top: 1px dotted var(--dotted-border);
 }
 
-.tweet-composer-left {
+.note-composer-left {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.tweet-attach-btn {
+.note-attach-btn {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -3682,12 +3710,12 @@ body.gallery-lb-open {
   transition: all 0.15s ease;
 }
 
-.tweet-attach-btn:hover {
+.note-attach-btn:hover {
   border-color: var(--link-color);
   color: var(--link-color);
 }
 
-.tweet-tags-field {
+.note-tags-field {
   padding: 5px 8px;
   background: var(--code-bg);
   border: 1px solid var(--border-color);
@@ -3698,24 +3726,24 @@ body.gallery-lb-open {
   width: 140px;
 }
 
-.tweet-tags-field:focus {
+.note-tags-field:focus {
   outline: none;
   border-color: var(--link-color);
 }
 
-.tweet-composer-right {
+.note-composer-right {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.tweet-char-count {
+.note-char-count {
   font-size: 0.78rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
 
-.tweet-submit-btn {
+.note-submit-btn {
   padding: 6px 14px;
   background: var(--bg-header);
   color: var(--text-header);
@@ -3731,17 +3759,17 @@ body.gallery-lb-open {
   transition: filter 0.15s ease, transform 0.1s ease;
 }
 
-.tweet-submit-btn:hover {
+.note-submit-btn:hover {
   filter: brightness(1.2);
   transform: translateY(-1px);
 }
 
-.tweet-submit-btn:active {
+.note-submit-btn:active {
   transform: translateY(0);
 }
 
 /* Permanent Export Accordion */
-.tweet-export-box {
+.note-export-box {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid var(--dotted-border);
   border-radius: 4px;
@@ -3751,26 +3779,26 @@ body.gallery-lb-open {
   color: var(--text-muted);
 }
 
-.tweet-export-box summary {
+.note-export-box summary {
   cursor: pointer;
   font-weight: bold;
   color: var(--link-color);
   user-select: none;
 }
 
-.tweet-export-content {
+.note-export-content {
   margin-top: 8px;
   line-height: 1.5;
 }
 
-.tweet-export-btns {
+.note-export-btns {
   display: flex;
   gap: 8px;
   margin-top: 8px;
   flex-wrap: wrap;
 }
 
-.tweet-mini-btn {
+.note-mini-btn {
   padding: 4px 8px;
   background: var(--code-bg);
   border: 1px solid var(--border-color);
@@ -3780,13 +3808,13 @@ body.gallery-lb-open {
   cursor: pointer;
 }
 
-.tweet-mini-btn:hover {
+.note-mini-btn:hover {
   border-color: var(--link-color);
   color: var(--link-color);
 }
 
-/* --- Tweet Feed Grid (3 columns on desktop, like a tweet wall) --- */
-.tweets-feed {
+/* --- Note Feed Grid (3 columns on desktop, like a note wall) --- */
+.notes-feed {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
@@ -3795,12 +3823,12 @@ body.gallery-lb-open {
 
 /* Inside the grid, the per-card bottom margin (used when stacked) is
    replaced by the grid gap. */
-.tweets-feed .tweet-card {
+.notes-feed .note-card {
   margin-bottom: 0;
 }
 
-/* --- Tweet Card UI --- */
-.tweet-card {
+/* --- Note Card UI --- */
+.note-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 4px;
@@ -3810,11 +3838,11 @@ body.gallery-lb-open {
   transition: border-color 0.15s ease;
 }
 
-.tweet-card:hover {
+.note-card:hover {
   border-color: var(--link-color);
 }
 
-.tweet-card-header {
+.note-card-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -3822,13 +3850,13 @@ body.gallery-lb-open {
   margin-bottom: 10px;
 }
 
-.tweet-author-wrap {
+.note-author-wrap {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.tweet-avatar {
+.note-avatar {
   width: 38px;
   height: 38px;
   border-radius: 4px;
@@ -3838,36 +3866,36 @@ body.gallery-lb-open {
   flex-shrink: 0;
 }
 
-.tweet-meta-info {
+.note-meta-info {
   display: flex;
   flex-direction: column;
 }
 
-.tweet-author-line {
+.note-author-line {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.tweet-author-name {
+.note-author-name {
   font-family: var(--font-ui);
   font-weight: bold;
   font-size: 0.92rem;
   color: var(--text-main);
 }
 
-.tweet-author-handle {
+.note-author-handle {
   font-size: 0.8rem;
   color: var(--text-muted);
 }
 
-.tweet-date {
+.note-date {
   font-size: 0.78rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
 
-.tweet-badge-local {
+.note-badge-local {
   font-size: 0.7rem;
   padding: 1px 5px;
   background: #2a3c24;
@@ -3877,7 +3905,7 @@ body.gallery-lb-open {
   margin-left: 6px;
 }
 
-.tweet-content {
+.note-content {
   font-family: var(--font-ui);
   font-size: 0.95rem;
   line-height: 1.5;
@@ -3886,16 +3914,16 @@ body.gallery-lb-open {
   margin-bottom: 10px;
 }
 
-.tweet-content p {
+.note-content p {
   margin: 0 0 6px 0;
 }
 
-.tweet-content a {
+.note-content a {
   color: var(--link-color);
   text-decoration: underline;
 }
 
-.tweet-content code {
+.note-content code {
   background: var(--code-bg);
   color: var(--code-text);
   padding: 1px 4px;
@@ -3907,7 +3935,7 @@ body.gallery-lb-open {
 /* ==========================================================================
    TWITTER-STYLE IMAGE GRID (Max 10 Images)
    ========================================================================== */
-.tweet-media-wrap {
+.note-media-wrap {
   margin: 10px 0;
   border-radius: 6px;
   overflow: hidden;
@@ -3917,18 +3945,18 @@ body.gallery-lb-open {
 
 /* --- Twitter-Style Multi-Image Layouts (1 to 10 Images) --- */
 /* 1 Image: Large display */
-.tweet-media-grid.grid-1 {
+.note-media-grid.grid-1 {
   display: block;
 }
 
-.tweet-media-grid.grid-1 .tweet-media-item {
+.note-media-grid.grid-1 .note-media-item {
   width: 100%;
   max-height: 460px;
   aspect-ratio: 16 / 9;
 }
 
 /* 2 Images: 2 columns (1st left, 2nd right) */
-.tweet-media-grid.grid-2 {
+.note-media-grid.grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 3px;
@@ -3936,7 +3964,7 @@ body.gallery-lb-open {
 }
 
 /* 3 Images: 1st image large left (spans 2 rows), 2 stacked right */
-.tweet-media-grid.grid-3 {
+.note-media-grid.grid-3 {
   display: grid;
   grid-template-columns: 1.25fr 1fr;
   grid-template-rows: 1fr 1fr;
@@ -3944,12 +3972,12 @@ body.gallery-lb-open {
   height: 300px;
 }
 
-.tweet-media-grid.grid-3 .tweet-media-item:first-child {
+.note-media-grid.grid-3 .note-media-item:first-child {
   grid-row: span 2;
 }
 
 /* 4 Images: 2x2 square grid (1st top-left, 2nd top-right, 3rd bot-left, 4th bot-right) */
-.tweet-media-grid.grid-4 {
+.note-media-grid.grid-4 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
@@ -3958,7 +3986,7 @@ body.gallery-lb-open {
 }
 
 /* 5 Images: 1st image large left, 4 images in 2x2 on right */
-.tweet-media-grid.grid-5 {
+.note-media-grid.grid-5 {
   display: grid;
   grid-template-columns: 1.25fr 1fr 1fr;
   grid-template-rows: 1fr 1fr;
@@ -3966,13 +3994,13 @@ body.gallery-lb-open {
   height: 320px;
 }
 
-.tweet-media-grid.grid-5 .tweet-media-item:first-child {
+.note-media-grid.grid-5 .note-media-item:first-child {
   grid-row: span 2;
   grid-column: 1;
 }
 
 /* 6 Images: 2 rows of 3 columns (user's drawing: 3 columns, 2 rows) */
-.tweet-media-grid.grid-6 {
+.note-media-grid.grid-6 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: 1fr 1fr;
@@ -3981,8 +4009,8 @@ body.gallery-lb-open {
 }
 
 /* 7 & 8 Images: 4 columns, 2 rows */
-.tweet-media-grid.grid-7,
-.tweet-media-grid.grid-8 {
+.note-media-grid.grid-7,
+.note-media-grid.grid-8 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: 1fr 1fr;
@@ -3991,7 +4019,7 @@ body.gallery-lb-open {
 }
 
 /* 9 Images: 3x3 square grid */
-.tweet-media-grid.grid-9 {
+.note-media-grid.grid-9 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
@@ -4000,7 +4028,7 @@ body.gallery-lb-open {
 }
 
 /* 10 Images: 5 columns, 2 rows */
-.tweet-media-grid.grid-10 {
+.note-media-grid.grid-10 {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: 1fr 1fr;
@@ -4008,7 +4036,7 @@ body.gallery-lb-open {
   height: 320px;
 }
 
-.tweet-media-grid.grid-multi {
+.note-media-grid.grid-multi {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 3px;
@@ -4016,7 +4044,7 @@ body.gallery-lb-open {
   overflow: hidden;
 }
 
-.tweet-media-item {
+.note-media-item {
   position: relative;
   overflow: hidden;
   cursor: zoom-in;
@@ -4024,7 +4052,7 @@ body.gallery-lb-open {
   height: 100%;
 }
 
-.tweet-media-item img {
+.note-media-item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -4032,12 +4060,12 @@ body.gallery-lb-open {
   transition: transform 0.25s ease, filter 0.25s ease;
 }
 
-.tweet-media-item:hover img {
+.note-media-item:hover img {
   transform: scale(1.03);
   filter: brightness(1.08);
 }
 
-.tweet-media-count-badge {
+.note-media-count-badge {
   position: absolute;
   bottom: 8px;
   right: 8px;
@@ -4051,45 +4079,45 @@ body.gallery-lb-open {
   pointer-events: none;
 }
 
-/* Tweets Viewing Mode: hide side panels and center timeline */
-body.tweets-viewing-mode .column-left,
-body.tweets-viewing-mode .column-right {
+/* Notes Viewing Mode: hide side panels and center timeline */
+body.notes-viewing-mode .column-left,
+body.notes-viewing-mode .column-right {
   display: none !important;
 }
 
-body.tweets-viewing-mode .main-grid {
+body.notes-viewing-mode .main-grid {
   grid-template-columns: 1fr !important;
 }
 
-body.tweets-viewing-mode .column-main {
+body.notes-viewing-mode .column-main {
   max-width: min(1080px, 100%);
   margin: 0 auto;
   width: 100%;
 }
 
-/* Tweets feed drops to 2 columns on tablets and 1 on phones so cards
+/* Notes feed drops to 2 columns on tablets and 1 on phones so cards
    stay readable. */
 @media (max-width: 900px) {
-  .tweets-feed {
+  .notes-feed {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 640px) {
-  .tweets-feed {
+  .notes-feed {
     grid-template-columns: 1fr;
   }
 }
 
-/* Tweet Image Editor in Content Studio (editor.html) */
-.tweet-ed-img-list {
+/* Note Image Editor in Content Studio (editor.html) */
+.note-ed-img-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-top: 10px;
 }
 
-.tweet-ed-img-row {
+.note-ed-img-row {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -4099,7 +4127,7 @@ body.tweets-viewing-mode .column-main {
   border-radius: 4px;
 }
 
-.tweet-ed-img-badge {
+.note-ed-img-badge {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   background: var(--bg-header);
@@ -4109,12 +4137,12 @@ body.tweets-viewing-mode .column-main {
   white-space: nowrap;
 }
 
-.tweet-ed-img-badge.primary {
+.note-ed-img-badge.primary {
   background: #2563eb;
   font-weight: bold;
 }
 
-.tweet-ed-thumb {
+.note-ed-thumb {
   width: 44px;
   height: 44px;
   object-fit: cover;
@@ -4124,7 +4152,7 @@ body.tweets-viewing-mode .column-main {
   background: #000;
 }
 
-.tweet-ed-path-input {
+.note-ed-path-input {
   flex: 1;
   font-family: var(--font-mono);
   font-size: 0.85rem;
@@ -4135,7 +4163,7 @@ body.tweets-viewing-mode .column-main {
   border-radius: 3px;
 }
 
-.tweet-ed-btn-sm {
+.note-ed-btn-sm {
   padding: 4px 7px;
   background: transparent;
   border: 1px solid var(--border-color);
@@ -4145,23 +4173,23 @@ body.tweets-viewing-mode .column-main {
   font-size: 0.78rem;
 }
 
-.tweet-ed-btn-sm:hover {
+.note-ed-btn-sm:hover {
   color: var(--text-main);
   border-color: var(--link-color);
 }
 
-.tweet-ed-btn-del {
+.note-ed-btn-del {
   color: #f87171;
   border-color: #7f1d1d;
 }
 
-.tweet-ed-btn-del:hover {
+.note-ed-btn-del:hover {
   background: rgba(239, 68, 68, 0.15);
   color: #fca5a5;
 }
 
-/* --- Tweet Footer & Actions --- */
-.tweet-footer {
+/* --- Note Footer & Actions --- */
+.note-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4172,13 +4200,13 @@ body.tweets-viewing-mode .column-main {
   border-top: 1px dotted var(--dotted-border);
 }
 
-.tweet-actions-left {
+.note-actions-left {
   display: flex;
   align-items: center;
   gap: 14px;
 }
 
-.tweet-action-btn {
+.note-action-btn {
   background: none;
   border: none;
   color: var(--text-muted);
@@ -4193,16 +4221,16 @@ body.tweets-viewing-mode .column-main {
   transition: all 0.15s ease;
 }
 
-.tweet-action-btn:hover {
+.note-action-btn:hover {
   color: var(--link-color);
   background: rgba(123, 132, 255, 0.1);
 }
 
-.tweet-action-btn.liked {
+.note-action-btn.liked {
   color: #f87171;
 }
 
-.tweet-action-btn.liked .heart-icon {
+.note-action-btn.liked .heart-icon {
   animation: heartPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -4212,20 +4240,20 @@ body.tweets-viewing-mode .column-main {
   100% { transform: scale(1); }
 }
 
-.tweet-del-btn {
+.note-del-btn {
   color: #ef4444;
   font-size: 0.78rem;
 }
 
-.tweet-del-btn:hover {
+.note-del-btn:hover {
   color: #fca5a5;
   background: rgba(239, 68, 68, 0.15);
 }
 
 /* ==========================================================================
-   TWEET LIGHTBOX VIEWER
+   NOTE LIGHTBOX VIEWER
    ========================================================================== */
-.tweet-lightbox {
+.note-lightbox {
   position: fixed;
   inset: 0;
   z-index: 10000;
@@ -4234,14 +4262,14 @@ body.tweets-viewing-mode .column-main {
   justify-content: center;
 }
 
-.tweet-lb-backdrop {
+.note-lb-backdrop {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.88);
   backdrop-filter: blur(4px);
 }
 
-.tweet-lb-box {
+.note-lb-box {
   position: relative;
   max-width: 92vw;
   max-height: 92vh;
@@ -4251,7 +4279,7 @@ body.tweets-viewing-mode .column-main {
   z-index: 1;
 }
 
-.tweet-lb-header {
+.note-lb-header {
   width: 100%;
   display: flex;
   align-items: center;
@@ -4262,7 +4290,7 @@ body.tweets-viewing-mode .column-main {
   font-size: 0.85rem;
 }
 
-.tweet-lb-img-wrap {
+.note-lb-img-wrap {
   position: relative;
   max-width: 90vw;
   max-height: 80vh;
@@ -4271,7 +4299,7 @@ body.tweets-viewing-mode .column-main {
   justify-content: center;
 }
 
-.tweet-lb-img {
+.note-lb-img {
   max-width: 100%;
   max-height: 80vh;
   object-fit: contain;
@@ -4280,7 +4308,7 @@ body.tweets-viewing-mode .column-main {
   border: 1px solid #333;
 }
 
-.tweet-lb-nav {
+.note-lb-nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -4298,15 +4326,15 @@ body.tweets-viewing-mode .column-main {
   transition: all 0.15s ease;
 }
 
-.tweet-lb-nav:hover {
+.note-lb-nav:hover {
   background: var(--bg-header);
   border-color: #fff;
 }
 
-.tweet-lb-prev { left: -45px; }
-.tweet-lb-next { right: -45px; }
+.note-lb-prev { left: -45px; }
+.note-lb-next { right: -45px; }
 
-.tweet-lb-close {
+.note-lb-close {
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid #666;
   color: #fff;
@@ -4317,21 +4345,180 @@ body.tweets-viewing-mode .column-main {
   font-size: 0.8rem;
 }
 
-.tweet-lb-close:hover {
+.note-lb-close:hover {
   background: #c53030;
   border-color: #fff;
 }
 
 @media (max-width: 640px) {
-  .tweet-media-grid.grid-1 .tweet-media-item {
+  .note-media-grid.grid-1 .note-media-item {
     aspect-ratio: 4 / 3;
     max-height: 300px;
   }
-  .tweet-media-grid.grid-2,
-  .tweet-media-grid.grid-3,
-  .tweet-media-grid.grid-4 {
+  .note-media-grid.grid-2,
+  .note-media-grid.grid-3,
+  .note-media-grid.grid-4 {
     height: 210px;
   }
-  .tweet-lb-prev { left: 4px; }
-  .tweet-lb-next { right: 4px; }
+  .note-lb-prev { left: 4px; }
+  .note-lb-next { right: 4px; }
+}
+
+/* ==========================================================================
+   FULL-SCREEN NOTE READER
+   Clicking a note (or its "open" button) opens it here so long text stays
+   comfortable to read. Sits below the image lightbox (z 10000) so stacked
+   zooming works.
+   ========================================================================== */
+.note-card {
+  cursor: pointer;
+}
+
+body.note-reader-open {
+  overflow: hidden;
+}
+
+.note-reader {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.note-reader-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(4px);
+}
+
+.note-reader-box {
+  position: relative;
+  z-index: 1;
+  width: min(860px, 100%);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+
+.note-reader-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--bg-header);
+  color: #fff;
+  border-bottom: 1px solid var(--border-color);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.note-reader-label {
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.note-reader-close {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 3px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.note-reader-close:hover {
+  background: #c53030;
+  border-color: #fff;
+}
+
+.note-reader-scroll {
+  overflow-y: auto;
+  padding: 22px 26px 28px;
+}
+
+.note-reader-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.note-reader-content.note-content {
+  font-size: 1.12rem;
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.note-reader-content.note-content p {
+  margin: 0 0 12px 0;
+}
+
+.note-reader-images {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.note-reader-img-item {
+  cursor: zoom-in;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+  background: #000;
+}
+
+.note-reader-img-item:hover {
+  border-color: var(--link-color);
+}
+
+.note-reader-img-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+.note-reader-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px dotted var(--dotted-border);
+}
+
+@media (max-width: 640px) {
+  .note-reader {
+    padding: 0;
+    align-items: stretch;
+  }
+  .note-reader-box {
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  .note-reader-scroll {
+    padding: 16px;
+  }
+  .note-reader-content.note-content {
+    font-size: 1.05rem;
+  }
 }

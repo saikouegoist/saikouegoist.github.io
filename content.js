@@ -27,5 +27,5 @@ window.SITE_CONTENT = {
   get guestbook() { return window.SITE_GUESTBOOK || []; },
   get gallery() { return window.SITE_GALLERY || []; },
   get music() { return window.SITE_MUSIC || {}; },
-  get tweets() { return window.SITE_TWEETS || []; }
+  get notes() { return window.SITE_NOTES || []; }
 };

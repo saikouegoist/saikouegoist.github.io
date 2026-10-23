@@ -100,7 +100,7 @@ You **never** need to touch `index.html` or `style.css` to manage your content. 
 
 ### Visual Content Studio (recommended)
 
-Open [editor.html](editor.html) — your local writing desk (works offline, makes zero network requests). It offers guided forms for **articles, projects, and tweets** with live preview, slug/read-time automation, and validation, then lets you **download** the updated `data/*.js` (and `articles/*.md`) to replace your local copies. The studio ships with the site, but merely opening it changes nothing: it only generates download files, and publishing still requires pushing to your repo.
+Open [editor.html](editor.html) — your local writing desk (works offline, makes zero network requests). It offers guided forms for **articles, projects, and notes** with live preview, slug/read-time automation, and validation, then lets you **download** the updated `data/*.js` (and `articles/*.md`) to replace your local copies. The studio ships with the site, but merely opening it changes nothing: it only generates download files, and publishing still requires pushing to your repo.
 
 `editor.html` is git-ignored and CI-guarded so it can never be deployed — strangers can't reach it, and even if they could, a static page cannot change your published site (only pushing to your repo can).
 

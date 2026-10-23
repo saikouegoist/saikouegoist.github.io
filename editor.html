@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>meowking content studio</title>
-  <!-- Content studio: writing tool for articles, projects and tweets.
+  <!-- Content studio: writing tool for articles, projects and notes.
        Safe to deploy: it makes zero network requests and can only
        generate download files — publishing always requires a repo push. -->
   <link rel="stylesheet" href="style.css">
@@ -99,7 +99,7 @@
       <div class="ed-tabs" role="tablist">
         <button type="button" class="ed-tab active" id="tab-articles" data-tab="articles">articles</button>
         <button type="button" class="ed-tab" id="tab-projects" data-tab="projects">projects</button>
-        <button type="button" class="ed-tab" id="tab-tweets" data-tab="tweets">tweets</button>
+        <button type="button" class="ed-tab" id="tab-notes" data-tab="notes">notes</button>
       </div>
 
       <!-- ARTICLES -->
@@ -276,35 +276,35 @@
       </div>
       </div>
 
-      <!-- TWEETS -->
-      <div id="tabwrap-tweets" hidden>
+      <!-- NOTES -->
+      <div id="tabwrap-notes" hidden>
       <div class="box" style="margin-bottom:14px;">
-        <div class="box-header"><span>how to add / remove tweets</span></div>
+        <div class="box-header"><span>how to add / remove notes</span></div>
         <div class="box-content">
           <ol class="ed-steps">
-            <li>Compose your tweet and attach up to <strong>10 images</strong>. Choosing files records them as <code>tweets/images/&lt;filename&gt;</code> (paths, never embedded) — the <strong>1st image</strong> becomes the primary photo, like Twitter.</li>
-            <li>Press <strong>save tweet</strong> — it stages it and immediately updates your preview and local timeline.</li>
-            <li>Copy the image file(s) shown in the <em>“copy these files”</em> note into the <code>tweets/images/</code> folder, then press <strong>download data/tweets.js</strong> (or <strong>copy code</strong>) and overwrite <code>data/tweets.js</code>.</li>
-            <li>Open <a href="index.html#/tweets" target="_blank"><code>index.html#/tweets</code></a> to view your distraction-free timeline without sidebars!</li>
+            <li>Compose your note and attach up to <strong>10 images</strong>. Choosing files records them as <code>notes/images/&lt;filename&gt;</code> (paths, never embedded) — the <strong>1st image</strong> becomes the primary photo, like Twitter.</li>
+            <li>Press <strong>save note</strong> — it stages it and immediately updates your preview and local timeline.</li>
+            <li>Copy the image file(s) shown in the <em>“copy these files”</em> note into the <code>notes/images/</code> folder, then press <strong>download data/notes.js</strong> (or <strong>copy code</strong>) and overwrite <code>data/notes.js</code>.</li>
+            <li>Open <a href="index.html#/notes" target="_blank"><code>index.html#/notes</code></a> to view your distraction-free timeline without sidebars!</li>
           </ol>
         </div>
       </div>
-      <div id="panel-tweets" class="box">
-        <div class="box-header"><span id="tweet-form-title">new tweet</span></div>
+      <div id="panel-notes" class="box">
+        <div class="box-header"><span id="note-form-title">new note</span></div>
         <div class="box-content">
           <div class="ed-form">
             <div class="ed-field">
-              <label class="ed-label" for="tweet-content">content * (supports markdown: **bold**, *italic*, \`code\`, and [links](url))</label>
-              <textarea id="tweet-content" class="ed-textarea ed-textarea-short" placeholder="What's on your mind?"></textarea>
+              <label class="ed-label" for="note-content">content * (supports markdown: **bold**, *italic*, \`code\`, and [links](url))</label>
+              <textarea id="note-content" class="ed-textarea ed-textarea-short" placeholder="What's on your mind?"></textarea>
             </div>
             <div class="ed-row">
               <div class="ed-field">
-                <label class="ed-label" for="tweet-tags">tags (comma separated)</label>
-                <input type="text" id="tweet-tags" class="ed-input" placeholder="photos, thought, dev" maxlength="200">
+                <label class="ed-label" for="note-tags">tags (comma separated)</label>
+                <input type="text" id="note-tags" class="ed-input" placeholder="photos, thought, dev" maxlength="200">
               </div>
               <div class="ed-field">
-                <label class="ed-label" for="tweet-date">date * (YYYY-MM-DD)</label>
-                <input type="text" id="tweet-date" class="ed-input" maxlength="10">
+                <label class="ed-label" for="note-date">date * (YYYY-MM-DD)</label>
+                <input type="text" id="note-date" class="ed-input" maxlength="10">
               </div>
             </div>
 
@@ -312,48 +312,48 @@
             <div class="ed-field" style="margin-top: 10px;">
               <label class="ed-label">attached images (max 10) — <em>1st image uploaded is primary</em></label>
               <div class="ed-btn-row">
-                <button type="button" id="tweet-add-file-btn" class="ed-btn-secondary">📁 choose image files → tweets/images/</button>
-                <button type="button" id="tweet-add-path-btn" class="ed-btn-secondary">+ add relative path / url</button>
-                <span id="tweet-img-badge" style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-muted);">0 / 10 images</span>
+                <button type="button" id="note-add-file-btn" class="ed-btn-secondary">📁 choose image files → notes/images/</button>
+                <button type="button" id="note-add-path-btn" class="ed-btn-secondary">+ add relative path / url</button>
+                <span id="note-img-badge" style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-muted);">0 / 10 images</span>
               </div>
-              <input type="file" id="tweet-file-input" accept="image/*" multiple hidden>
+              <input type="file" id="note-file-input" accept="image/*" multiple hidden>
               
-              <div id="tweet-img-list" class="tweet-ed-img-list"></div>
-              <div id="tweet-copy-hint" class="ed-hint" style="margin-top: 8px;"></div>
+              <div id="note-img-list" class="note-ed-img-list"></div>
+              <div id="note-copy-hint" class="ed-hint" style="margin-top: 8px;"></div>
 
               <!-- Live Twitter-style preview -->
-              <div id="tweet-preview-grid-box" style="margin-top: 12px; display: none;">
+              <div id="note-preview-grid-box" style="margin-top: 12px; display: none;">
                 <label class="ed-label">live twitter-style grid preview:</label>
-                <div id="tweet-preview-grid-wrap" class="tweet-media-wrap" style="max-width: 520px;"></div>
+                <div id="note-preview-grid-wrap" class="note-media-wrap" style="max-width: 520px;"></div>
               </div>
             </div>
 
             <div class="ed-btn-row" style="margin-top: 12px;">
-              <button type="button" id="tweet-save" class="ed-btn">save tweet</button>
-              <button type="button" id="tweet-cancel" class="ed-btn-secondary" hidden>cancel edit</button>
+              <button type="button" id="note-save" class="ed-btn">save note</button>
+              <button type="button" id="note-cancel" class="ed-btn-secondary" hidden>cancel edit</button>
             </div>
-            <div class="ed-msg" id="tweet-msg" role="alert"></div>
-            <div class="ed-hint" id="tweet-draft"></div>
+            <div class="ed-msg" id="note-msg" role="alert"></div>
+            <div class="ed-hint" id="note-draft"></div>
           </div>
         </div>
       </div>
 
-      <div class="box" id="tweets-list-box" style="margin-top:14px;">
-        <div class="box-header"><span>existing tweets (<span id="tweet-count">0</span>)</span></div>
+      <div class="box" id="notes-list-box" style="margin-top:14px;">
+        <div class="box-header"><span>existing notes (<span id="note-count">0</span>)</span></div>
         <div class="box-content">
           <div class="filter-controls-row">
-            <input type="text" id="tweet-filter-q" class="filter-input" placeholder="Search content or #tag...">
+            <input type="text" id="note-filter-q" class="filter-input" placeholder="Search content or #tag...">
             <div class="filter-dropdown-wrapper">
-              <label class="filter-label" for="tweet-filter-year">Year:</label>
-              <select id="tweet-filter-year" class="retro-select"></select>
+              <label class="filter-label" for="note-filter-year">Year:</label>
+              <select id="note-filter-year" class="retro-select"></select>
             </div>
           </div>
-          <div id="tweet-list"></div>
+          <div id="note-list"></div>
           <div class="ed-btn-row" style="margin-top:10px;">
-            <button type="button" id="tweet-dl-js" class="ed-btn-secondary">download data/tweets.js</button>
-            <button type="button" id="tweet-copy-js" class="ed-btn-secondary">copy code for data/tweets.js</button>
+            <button type="button" id="note-dl-js" class="ed-btn-secondary">download data/notes.js</button>
+            <button type="button" id="note-copy-js" class="ed-btn-secondary">copy code for data/notes.js</button>
           </div>
-          <p class="ed-hint">After downloading: copy the image files listed above into <code>tweets/images/</code>, overwrite <code>data/tweets.js</code>, refresh <code>index.html#/tweets</code>.</p>
+          <p class="ed-hint">After downloading: copy the image files listed above into <code>notes/images/</code>, overwrite <code>data/notes.js</code>, refresh <code>index.html#/notes</code>.</p>
         </div>
       </div>
       </div>
@@ -367,7 +367,7 @@
   <script>window.MEOWKING_NOAUTOINIT = true;</script>
   <script src="data/articles.js"></script>
   <script src="data/projects.js"></script>
-  <script src="data/tweets.js"></script>
+  <script src="data/notes.js"></script>
   <script src="app.js"></script>
   <script>
   (function () {
@@ -398,13 +398,13 @@
     function clone(v) { return JSON.parse(JSON.stringify(v == null ? [] : v)); }
     var articles = clone(window.SITE_ARTICLES);
     var projects = clone(window.SITE_PROJECTS);
-    var tweets = clone(window.SITE_TWEETS);
+    var notes = clone(window.SITE_NOTES);
 
     (function reportLoadState() {
       var problems = [];
       if (!Array.isArray(window.SITE_ARTICLES)) problems.push('data/articles.js failed to load (check its syntax) — starting with an empty list.');
       if (!Array.isArray(window.SITE_PROJECTS)) problems.push('data/projects.js failed to load (check its syntax) — starting with an empty list.');
-      if (!Array.isArray(window.SITE_TWEETS)) problems.push('data/tweets.js failed to load (check its syntax) — starting with an empty list.');
+      if (!Array.isArray(window.SITE_NOTES)) problems.push('data/notes.js failed to load (check its syntax) — starting with an empty list.');
       if (!window.parseMarkdownMicro) problems.push('app.js failed to load — live preview disabled.');
       if (problems.length) {
         $('load-warn').hidden = false;
@@ -539,7 +539,7 @@
       }).join(',\n');
       return EMIT_HEAD + 'window.SITE_PROJECTS = [\n' + body + '\n];\n';
     }
-    function emitTweets(arr) {
+    function emitNotes(arr) {
       var body = (arr || []).map(function (t) {
         return '  {\n' +
           '    id: ' + jsStr(t.id) + ',\n' +
@@ -549,7 +549,7 @@
           '    tags: ' + jsArr(t.tags || []) + '\n' +
           '  }';
       }).join(',\n');
-      return EMIT_HEAD + 'window.SITE_TWEETS = [\n' + body + '\n];\n';
+      return EMIT_HEAD + 'window.SITE_NOTES = [\n' + body + '\n];\n';
     }
     /*EMIT-END*/
 
@@ -560,7 +560,7 @@
     var tabwraps = {
       articles: $('tabwrap-articles'),
       projects: $('tabwrap-projects'),
-      tweets: $('tabwrap-tweets')
+      notes: $('tabwrap-notes')
     };
     document.querySelectorAll('.ed-tab').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -903,43 +903,43 @@
       showMsg('proj-msg', 'Downloaded projects.js — overwrite data/projects.js with it.', true);
     });
 
-    // ---------------- Tweets ----------------
-    var editingTweetId = null;
-    var tweetPage = 1;
-    var tweetFQ = '', tweetFY = 'all';
-    var tweetImages = [];
+    // ---------------- Notes ----------------
+    var editingNoteId = null;
+    var notePage = 1;
+    var noteFQ = '', noteFY = 'all';
+    var noteImages = [];
 
-    function updateTweetImagesUi() {
-      var badge = $('tweet-img-badge');
+    function updateNoteImagesUi() {
+      var badge = $('note-img-badge');
       if (badge) {
-        badge.textContent = tweetImages.length + ' / 10 images';
-        badge.style.color = tweetImages.length >= 10 ? '#f87171' : 'var(--text-muted)';
+        badge.textContent = noteImages.length + ' / 10 images';
+        badge.style.color = noteImages.length >= 10 ? '#f87171' : 'var(--text-muted)';
       }
-      var list = $('tweet-img-list');
+      var list = $('note-img-list');
       if (!list) return;
 
-      if (tweetImages.length === 0) {
+      if (noteImages.length === 0) {
         list.innerHTML = '<p class="ed-hint" style="margin: 4px 0;">No images attached. Click "choose image files" or "add relative path" above (max 10).</p>';
       } else {
-        list.innerHTML = tweetImages.map(function (src, idx) {
+        list.innerHTML = noteImages.map(function (src, idx) {
           var isFirst = idx === 0;
-          return '<div class="tweet-ed-img-row">' +
-            '<span class="tweet-ed-img-badge' + (isFirst ? ' primary' : '') + '">' +
+          return '<div class="note-ed-img-row">' +
+            '<span class="note-ed-img-badge' + (isFirst ? ' primary' : '') + '">' +
               (isFirst ? '★ #1 (1st uploaded - Primary)' : '#' + (idx + 1)) +
             '</span>' +
-            '<img src="' + esc(src) + '" alt="thumb" class="tweet-ed-thumb" onerror="this.style.opacity=0.3;this.title=\'File not found yet - copy it into tweets/images/\'">' +
-            '<input type="text" class="tweet-ed-path-input" data-img-idx="' + idx + '" value="' + esc(src) + '" placeholder="tweets/images/photo.jpg">' +
-            (idx > 0 ? '<button type="button" class="tweet-ed-btn-sm" data-img-act="up" data-img-idx="' + idx + '" title="Move up">&uarr;</button>' : '') +
-            (idx < tweetImages.length - 1 ? '<button type="button" class="tweet-ed-btn-sm" data-img-act="down" data-img-idx="' + idx + '" title="Move down">&darr;</button>' : '') +
-            '<button type="button" class="tweet-ed-btn-sm tweet-ed-btn-del" data-img-act="del" data-img-idx="' + idx + '" title="Remove image">&times;</button>' +
+            '<img src="' + esc(src) + '" alt="thumb" class="note-ed-thumb" onerror="this.style.opacity=0.3;this.title=\'File not found yet - copy it into notes/images/\'">' +
+            '<input type="text" class="note-ed-path-input" data-img-idx="' + idx + '" value="' + esc(src) + '" placeholder="notes/images/photo.jpg">' +
+            (idx > 0 ? '<button type="button" class="note-ed-btn-sm" data-img-act="up" data-img-idx="' + idx + '" title="Move up">&uarr;</button>' : '') +
+            (idx < noteImages.length - 1 ? '<button type="button" class="note-ed-btn-sm" data-img-act="down" data-img-idx="' + idx + '" title="Move down">&darr;</button>' : '') +
+            '<button type="button" class="note-ed-btn-sm note-ed-btn-del" data-img-act="del" data-img-idx="' + idx + '" title="Remove image">&times;</button>' +
           '</div>';
         }).join('');
 
-        list.querySelectorAll('.tweet-ed-path-input').forEach(function (inp) {
+        list.querySelectorAll('.note-ed-path-input').forEach(function (inp) {
           inp.addEventListener('input', function (e) {
             var i = parseInt(e.target.getAttribute('data-img-idx'), 10);
-            tweetImages[i] = e.target.value.trim();
-            updateTweetPreviewGrid();
+            noteImages[i] = e.target.value.trim();
+            updateNotePreviewGrid();
           });
         });
 
@@ -948,36 +948,36 @@
             var act = btn.getAttribute('data-img-act');
             var i = parseInt(btn.getAttribute('data-img-idx'), 10);
             if (act === 'del') {
-              tweetImages.splice(i, 1);
+              noteImages.splice(i, 1);
             } else if (act === 'up' && i > 0) {
-              var tmp = tweetImages[i];
-              tweetImages[i] = tweetImages[i - 1];
-              tweetImages[i - 1] = tmp;
-            } else if (act === 'down' && i < tweetImages.length - 1) {
-              var tmp2 = tweetImages[i];
-              tweetImages[i] = tweetImages[i + 1];
-              tweetImages[i + 1] = tmp2;
+              var tmp = noteImages[i];
+              noteImages[i] = noteImages[i - 1];
+              noteImages[i - 1] = tmp;
+            } else if (act === 'down' && i < noteImages.length - 1) {
+              var tmp2 = noteImages[i];
+              noteImages[i] = noteImages[i + 1];
+              noteImages[i + 1] = tmp2;
             }
-            updateTweetImagesUi();
-            updateTweetPreviewGrid();
+            updateNoteImagesUi();
+            updateNotePreviewGrid();
           });
         });
       }
-      updateTweetPreviewGrid();
-      updateTweetCopyHint();
+      updateNotePreviewGrid();
+      updateNoteCopyHint();
     }
 
-    // Option A: choosing files records tweets/images/<filename> paths (never
+    // Option A: choosing files records notes/images/<filename> paths (never
     // embeds base64). This hint lists the raw filenames the visitor must copy
-    // into their tweets/images/ folder before downloading data/tweets.js.
-    function updateTweetCopyHint() {
-      var box = $('tweet-copy-hint');
+    // into their notes/images/ folder before downloading data/notes.js.
+    function updateNoteCopyHint() {
+      var box = $('note-copy-hint');
       if (!box) return;
       var files = [];
-      tweetImages.forEach(function (src) {
+      noteImages.forEach(function (src) {
         var s = String(src || '').trim();
-        if (s.indexOf('tweets/images/') !== 0) return;
-        var rest = s.slice('tweets/images/'.length);
+        if (s.indexOf('notes/images/') !== 0) return;
+        var rest = s.slice('notes/images/'.length);
         if (!rest || rest.indexOf('/') !== -1) return;
         if (files.indexOf(rest) === -1) files.push(rest);
       });
@@ -987,17 +987,17 @@
         return;
       }
       box.style.display = 'block';
-      box.innerHTML = '📌 <strong>Copy these file(s) into the <code>tweets/images/</code> folder before downloading</strong>' +
-        ' (the tweet stores the path, not the image): ' +
+      box.innerHTML = '📌 <strong>Copy these file(s) into the <code>notes/images/</code> folder before downloading</strong>' +
+        ' (the note stores the path, not the image): ' +
         files.map(function (f) { return '<code>' + esc(f) + '</code>'; }).join(', ');
     }
 
-    function updateTweetPreviewGrid() {
-      var box = $('tweet-preview-grid-box');
-      var wrap = $('tweet-preview-grid-wrap');
+    function updateNotePreviewGrid() {
+      var box = $('note-preview-grid-box');
+      var wrap = $('note-preview-grid-wrap');
       if (!box || !wrap) return;
 
-      var validImgs = tweetImages.filter(function (s) { return s && s.trim(); });
+      var validImgs = noteImages.filter(function (s) { return s && s.trim(); });
       if (validImgs.length === 0) {
         box.style.display = 'none';
         wrap.innerHTML = '';
@@ -1017,81 +1017,81 @@
       else if (count === 9) gridClass = 'grid-9';
       else if (count >= 10) gridClass = 'grid-10';
 
-      wrap.innerHTML = '<div class="tweet-media-grid ' + gridClass + '">' +
+      wrap.innerHTML = '<div class="note-media-grid ' + gridClass + '">' +
         validImgs.slice(0, 10).map(function (src, idx) {
-          return '<div class="tweet-media-item">' +
+          return '<div class="note-media-item">' +
             '<img src="' + esc(src) + '" alt="preview">' +
-            (count > 4 && idx === count - 1 ? '<span class="tweet-media-count-badge">📸 ' + count + ' photos</span>' : '') +
+            (count > 4 && idx === count - 1 ? '<span class="note-media-count-badge">📸 ' + count + ' photos</span>' : '') +
           '</div>';
         }).join('') +
       '</div>';
     }
 
-    var tweetFileInput = $('tweet-file-input');
-    var tweetAddFileBtn = $('tweet-add-file-btn');
-    var tweetAddPathBtn = $('tweet-add-path-btn');
+    var noteFileInput = $('note-file-input');
+    var noteAddFileBtn = $('note-add-file-btn');
+    var noteAddPathBtn = $('note-add-path-btn');
 
-    if (tweetAddFileBtn && tweetFileInput) {
-      tweetAddFileBtn.addEventListener('click', function () {
-        if (tweetImages.length >= 10) {
+    if (noteAddFileBtn && noteFileInput) {
+      noteAddFileBtn.addEventListener('click', function () {
+        if (noteImages.length >= 10) {
           alert('Maximum 10 images reached.');
           return;
         }
-        tweetFileInput.click();
+        noteFileInput.click();
       });
 
-      tweetFileInput.addEventListener('change', function (e) {
+      noteFileInput.addEventListener('change', function (e) {
         var files = Array.from(e.target.files || []);
         if (!files.length) return;
-        var remaining = 10 - tweetImages.length;
+        var remaining = 10 - noteImages.length;
         if (remaining <= 0) { e.target.value = ''; return; }
         files.slice(0, remaining).forEach(function (file) {
           var name = String(file.name || '').trim();
           if (!name) return;
-          var path = 'tweets/images/' + name;
-          if (tweetImages.indexOf(path) === -1 && tweetImages.length < 10) {
-            tweetImages.push(path);
+          var path = 'notes/images/' + name;
+          if (noteImages.indexOf(path) === -1 && noteImages.length < 10) {
+            noteImages.push(path);
           }
         });
-        updateTweetImagesUi();
-        tweetFileInput.value = '';
+        updateNoteImagesUi();
+        noteFileInput.value = '';
       });
     }
 
-    if (tweetAddPathBtn) {
-      tweetAddPathBtn.addEventListener('click', function () {
-        if (tweetImages.length >= 10) {
+    if (noteAddPathBtn) {
+      noteAddPathBtn.addEventListener('click', function () {
+        if (noteImages.length >= 10) {
           alert('Maximum 10 images reached.');
           return;
         }
-        var p = prompt('Enter relative image path (e.g. tweets/images/my-photo.jpg):', 'tweets/images/image.jpg');
+        var p = prompt('Enter relative image path (e.g. notes/images/my-photo.jpg):', 'notes/images/image.jpg');
         if (p && p.trim()) {
-          tweetImages.push(p.trim());
-          updateTweetImagesUi();
+          noteImages.push(p.trim());
+          updateNoteImagesUi();
         }
       });
     }
 
-    function filteredTweets() {
-      var q = tweetFQ.toLowerCase().trim();
-      return tweets.filter(function (t) {
-        if (tweetFY !== 'all' && edYear(t) !== tweetFY) return false;
+    function filteredNotes() {
+      var q = noteFQ.toLowerCase().trim();
+      return notes.filter(function (t) {
+        if (noteFY !== 'all' && edYear(t) !== noteFY) return false;
         if (!q) return true;
         return String(t.content || '').toLowerCase().indexOf(q) !== -1 || matchTags(t.tags, q);
       });
     }
 
-    function renderTweetList() {
-      var list = $('tweet-list');
+    function renderNoteList() {
+      var list = $('note-list');
       if (!list) return;
-      $('tweet-count').textContent = tweets.length;
-      tweetFY = buildYearOptions($('tweet-filter-year'), tweets, tweetFY);
-      var shown = filteredTweets();
-      if (!tweets.length) { list.innerHTML = '<p class="ed-hint">No tweets yet.</p>'; return; }
-      if (!shown.length) { list.innerHTML = '<p class="ed-hint">No tweets match the filter.</p>'; return; }
+      $('note-count').textContent = notes.length;
+      noteFY = buildYearOptions($('note-filter-year'), notes, noteFY);
+      var shown = filteredNotes();
+      if (!notes.length) { list.innerHTML = '<p class="ed-hint">No notes yet.</p>'; return; }
+      if (!shown.length) { list.innerHTML = '<p class="ed-hint">No notes match the filter.</p>'; return; }
       var totalPages = Math.max(1, Math.ceil(shown.length / ED_PAGE_SIZE));
-      if (tweetPage > totalPages) tweetPage = totalPages;
-      var html = shown.slice((tweetPage - 1) * ED_PAGE_SIZE, tweetPage * ED_PAGE_SIZE).map(function (t) {
+      if (notePage > totalPages) notePage = totalPages;
+      var html = shown.slice((notePage - 1) * ED_PAGE_SIZE, notePage * ED_PAGE_SIZE).map(function (t) {
         var snippet = String(t.content || '').slice(0, 80);
         var imgCount = (t.images || []).length;
         return '<div class="ed-item">' +
@@ -1108,122 +1108,122 @@
 
       if (totalPages > 1) {
         html += '<div class="pager-row">' +
-          '<button type="button" class="pager-btn" data-pager="prev"' + (tweetPage <= 1 ? ' disabled' : '') + '>&larr; prev</button>' +
-          '<span class="pager-info">Page ' + tweetPage + ' of ' + totalPages + '</span>' +
-          '<button type="button" class="pager-btn" data-pager="next"' + (tweetPage >= totalPages ? ' disabled' : '') + '>next &rarr;</button>' +
+          '<button type="button" class="pager-btn" data-pager="prev"' + (notePage <= 1 ? ' disabled' : '') + '>&larr; prev</button>' +
+          '<span class="pager-info">Page ' + notePage + ' of ' + totalPages + '</span>' +
+          '<button type="button" class="pager-btn" data-pager="next"' + (notePage >= totalPages ? ' disabled' : '') + '>next &rarr;</button>' +
           '</div>';
       }
       list.innerHTML = html;
     }
 
-    function resetTweetForm() {
-      editingTweetId = null;
-      $('tweet-form-title').textContent = 'new tweet';
-      $('tweet-content').value = '';
-      $('tweet-tags').value = '';
-      $('tweet-date').value = todayLocal();
-      $('tweet-cancel').hidden = true;
-      tweetImages = [];
-      updateTweetImagesUi();
-      showMsg('tweet-msg', '', true);
+    function resetNoteForm() {
+      editingNoteId = null;
+      $('note-form-title').textContent = 'new note';
+      $('note-content').value = '';
+      $('note-tags').value = '';
+      $('note-date').value = todayLocal();
+      $('note-cancel').hidden = true;
+      noteImages = [];
+      updateNoteImagesUi();
+      showMsg('note-msg', '', true);
     }
 
-    $('tweet-filter-q').addEventListener('input', function (e) {
-      tweetFQ = e.target.value; tweetPage = 1; renderTweetList();
+    $('note-filter-q').addEventListener('input', function (e) {
+      noteFQ = e.target.value; notePage = 1; renderNoteList();
     });
-    $('tweet-filter-year').addEventListener('change', function (e) {
-      tweetFY = e.target.value; tweetPage = 1; renderTweetList();
+    $('note-filter-year').addEventListener('change', function (e) {
+      noteFY = e.target.value; notePage = 1; renderNoteList();
     });
 
-    $('tweet-save').addEventListener('click', function () {
-      var content = $('tweet-content').value.trim();
-      var date = $('tweet-date').value.trim();
-      var tags = parseTags($('tweet-tags').value);
-      var imgs = tweetImages.map(function(s){ return String(s || '').trim(); }).filter(Boolean).slice(0, 10);
+    $('note-save').addEventListener('click', function () {
+      var content = $('note-content').value.trim();
+      var date = $('note-date').value.trim();
+      var tags = parseTags($('note-tags').value);
+      var imgs = noteImages.map(function(s){ return String(s || '').trim(); }).filter(Boolean).slice(0, 10);
 
       if (!content && imgs.length === 0) {
-        showMsg('tweet-msg', 'Please enter text or attach at least one image.', false);
+        showMsg('note-msg', 'Please enter text or attach at least one image.', false);
         return;
       }
       if (!validDate(date)) {
-        showMsg('tweet-msg', 'Date must be YYYY-MM-DD.', false);
+        showMsg('note-msg', 'Date must be YYYY-MM-DD.', false);
         return;
       }
 
       var entry = {
-        id: editingTweetId || ('tweet-' + Date.now()),
+        id: editingNoteId || ('note-' + Date.now()),
         date: date,
         content: content,
         images: imgs,
         tags: tags
       };
 
-      if (editingTweetId) {
-        var idx = tweets.findIndex(function (t) { return t.id === editingTweetId; });
-        if (idx !== -1) tweets[idx] = entry; else tweets.unshift(entry);
+      if (editingNoteId) {
+        var idx = notes.findIndex(function (t) { return t.id === editingNoteId; });
+        if (idx !== -1) notes[idx] = entry; else notes.unshift(entry);
       } else {
-        tweets.unshift(entry);
+        notes.unshift(entry);
       }
 
-      try { localStorage.setItem('meowking_local_tweets', JSON.stringify(tweets)); } catch(e){}
+      try { localStorage.setItem('meowking_local_notes', JSON.stringify(notes)); } catch(e){}
 
-      staged.tweets = true;
-      tweetPage = 1;
+      staged.notes = true;
+      notePage = 1;
       persistWork();
-      renderTweetList();
-      resetTweetForm();
-      persistDraft('tweets');
-      showMsg('tweet-msg', 'Staged — download data/tweets.js (or copy code) to keep it.', true);
+      renderNoteList();
+      resetNoteForm();
+      persistDraft('notes');
+      showMsg('note-msg', 'Staged — download data/notes.js (or copy code) to keep it.', true);
     });
 
-    $('tweet-cancel').addEventListener('click', function () {
-      resetTweetForm();
-      clearTypeDraft('tweets');
+    $('note-cancel').addEventListener('click', function () {
+      resetNoteForm();
+      clearTypeDraft('notes');
     });
 
-    $('tweet-list').addEventListener('click', function (e) {
+    $('note-list').addEventListener('click', function (e) {
       var pagerBtn = e.target.closest('[data-pager]');
       if (pagerBtn) {
-        if (pagerBtn.getAttribute('data-pager') === 'prev' && tweetPage > 1) { tweetPage--; renderTweetList(); }
-        else if (pagerBtn.getAttribute('data-pager') === 'next') { tweetPage++; renderTweetList(); }
+        if (pagerBtn.getAttribute('data-pager') === 'prev' && notePage > 1) { notePage--; renderNoteList(); }
+        else if (pagerBtn.getAttribute('data-pager') === 'next') { notePage++; renderNoteList(); }
         return;
       }
       var btn = e.target.closest('[data-act]');
       if (!btn) return;
       var id = btn.getAttribute('data-id');
-      var entry = tweets.find(function (t) { return t.id === id; });
+      var entry = notes.find(function (t) { return t.id === id; });
       if (!entry) return;
       if (btn.getAttribute('data-act') === 'del') {
-        if (!window.confirm('Delete this tweet? (Changes become permanent after downloading data/tweets.js)')) return;
-        tweets = tweets.filter(function (t) { return t.id !== id; });
-        try { localStorage.setItem('meowking_local_tweets', JSON.stringify(tweets)); } catch(e){}
+        if (!window.confirm('Delete this note? (Changes become permanent after downloading data/notes.js)')) return;
+        notes = notes.filter(function (t) { return t.id !== id; });
+        try { localStorage.setItem('meowking_local_notes', JSON.stringify(notes)); } catch(e){}
         persistWork();
-        if (editingTweetId === id) { resetTweetForm(); clearTypeDraft('tweets'); }
-        renderTweetList();
+        if (editingNoteId === id) { resetNoteForm(); clearTypeDraft('notes'); }
+        renderNoteList();
         return;
       }
-      editingTweetId = id;
-      $('tweet-form-title').textContent = 'edit tweet';
-      $('tweet-content').value = entry.content || '';
-      $('tweet-tags').value = (entry.tags || []).join(', ');
-      $('tweet-date').value = entry.date || '';
-      $('tweet-cancel').hidden = false;
-      tweetImages = (entry.images || []).slice(0, 10);
-      updateTweetImagesUi();
+      editingNoteId = id;
+      $('note-form-title').textContent = 'edit note';
+      $('note-content').value = entry.content || '';
+      $('note-tags').value = (entry.tags || []).join(', ');
+      $('note-date').value = entry.date || '';
+      $('note-cancel').hidden = false;
+      noteImages = (entry.images || []).slice(0, 10);
+      updateNoteImagesUi();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    $('tweet-dl-js').addEventListener('click', function () {
-      download('tweets.js', emitTweets(tweets));
-      markDownloaded('tweets', 'jsDone');
-      showMsg('tweet-msg', 'Downloaded tweets.js — overwrite data/tweets.js with it.', true);
+    $('note-dl-js').addEventListener('click', function () {
+      download('notes.js', emitNotes(notes));
+      markDownloaded('notes', 'jsDone');
+      showMsg('note-msg', 'Downloaded notes.js — overwrite data/notes.js with it.', true);
     });
 
-    $('tweet-copy-js').addEventListener('click', function () {
-      var code = emitTweets(tweets);
+    $('note-copy-js').addEventListener('click', function () {
+      var code = emitNotes(notes);
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(code).then(function () {
-          showMsg('tweet-msg', 'Copied data/tweets.js code to clipboard!', true);
+          showMsg('note-msg', 'Copied data/notes.js code to clipboard!', true);
         });
       } else {
         prompt('Copy code:', code);
@@ -1236,14 +1236,14 @@
     // reopening the studio offers the unfinished work back, with a status
     // line showing exactly which downloads are still missing.
     var DRAFT_KEY = 'meowking_editor_drafts';
-    var staged = { articles: false, projects: false, tweets: false };
+    var staged = { articles: false, projects: false, notes: false };
     var DRAFT_FIELDS = {
       articles: ['art-title', 'art-slug', 'art-date', 'art-readtime', 'art-tags', 'art-excerpt', 'art-md'],
       projects: ['proj-title', 'proj-id', 'proj-date', 'proj-status', 'proj-desc', 'proj-tags', 'proj-github', 'proj-demo', 'proj-details'],
-      tweets: ['tweet-content', 'tweet-tags', 'tweet-date']
+      notes: ['note-content', 'note-tags', 'note-date']
     };
-    var DRAFT_STATUS = { articles: 'art-draft', projects: 'proj-draft', tweets: 'tweet-draft' };
-    var DRAFT_MSG = { articles: 'art-msg', projects: 'proj-msg', tweets: 'tweet-msg' };
+    var DRAFT_STATUS = { articles: 'art-draft', projects: 'proj-draft', notes: 'note-draft' };
+    var DRAFT_MSG = { articles: 'art-msg', projects: 'proj-msg', notes: 'note-msg' };
 
     function loadDrafts() {
       try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}'); }
@@ -1256,7 +1256,7 @@
       try { localStorage.setItem(DRAFT_KEY, JSON.stringify(all)); } catch (e) { }
     }
     function editingIdFor(t) {
-      return t === 'articles' ? editingArtId : t === 'projects' ? editingProjId : editingTweetId;
+      return t === 'articles' ? editingArtId : t === 'projects' ? editingProjId : editingNoteId;
     }
     function snapshotForm(t) {
       var f = {};
@@ -1273,7 +1273,7 @@
     function draftHasContent(d) {
       if (!d || !d.fields) return false;
       return Object.keys(d.fields).some(function (k) {
-        if (k === 'art-date' || k === 'proj-date' || k === 'proj-status' || k === 'tweet-date') return false;
+        if (k === 'art-date' || k === 'proj-date' || k === 'proj-status' || k === 'note-date') return false;
         var v = d.fields[k];
         return v != null && String(v).trim() !== '';
       });
@@ -1367,10 +1367,10 @@
         $('proj-form-title').textContent = 'edit project';
         $('proj-cancel').hidden = false;
       }
-      if (t === 'tweets' && d.editingId) {
-        editingTweetId = d.editingId;
-        $('tweet-form-title').textContent = 'edit tweet';
-        $('tweet-cancel').hidden = false;
+      if (t === 'notes' && d.editingId) {
+        editingNoteId = d.editingId;
+        $('note-form-title').textContent = 'edit note';
+        $('note-cancel').hidden = false;
       }
       staged[t] = Boolean(d.staged);
       if (t === 'articles') {
@@ -1386,9 +1386,9 @@
     }
 
     function typeForEl(el) {
-      var p = el && el.closest ? el.closest('#panel-articles,#panel-projects,#panel-tweets') : null;
+      var p = el && el.closest ? el.closest('#panel-articles,#panel-projects,#panel-notes') : null;
       if (!p) return null;
-      return p.id === 'panel-articles' ? 'articles' : p.id === 'panel-projects' ? 'projects' : 'tweets';
+      return p.id === 'panel-articles' ? 'articles' : p.id === 'panel-projects' ? 'projects' : 'notes';
     }
     studio.addEventListener('input', function (e) {
       var t = e.target && typeForEl(e.target);
@@ -1398,7 +1398,7 @@
       var t = e.target && typeForEl(e.target);
       if (t) scheduleDraft(t);
     });
-    ['art-draft', 'proj-draft', 'tweet-draft'].forEach(function (id) {
+    ['art-draft', 'proj-draft', 'note-draft'].forEach(function (id) {
       var el = $(id);
       if (el) el.addEventListener('click', function (e) {
         var attr = function (n) { return e.target && e.target.getAttribute ? e.target.getAttribute(n) : null; };
@@ -1410,7 +1410,7 @@
           // brand-new draft, unlike "cancel edit".
           if (t === 'articles') resetArtForm();
           else if (t === 'projects') resetProjForm();
-          else resetTweetForm();
+          else resetNoteForm();
           showMsg(DRAFT_MSG[t], 'Draft discarded.', true);
           return;
         }
@@ -1430,7 +1430,7 @@
       Object.keys(draftTimers).forEach(function (t) {
         if (draftTimers[t]) { clearTimeout(draftTimers[t]); persistDraft(t); }
       });
-      if (staged.articles || staged.projects || staged.tweets) {
+      if (staged.articles || staged.projects || staged.notes) {
         e.preventDefault();
         e.returnValue = '';
       }
@@ -1442,14 +1442,14 @@
     // back with restore/discard — merged by id with disk winning conflicts,
     // so restoring can never delete anything.
     var WORK_KEY = 'meowking_editor_work';
-    var exported = { articles: false, projects: false, tweets: false };
+    var exported = { articles: false, projects: false, notes: false };
     function currentArr(t) {
-      return t === 'articles' ? articles : t === 'projects' ? projects : tweets;
+      return t === 'articles' ? articles : t === 'projects' ? projects : notes;
     }
     function setArr(t, v) {
       if (t === 'articles') articles = v;
       else if (t === 'projects') projects = v;
-      else tweets = v;
+      else notes = v;
     }
     function loadWork() {
       try { return JSON.parse(localStorage.getItem(WORK_KEY) || '{}'); }
@@ -1458,7 +1458,7 @@
     function persistWork() {
       try {
         localStorage.setItem(WORK_KEY, JSON.stringify({
-          articles: articles, projects: projects, tweets: tweets, updatedAt: Date.now()
+          articles: articles, projects: projects, notes: notes, updatedAt: Date.now()
         }));
       } catch (e) { }
     }
@@ -1483,7 +1483,7 @@
     function renderListFor(t) {
       if (t === 'articles') renderArtList();
       else if (t === 'projects') renderProjList();
-      else renderTweetList();
+      else renderNoteList();
     }
     function restoreWork(t) {
       var saved = loadWork()[t] || [];
@@ -1523,19 +1523,19 @@
     // ---------------- Init ----------------
     $('art-date').value = todayLocal();
     $('proj-date').value = todayLocal();
-    $('tweet-date').value = todayLocal();
+    $('note-date').value = todayLocal();
     renderArtList();
     renderProjList();
-    renderTweetList();
+    renderNoteList();
     restoreDraft('articles');
     restoreDraft('projects');
-    restoreDraft('tweets');
+    restoreDraft('notes');
     updateDraftStatus('articles');
     updateDraftStatus('projects');
-    updateDraftStatus('tweets');
+    updateDraftStatus('notes');
 
-    if (window.location.hash === '#tweets') {
-      var tBtn = $('tab-tweets');
+    if (window.location.hash === '#notes') {
+      var tBtn = $('tab-notes');
       if (tBtn) tBtn.click();
     }
   })();

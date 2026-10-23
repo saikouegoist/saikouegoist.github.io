@@ -43,8 +43,11 @@
   // overwrite each other.
   let guestbookCleanup = null;
 
-  // Cleanup for tweet image lightbox on route change
-  let tweetLightboxCleanup = null;
+  // Cleanup for note image lightbox on route change
+  let noteLightboxCleanup = null;
+
+  // Cleanup for the full-screen note reader overlay on route change
+  let noteReaderCleanup = null;
 
   // Safe storage helper (prevents SecurityError crashes in private browsing or iframe contexts)
   const safeStorage = {
@@ -67,16 +70,17 @@
       guestbook: window.SITE_GUESTBOOK || (window.SITE_CONTENT && window.SITE_CONTENT.guestbook) || [],
       gallery: window.SITE_GALLERY || (window.SITE_CONTENT && window.SITE_CONTENT.gallery) || [],
       music: window.SITE_MUSIC || (window.SITE_CONTENT && window.SITE_CONTENT.music) || null,
-      tweets: window.SITE_TWEETS || (window.SITE_CONTENT && window.SITE_CONTENT.tweets) || []
+      notes: window.SITE_NOTES || (window.SITE_CONTENT && window.SITE_CONTENT.notes) || []
     };
   }
 
   // Helper to extract year from date string (YYYY-MM-DD or year field)
   // Validates YYYY to avoid garbage buckets like "10 /" from "10 / 06 / 2004".
   function getYear(item) {
+    if (!item) return String(new Date().getFullYear());
     if (item.year && /^\d{3,4}$/.test(String(item.year).trim())) return String(item.year).trim();
     if (item.date) {
-      const m = String(item.date).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+      const m = String(item.date).trim().match(/^(\d{4})/);
       if (m) return m[1];
     }
     return String(new Date().getFullYear());
@@ -1300,10 +1304,16 @@
       guestbookCleanup = null;
     }
 
-    // Tear down any open tweet lightbox
-    if (tweetLightboxCleanup) {
-      try { tweetLightboxCleanup(); } catch (e) { console.warn('tweet lightbox cleanup failed:', e); }
-      tweetLightboxCleanup = null;
+    // Tear down any open note lightbox
+    if (noteLightboxCleanup) {
+      try { noteLightboxCleanup(); } catch (e) { console.warn('note lightbox cleanup failed:', e); }
+      noteLightboxCleanup = null;
+    }
+
+    // Tear down any open full-screen note reader
+    if (noteReaderCleanup) {
+      try { noteReaderCleanup(); } catch (e) { console.warn('note reader cleanup failed:', e); }
+      noteReaderCleanup = null;
     }
 
     // Distraction-free reading layout: hides the left/right sidebars and
@@ -1311,10 +1321,10 @@
     // Temples (list + detail) always use reading-mode like article readers.
     const isArticleReading = route.startsWith('articles/');
     const isTempleReading = route.startsWith('temples/') || route === 'temples' || route === 'unknown' || route.startsWith('unknown/');
-    const isTweetsViewing = route === 'tweets' || route.startsWith('tweets/');
+    const isNotesViewing = route === 'notes' || route.startsWith('notes/');
     try {
       document.body.classList.toggle('reading-mode', isArticleReading || isTempleReading);
-      document.body.classList.toggle('tweets-viewing-mode', isTweetsViewing);
+      document.body.classList.toggle('notes-viewing-mode', isNotesViewing);
     } catch (e) { /* non-critical */ }
 
     // Each view is isolated: a broken list/template shows an error box
@@ -1361,8 +1371,9 @@
     } else if (isTempleReading) {
       const templeId = route.replace('temples/', '').replace('unknown/', '');
       runView('temple', () => renderTempleDetail(mainContent, templeId));
-    } else if (route === 'tweets') {
-      runView('tweets', () => renderTweets(mainContent));
+    } else if (isNotesViewing) {
+      const targetNoteId = route.startsWith('notes/') ? route.replace(/^notes\//, '').trim() : null;
+      runView('notes', () => renderNotes(mainContent, targetNoteId));
     } else if (route === 'projects') {
       runView('projects', () => renderProjects(mainContent));
     } else if (route === 'about') {
@@ -1441,10 +1452,10 @@
   // studio) all show this many entries per page with prev/next paging.
   const LIST_PAGE_SIZE = 49;
 
-  // Tweets get their own, larger page size (a 3-column wall reads better
+  // Notes get their own, larger page size (a 3-column wall reads better
   // with more per page). Kept separate so articles/projects are
   // unaffected.
-  const TWEETS_PAGE_SIZE = 50;
+  const NOTES_PAGE_SIZE = 50;
 
   // Builds the prev/next pager row shared by the list views. Returns ''
   // when everything fits on one page. Callers re-bind the buttons after
@@ -2198,9 +2209,9 @@
   }
 
   // -----------------------------------------------------------
-  // TWEETS / MICROBLOG VIEW (Search + Year Dropdown, 10 Images Grid, & Lightbox)
+  // NOTES / MICROBLOG VIEW (Search + Year Dropdown, 10 Images Grid, & Lightbox)
   // -----------------------------------------------------------
-  function safeTweetImageSrc(src) {
+  function safeNoteImageSrc(src) {
     if (typeof src !== 'string') return 'assets/cat.jpg';
     const t = src.trim();
     if (!t) return 'assets/cat.jpg';
@@ -2213,48 +2224,48 @@
     return 'assets/cat.jpg';
   }
 
-  function getLocalTweets() {
+  function getLocalNotes() {
     try {
-      const raw = safeStorage.get('meowking_local_tweets');
+      const raw = safeStorage.get('meowking_local_notes');
       return raw ? JSON.parse(raw) : [];
     } catch (e) {
       return [];
     }
   }
 
-  function saveLocalTweets(tweets) {
+  function saveLocalNotes(notes) {
     try {
-      safeStorage.set('meowking_local_tweets', JSON.stringify(tweets));
+      safeStorage.set('meowking_local_notes', JSON.stringify(notes));
     } catch (e) {
-      console.warn('Could not save local tweets:', e);
+      console.warn('Could not save local notes:', e);
     }
   }
 
-  function renderTweets(container) {
+  function renderNotes(container, targetNoteId) {
     const siteData = getSiteData();
-    const seedTweets = siteData.tweets || [];
-    let localTweets = getLocalTweets();
+    const seedNotes = siteData.notes || [];
+    let localNotes = getLocalNotes();
 
-    function getAllTweets() {
-      const localIds = new Set(localTweets.map(t => t.id));
-      const seedIds = new Set(seedTweets.map(t => t.id));
-      // Mark a tweet as "local" only when it does NOT also exist in the
+    function getAllNotes() {
+      const localIds = new Set(localNotes.map(t => t.id));
+      const seedIds = new Set(seedNotes.map(t => t.id));
+      // Mark a note as "local" only when it does NOT also exist in the
       // published seed file. The studio mirrors the whole list into
       // localStorage for live preview, so id-matched entries are just seed
       // previews; only genuinely browser-only posts get delete + badge.
-      const markedLocal = localTweets.map(t => ({ ...t, isLocal: !seedIds.has(t.id) }));
-      return [...markedLocal, ...seedTweets.filter(t => !localIds.has(t.id))];
+      const markedLocal = localNotes.map(t => ({ ...t, isLocal: !seedIds.has(t.id) }));
+      return [...markedLocal, ...seedNotes.filter(t => !localIds.has(t.id))];
     }
 
-    let allTweets = getAllTweets();
+    let allNotes = getAllNotes();
 
-    // Calculate years ONLY if tweets exist for that year (like articles)
+    // Calculate years ONLY if notes exist for that year (like articles)
     const yearCounts = {};
-    allTweets.forEach(t => {
+    allNotes.forEach(t => {
       const yr = getYear(t);
       yearCounts[yr] = (yearCounts[yr] || 0) + 1;
     });
-    const yearsWithTweets = Object.keys(yearCounts).sort().reverse();
+    const yearsWithNotes = Object.keys(yearCounts).sort().reverse();
 
     let selectedYear = 'all';
     let searchQuery = '';
@@ -2266,41 +2277,38 @@
     container.innerHTML = `
       <div class="box">
         <div class="box-header">
-          <span>tweets &amp; microblog</span>
-          <a href="editor.html#tweets" class="back-btn" style="float: right; margin-top: -2px; font-size: 0.8rem;" title="Open Content Studio to tweet">✎ new tweet</a>
+          <span>notes</span>
+          <a href="editor.html#notes" class="box-header-action" title="Open Content Studio to note">✎ new note</a>
         </div>
         <div class="box-content">
-          <p class="tweets-header-desc">
-            Personal timeline &amp; microblog feed. Short thoughts, quick observations, and photo dumps.
-          </p>
 
           <!-- Feed Controls: Search + Year Dropdown -->
           <div class="filter-controls-row">
-            <input type="text" id="tweet-search" class="filter-input" placeholder="Search tweets by text or #tag...">
+            <input type="text" id="note-search" class="filter-input" placeholder="Search notes by text or #tag...">
             <div class="filter-dropdown-wrapper">
-              <label for="tweet-year-select" class="filter-label">Year:</label>
-              <select id="tweet-year-select" class="retro-select">
-                <option value="all">All Years (${allTweets.length})</option>
-                ${yearsWithTweets.map(yr => `<option value="${yr}">${yr} (${yearCounts[yr]})</option>`).join('')}
+              <label for="note-year-select" class="filter-label">Year:</label>
+              <select id="note-year-select" class="retro-select">
+                <option value="all">All Years (${allNotes.length})</option>
+                ${yearsWithNotes.map(yr => `<option value="${yr}">${yr} (${yearCounts[yr]})</option>`).join('')}
               </select>
             </div>
           </div>
 
-          <p class="filter-count-line">Showing <span id="tweets-count">${allTweets.length}</span> tweet(s)</p>
+          <p class="filter-count-line">Showing <span id="notes-count">${allNotes.length}</span> note(s)</p>
 
           <!-- Timeline Feed -->
-          <div class="tweets-feed" id="tweets-container">
-            ${renderTweetList(allTweets, siteInfo)}
+          <div class="notes-feed" id="notes-container">
+            ${renderNoteList(allNotes, siteInfo)}
           </div>
 
-          <div id="tweets-pager"></div>
+          <div id="notes-pager"></div>
         </div>
       </div>
     `;
 
     // Feed filtering and pagination
-    function updateTweetsView() {
-      const filtered = allTweets.filter(t => {
+    function updateNotesView() {
+      const filtered = allNotes.filter(t => {
         const itemYear = getYear(t);
         const matchYear = selectedYear === 'all' || itemYear === selectedYear;
         const q = searchQuery.toLowerCase().trim();
@@ -2310,70 +2318,70 @@
         return matchYear && matchSearch;
       });
 
-      const totalPages = Math.max(1, Math.ceil(filtered.length / TWEETS_PAGE_SIZE));
+      const totalPages = Math.max(1, Math.ceil(filtered.length / NOTES_PAGE_SIZE));
       if (currentPage > totalPages) currentPage = totalPages;
-      const pageItems = filtered.slice((currentPage - 1) * TWEETS_PAGE_SIZE, currentPage * TWEETS_PAGE_SIZE);
+      const pageItems = filtered.slice((currentPage - 1) * NOTES_PAGE_SIZE, currentPage * NOTES_PAGE_SIZE);
 
-      const countEl = document.getElementById('tweets-count');
-      if (countEl) countEl.textContent = pageRangeText(filtered.length, currentPage, TWEETS_PAGE_SIZE);
+      const countEl = document.getElementById('notes-count');
+      if (countEl) countEl.textContent = pageRangeText(filtered.length, currentPage, NOTES_PAGE_SIZE);
 
-      const feedEl = document.getElementById('tweets-container');
+      const feedEl = document.getElementById('notes-container');
       if (feedEl) {
-        feedEl.innerHTML = renderTweetList(pageItems, siteInfo);
-        wireTweetCardEvents(feedEl);
+        feedEl.innerHTML = renderNoteList(pageItems, siteInfo);
+        wireNoteCardEvents(feedEl);
       }
 
-      const pagerEl = document.getElementById('tweets-pager');
+      const pagerEl = document.getElementById('notes-pager');
       if (pagerEl) {
-        pagerEl.innerHTML = pagerRowHtml(currentPage, totalPages, 'tweets-prev', 'tweets-next');
-        const prevBtn = document.getElementById('tweets-prev');
-        const nextBtn = document.getElementById('tweets-next');
-        if (prevBtn) prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; updateTweetsView(); } });
-        if (nextBtn) nextBtn.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; updateTweetsView(); } });
+        pagerEl.innerHTML = pagerRowHtml(currentPage, totalPages, 'notes-prev', 'notes-next');
+        const prevBtn = document.getElementById('notes-prev');
+        const nextBtn = document.getElementById('notes-next');
+        if (prevBtn) prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; updateNotesView(); } });
+        if (nextBtn) nextBtn.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; updateNotesView(); } });
       }
     }
 
     // Search input
-    const searchInput = document.getElementById('tweet-search');
+    const searchInput = document.getElementById('note-search');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         searchQuery = e.target.value;
         currentPage = 1;
-        updateTweetsView();
+        updateNotesView();
       });
     }
 
     // Year dropdown
-    const yearSelect = document.getElementById('tweet-year-select');
+    const yearSelect = document.getElementById('note-year-select');
     if (yearSelect) {
       yearSelect.addEventListener('change', (e) => {
         selectedYear = e.target.value;
         currentPage = 1;
-        updateTweetsView();
+        updateNotesView();
       });
     }
 
     // Wire up events on the cards (media lightbox, likes, delete, copy link)
-    function wireTweetCardEvents(feedEl) {
-      // Lightbox click on tweet images
-      feedEl.querySelectorAll('.tweet-media-item').forEach(item => {
+    function wireNoteCardEvents(feedEl) {
+      // Lightbox click on note images
+      feedEl.querySelectorAll('.note-media-item').forEach(item => {
         item.addEventListener('click', (e) => {
           e.stopPropagation();
-          const tweetId = item.getAttribute('data-tweet-id');
+          const noteId = item.getAttribute('data-note-id');
           const imgIdx = parseInt(item.getAttribute('data-img-index'), 10) || 0;
-          const tweet = allTweets.find(t => String(t.id) === String(tweetId));
-          if (tweet && tweet.images && tweet.images.length > 0) {
-            openTweetLightbox(tweet.images, imgIdx);
+          const note = allNotes.find(t => String(t.id) === String(noteId));
+          if (note && note.images && note.images.length > 0) {
+            openNoteLightbox(note.images, imgIdx);
           }
         });
       });
 
       // Like buttons
-      feedEl.querySelectorAll('.tweet-btn-like').forEach(btn => {
+      feedEl.querySelectorAll('.note-btn-like').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          const tweetId = btn.getAttribute('data-tweet-id');
-          const likeKey = 'meowking_tweet_like_' + tweetId;
+          const noteId = btn.getAttribute('data-note-id');
+          const likeKey = 'meowking_note_like_' + noteId;
           const isLiked = safeStorage.get(likeKey) === '1';
           const nextLiked = !isLiked;
           safeStorage.set(likeKey, nextLiked ? '1' : '0');
@@ -2386,25 +2394,65 @@
         });
       });
 
-      // Local tweet delete button
-      feedEl.querySelectorAll('.tweet-btn-delete').forEach(btn => {
+      // Local note delete button
+      feedEl.querySelectorAll('.note-btn-delete').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          const tweetId = btn.getAttribute('data-tweet-id');
-          if (confirm('Delete this local tweet?')) {
-            localTweets = localTweets.filter(t => String(t.id) !== String(tweetId));
-            saveLocalTweets(localTweets);
-            allTweets = getAllTweets();
-            updateTweetsView();
+          const noteId = btn.getAttribute('data-note-id');
+          if (confirm('Delete this local note?')) {
+            localNotes = localNotes.filter(t => String(t.id) !== String(noteId));
+            saveLocalNotes(localNotes);
+            allNotes = getAllNotes();
+            updateNotesView();
           }
+        });
+      });
+
+      // Full-screen reader: explicit "open" button, or a click anywhere on
+      // the card that isn't an interactive control or an image (images keep
+      // their own lightbox behaviour).
+      const openReaderFor = (noteId) => {
+        const note = allNotes.find(t => String(t.id) === String(noteId));
+        if (note) {
+          if (window.location.hash !== '#/notes/' + note.id) {
+            try { history.replaceState(null, '', '#/notes/' + note.id); } catch (e) {}
+          }
+          openNoteReader(note, siteInfo);
+        }
+      };
+
+      feedEl.querySelectorAll('.note-open-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openReaderFor(btn.getAttribute('data-note-id'));
+        });
+      });
+
+      feedEl.querySelectorAll('.note-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('button, a, input, textarea, select, .note-media-item')) return;
+          openReaderFor(card.getAttribute('data-note-id'));
         });
       });
     }
 
-    updateTweetsView();
+    updateNotesView();
+
+    if (targetNoteId) {
+      setTimeout(() => {
+        const target = allNotes.find(t => String(t.id) === String(targetNoteId));
+        if (target) {
+          openNoteReader(target, siteInfo);
+          const cardEl = document.getElementById('note-' + target.id);
+          if (cardEl) {
+            try { cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+          }
+        }
+      }, 50);
+    }
   }
 
-  function renderTweetMediaHtml(images, tweetId) {
+  function renderNoteMediaHtml(images, noteId) {
     if (!images || !Array.isArray(images) || images.length === 0) return '';
     const safeImgs = images.slice(0, 10);
     const count = safeImgs.length;
@@ -2421,70 +2469,74 @@
     else if (count >= 10) gridClass = 'grid-10';
 
     const items = safeImgs.map((src, idx) => `
-      <div class="tweet-media-item" data-tweet-id="${escapeHtml(tweetId)}" data-img-index="${idx}">
-        <img src="${escapeHtml(safeTweetImageSrc(src))}" alt="Tweet photo ${idx + 1}" loading="lazy">
-        ${count > 4 && idx === count - 1 ? `<span class="tweet-media-count-badge">📸 ${count} photos</span>` : ''}
+      <div class="note-media-item" data-note-id="${escapeHtml(noteId)}" data-img-index="${idx}">
+        <img src="${escapeHtml(safeNoteImageSrc(src))}" alt="Note photo ${idx + 1}" loading="lazy">
+        ${count > 4 && idx === count - 1 ? `<span class="note-media-count-badge">📸 ${count} photos</span>` : ''}
       </div>
     `).join('');
 
     return `
-      <div class="tweet-media-wrap">
-        <div class="tweet-media-grid ${gridClass}">
+      <div class="note-media-wrap">
+        <div class="note-media-grid ${gridClass}">
           ${items}
         </div>
       </div>
     `;
   }
 
-  function renderTweetList(tweets, siteInfo) {
-    if (!tweets || tweets.length === 0) {
-      return `<p style="color: var(--text-muted); padding: 18px 0; text-align: center;">No tweets found matching your filter or search.</p>`;
+  function renderNoteList(notes, siteInfo) {
+    if (!notes || notes.length === 0) {
+      return `<p style="color: var(--text-muted); padding: 18px 0; text-align: center;">No notes found matching your filter or search.</p>`;
     }
 
     const avatarSrc = (siteInfo && siteInfo.avatar) || 'assets/cat.jpg';
     const siteTitle = (siteInfo && siteInfo.title) || 'meowking';
 
-    return tweets.map(tweet => {
-      const isLiked = safeStorage.get('meowking_tweet_like_' + tweet.id) === '1';
-      const baseLikes = tweet.likes || 0;
+    return notes.map(note => {
+      const isLiked = safeStorage.get('meowking_note_like_' + note.id) === '1';
+      const baseLikes = note.likes || 0;
       const displayLikes = baseLikes + (isLiked ? 1 : 0);
 
       return `
-        <article class="tweet-card" id="tweet-${escapeHtml(tweet.id)}">
-          <header class="tweet-card-header">
-            <div class="tweet-author-wrap">
-              <img src="${escapeHtml(avatarSrc)}" alt="avatar" class="tweet-avatar">
-              <div class="tweet-meta-info">
-                <div class="tweet-author-line">
-                  <span class="tweet-author-name">${escapeHtml(siteTitle)}</span>
-                  <span class="tweet-author-handle">@${escapeHtml(siteTitle)}</span>
-                  ${tweet.isLocal ? `<span class="tweet-badge-local" title="Saved locally in browser">local</span>` : ''}
+        <article class="note-card" id="note-${escapeHtml(note.id)}" data-note-id="${escapeHtml(note.id)}">
+          <header class="note-card-header">
+            <div class="note-author-wrap">
+              <img src="${escapeHtml(avatarSrc)}" alt="avatar" class="note-avatar">
+              <div class="note-meta-info">
+                <div class="note-author-line">
+                  <span class="note-author-name">${escapeHtml(siteTitle)}</span>
+                  <span class="note-author-handle">@${escapeHtml(siteTitle)}</span>
+                  ${note.isLocal ? `<span class="note-badge-local" title="Saved locally in browser">local</span>` : ''}
                 </div>
-                <time class="tweet-date">${escapeHtml(tweet.date || '')}</time>
+                <time class="note-date">${escapeHtml(note.date || '')}</time>
               </div>
             </div>
 
-            ${tweet.isLocal ? `
-              <button type="button" class="tweet-del-btn tweet-btn-delete" data-tweet-id="${escapeHtml(tweet.id)}" title="Delete tweet">[x delete]</button>
+            ${note.isLocal ? `
+              <button type="button" class="note-del-btn note-btn-delete" data-note-id="${escapeHtml(note.id)}" title="Delete note">[x delete]</button>
             ` : ''}
           </header>
 
-          <div class="tweet-content">
-            ${formatInlineMarkdown(tweet.content || '')}
+          <div class="note-content">
+            ${formatInlineMarkdown(note.content || '')}
           </div>
 
-          ${renderTweetMediaHtml(tweet.images, tweet.id)}
+          ${renderNoteMediaHtml(note.images, note.id)}
 
-          <footer class="tweet-footer">
-            <div class="tweet-actions-left">
-              <button type="button" class="tweet-action-btn tweet-btn-like ${isLiked ? 'liked' : ''}" data-tweet-id="${escapeHtml(tweet.id)}" data-base-count="${baseLikes}" title="Like this tweet">
+          <footer class="note-footer">
+            <div class="note-actions-left">
+              <button type="button" class="note-action-btn note-btn-like ${isLiked ? 'liked' : ''}" data-note-id="${escapeHtml(note.id)}" data-base-count="${baseLikes}" title="Like this note">
                 <span class="heart-icon">❤️</span>
                 <span class="like-count">${displayLikes > 0 ? displayLikes : ''}</span>
+              </button>
+              <button type="button" class="note-action-btn note-open-btn" data-note-id="${escapeHtml(note.id)}" title="Open this note in a big readable view">
+                <span class="open-icon">⤢</span>
+                <span>open</span>
               </button>
             </div>
 
             <div class="tag-list">
-              ${(tweet.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join('')}
+              ${(note.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join('')}
             </div>
           </footer>
         </article>
@@ -2492,28 +2544,28 @@
     }).join('');
   }
 
-  // Full-screen Tweet Lightbox (Singleton)
-  function openTweetLightbox(images, startIndex) {
+  // Full-screen Note Lightbox (Singleton)
+  function openNoteLightbox(images, startIndex) {
     if (!images || images.length === 0) return;
     let activeIdx = startIndex >= 0 && startIndex < images.length ? startIndex : 0;
     const total = images.length;
 
-    let lb = document.getElementById('tweet-lightbox');
+    let lb = document.getElementById('note-lightbox');
     if (!lb) {
       lb = document.createElement('div');
-      lb.id = 'tweet-lightbox';
-      lb.className = 'tweet-lightbox';
+      lb.id = 'note-lightbox';
+      lb.className = 'note-lightbox';
       lb.innerHTML = `
-        <div class="tweet-lb-backdrop" data-close></div>
-        <div class="tweet-lb-box" role="dialog" aria-modal="true" aria-label="Tweet image viewer">
-          <div class="tweet-lb-header">
-            <span id="tweet-lb-counter">Photo 1 of 1</span>
-            <button type="button" class="tweet-lb-close" data-close>[× close (Esc)]</button>
+        <div class="note-lb-backdrop" data-close></div>
+        <div class="note-lb-box" role="dialog" aria-modal="true" aria-label="Note image viewer">
+          <div class="note-lb-header">
+            <span id="note-lb-counter">Photo 1 of 1</span>
+            <button type="button" class="note-lb-close" data-close>[× close (Esc)]</button>
           </div>
-          <div class="tweet-lb-img-wrap">
-            <button type="button" class="tweet-lb-nav tweet-lb-prev" id="tweet-lb-prev" title="Previous (Left arrow)">&larr;</button>
-            <img id="tweet-lb-image" class="tweet-lb-img" src="" alt="Tweet photo full view">
-            <button type="button" class="tweet-lb-nav tweet-lb-next" id="tweet-lb-next" title="Next (Right arrow)">&rarr;</button>
+          <div class="note-lb-img-wrap">
+            <button type="button" class="note-lb-nav note-lb-prev" id="note-lb-prev" title="Previous (Left arrow)">&larr;</button>
+            <img id="note-lb-image" class="note-lb-img" src="" alt="Note photo full view">
+            <button type="button" class="note-lb-nav note-lb-next" id="note-lb-next" title="Next (Right arrow)">&rarr;</button>
           </div>
         </div>
       `;
@@ -2521,15 +2573,15 @@
     }
 
     lb.style.display = 'flex';
-    document.body.classList.add('tweet-lb-open');
+    document.body.classList.add('note-lb-open');
 
     function sync() {
-      const imgEl = document.getElementById('tweet-lb-image');
-      const counterEl = document.getElementById('tweet-lb-counter');
-      const prevBtn = document.getElementById('tweet-lb-prev');
-      const nextBtn = document.getElementById('tweet-lb-next');
+      const imgEl = document.getElementById('note-lb-image');
+      const counterEl = document.getElementById('note-lb-counter');
+      const prevBtn = document.getElementById('note-lb-prev');
+      const nextBtn = document.getElementById('note-lb-next');
 
-      if (imgEl) imgEl.src = safeTweetImageSrc(images[activeIdx]);
+      if (imgEl) imgEl.src = safeNoteImageSrc(images[activeIdx]);
       if (counterEl) counterEl.textContent = `Photo ${activeIdx + 1} of ${total}`;
 
       if (prevBtn) prevBtn.style.display = total > 1 ? 'flex' : 'none';
@@ -2552,22 +2604,22 @@
 
     function close() {
       lb.style.display = 'none';
-      document.body.classList.remove('tweet-lb-open');
+      document.body.classList.remove('note-lb-open');
       if (lb._keyHandler) {
         document.removeEventListener('keydown', lb._keyHandler);
         lb._keyHandler = null;
       }
-      tweetLightboxCleanup = null;
+      noteLightboxCleanup = null;
     }
 
-    tweetLightboxCleanup = close;
+    noteLightboxCleanup = close;
 
     lb.querySelectorAll('[data-close]').forEach(el => {
       el.onclick = close;
     });
 
-    const prevBtn = document.getElementById('tweet-lb-prev');
-    const nextBtn = document.getElementById('tweet-lb-next');
+    const prevBtn = document.getElementById('note-lb-prev');
+    const nextBtn = document.getElementById('note-lb-next');
     if (prevBtn) {
       prevBtn.onclick = (e) => {
         e.stopPropagation();
@@ -2589,6 +2641,154 @@
     lb._keyHandler = onKey;
     document.addEventListener('keydown', onKey);
     sync();
+  }
+
+  // Full-screen Note Reader (Singleton overlay)
+  // Opens a note in a large, comfortable reading pane so long text stays
+  // legible instead of being clipped inside the compact feed card. Images
+  // reuse the existing lightbox; likes stay in sync with the feed card.
+  function openNoteReader(note, siteInfo) {
+    if (!note) return;
+
+    const avatarSrc = (siteInfo && siteInfo.avatar) || 'assets/cat.jpg';
+    const siteTitle = (siteInfo && siteInfo.title) || 'meowking';
+    const baseLikes = note.likes || 0;
+    const isLiked = safeStorage.get('meowking_note_like_' + note.id) === '1';
+    const displayLikes = baseLikes + (isLiked ? 1 : 0);
+    const imgs = Array.isArray(note.images) ? note.images.slice(0, 10) : [];
+
+    const imagesHtml = imgs.length ? `
+      <div class="note-reader-images">
+        ${imgs.map((src, idx) => `
+          <div class="note-reader-img-item" data-img-index="${idx}">
+            <img src="${escapeHtml(safeNoteImageSrc(src))}" alt="Note photo ${idx + 1}" loading="lazy">
+          </div>`).join('')}
+      </div>` : '';
+
+    let rd = document.getElementById('note-reader');
+    if (!rd) {
+      rd = document.createElement('div');
+      rd.id = 'note-reader';
+      rd.className = 'note-reader';
+      document.body.appendChild(rd);
+    }
+
+    rd.innerHTML = `
+      <div class="note-reader-backdrop" data-close></div>
+      <div class="note-reader-box" role="dialog" aria-modal="true" aria-label="Note">
+        <div class="note-reader-topbar">
+          <span class="note-reader-label">note</span>
+          <button type="button" class="note-reader-close" data-close title="Close (Esc)">&times; close (Esc)</button>
+        </div>
+        <div class="note-reader-scroll">
+          <header class="note-reader-header">
+            <img src="${escapeHtml(avatarSrc)}" alt="avatar" class="note-avatar">
+            <div class="note-meta-info">
+              <div class="note-author-line">
+                <span class="note-author-name">${escapeHtml(siteTitle)}</span>
+                <span class="note-author-handle">@${escapeHtml(siteTitle)}</span>
+                ${note.isLocal ? `<span class="note-badge-local">local</span>` : ''}
+              </div>
+              <time class="note-date">${escapeHtml(note.date || '')}</time>
+            </div>
+          </header>
+
+          <div class="note-reader-content note-content">
+            ${formatInlineMarkdown(note.content || '')}
+          </div>
+
+          ${imagesHtml}
+
+          <footer class="note-reader-footer">
+            <button type="button" class="note-action-btn note-reader-like ${isLiked ? 'liked' : ''}" data-note-id="${escapeHtml(note.id)}" data-base-count="${baseLikes}" title="Like this note">
+              <span class="heart-icon">❤️</span>
+              <span class="like-count">${displayLikes > 0 ? displayLikes : ''}</span>
+            </button>
+            <div class="tag-list">
+              ${(note.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join('')}
+            </div>
+          </footer>
+        </div>
+      </div>
+    `;
+
+    rd.style.display = 'flex';
+    document.body.classList.add('note-reader-open');
+
+    function close() {
+      rd.style.display = 'none';
+      document.body.classList.remove('note-reader-open');
+      if (rd._keyHandler) {
+        document.removeEventListener('keydown', rd._keyHandler);
+        rd._keyHandler = null;
+      }
+      noteReaderCleanup = null;
+      if (window.location.hash.startsWith('#/notes/')) {
+        try { history.replaceState(null, '', '#/notes'); } catch (e) { window.location.hash = '#/notes'; }
+      }
+    }
+
+    noteReaderCleanup = close;
+
+    rd.querySelectorAll('[data-close]').forEach(el => {
+      el.onclick = close;
+    });
+
+    // Larger image click -> reuse the existing image lightbox for zoom/swipe.
+    rd.querySelectorAll('.note-reader-img-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (imgs.length === 0) return;
+        const idx = parseInt(item.getAttribute('data-img-index'), 10) || 0;
+        openNoteLightbox(imgs, idx);
+      });
+    });
+
+    // Like button inside the reader, mirrored back onto the feed card.
+    const likeBtn = rd.querySelector('.note-reader-like');
+    if (likeBtn) {
+      likeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const likeKey = 'meowking_note_like_' + note.id;
+        const nextLiked = safeStorage.get(likeKey) !== '1';
+        safeStorage.set(likeKey, nextLiked ? '1' : '0');
+
+        likeBtn.classList.toggle('liked', nextLiked);
+        const countSpan = likeBtn.querySelector('.like-count');
+        const updated = baseLikes + (nextLiked ? 1 : 0);
+        if (countSpan) countSpan.textContent = updated > 0 ? updated : '';
+
+        const rawId = String(note.id);
+        const selector = '.note-btn-like[data-note-id="' + (window.CSS && CSS.escape ? CSS.escape(rawId) : rawId) + '"]';
+        let cardBtns;
+        try { cardBtns = document.querySelectorAll(selector); } catch (err) { cardBtns = []; }
+        cardBtns.forEach(cardBtn => {
+          cardBtn.classList.toggle('liked', nextLiked);
+          const cs = cardBtn.querySelector('.like-count');
+          const cBase = parseInt(cardBtn.getAttribute('data-base-count'), 10) || 0;
+          const cUpdated = cBase + (nextLiked ? 1 : 0);
+          if (cs) cs.textContent = cUpdated > 0 ? cUpdated : '';
+        });
+      });
+    }
+
+    function onKey(e) {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        // If the image lightbox is stacked on top, let it consume the Esc.
+        const ilb = document.getElementById('note-lightbox');
+        if (ilb && ilb.style.display !== 'none') return;
+        e.preventDefault();
+        close();
+      }
+    }
+
+    if (rd._keyHandler) document.removeEventListener('keydown', rd._keyHandler);
+    rd._keyHandler = onKey;
+    document.addEventListener('keydown', onKey);
+
+    // Move focus to the close button for keyboard users.
+    const closeBtn = rd.querySelector('.note-reader-close');
+    if (closeBtn && closeBtn.focus) { try { closeBtn.focus(); } catch (err) { /* ignore */ } }
   }
 
   // -----------------------------------------------------------

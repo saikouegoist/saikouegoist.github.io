@@ -29,7 +29,7 @@ meowking/
 
 ## 0. Visual Content Studio (Easiest)
 
-Open `editor.html` — double-click it in this folder, or visit it on your live site. It gives you guided forms for **articles, projects, and tweets**: auto-slugs, auto read-time, live preview using the site's real renderer, and validation (required fields, real calendar dates, duplicate IDs). Opening it can never alter the published site; it only produces download files until you push.
+Open `editor.html` — double-click it in this folder, or visit it on your live site. It gives you guided forms for **articles, projects, and notes**: auto-slugs, auto read-time, live preview using the site's real renderer, and validation (required fields, real calendar dates, duplicate IDs). Opening it can never alter the published site; it only produces download files until you push.
 
 Flow per item: **fill the form → Save → Download** the generated file(s) → **replace** your local copy (`data/articles.js`, `data/projects.js`, plus `articles/your-slug.md` for articles) → refresh `index.html` → push to publish. For articles, download the `.md` even if you saved first — the button falls back to your staged copy. The sections below document the manual alternative and the exact file formats.
 
@@ -88,29 +88,29 @@ Simply delete the entry from `data/articles.js` (and optionally delete its file 
 
 
 
-## 2.5. How to Add Tweets & Microblog Posts (With Images)
+## 2.5. How to Add Notes & Microblog Posts (With Images)
 
-Tweets are shown on `#/tweets` with Twitter-style microblog cards, interactive likes, search & tag filtering, and a responsive grid supporting **up to 10 images** per tweet.
+Notes are shown on `#/notes` with Twitter-style microblog cards, interactive likes, search & tag filtering, and a responsive grid supporting **up to 10 images** per note.
 
 ### Option A: From the Browser UI (Easiest)
-1. Go to `#/tweets` on your site.
-2. Type in the composer box, click **📷 Attach Images** (select up to 10 photos), and click **🐱 Post Tweet**.
+1. Go to `#/notes` on your site.
+2. Type in the composer box, click **📷 Attach Images** (select up to 10 photos), and click **🐱 Post Note**.
 3. It posts instantly and saves to your browser!
-4. Click the **ℹ️ How to save permanently** accordion and click **📋 Copy Code** to paste it into `data/tweets.js` whenever you want it permanent in your Git repository.
+4. Click the **ℹ️ How to save permanently** accordion and click **📋 Copy Code** to paste it into `data/notes.js` whenever you want it permanent in your Git repository.
 
-### Option B: Directly in `data/tweets.js`
-1. Save your image files in `tweets/images/` (e.g. `tweets/images/photo1.jpg`).
-2. Open `data/tweets.js` and paste at the top of `window.SITE_TWEETS`:
+### Option B: Directly in `data/notes.js`
+1. Save your image files in `notes/images/` (e.g. `notes/images/photo1.jpg`).
+2. Open `data/notes.js` and paste at the top of `window.SITE_NOTES`:
 
 ```javascript
   {
-    id: "tweet-004",
+    id: "note-004",
     date: "2026-10-21",
     content: "Check out my new setup and photos! Supports **bold**, *italic*, \`code\`, and [links](https://...).",
     images: [
-      "tweets/images/photo1.jpg",
-      "tweets/images/photo2.jpg",
-      "tweets/images/photo3.jpg"
+      "notes/images/photo1.jpg",
+      "notes/images/photo2.jpg",
+      "notes/images/photo3.jpg"
     ],
     tags: ["tech", "photos"]
   },
